@@ -32,11 +32,11 @@ public:
 
    float     getScalingFactor() const;
 
-   void      setRotation(const quat& rotation);
+   void      setRotation(const Q::quat& rotation);
 
    void      translate(const glm::vec3& translation);
-   void      rotateByMultiplyingCurrentRotationFromTheLeft(const quat& rotation);
-   void      rotateByMultiplyingCurrentRotationFromTheRight(const quat& rotation);
+   void      rotateByMultiplyingCurrentRotationFromTheLeft(const Q::quat& rotation);
+   void      rotateByMultiplyingCurrentRotationFromTheRight(const Q::quat& rotation);
    void      scale(float scalingFactor);
 
 private:
@@ -46,7 +46,7 @@ private:
    std::shared_ptr<Model> mModel;
 
    glm::vec3              mPosition;
-   quat                   mRotation;
+   Q::quat                mRotation;
    float                  mScalingFactor;
 
    mutable glm::mat4      mModelMatrix;

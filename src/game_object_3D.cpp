@@ -9,7 +9,7 @@ GameObject3D::GameObject3D(const std::shared_ptr<Model>& model,
                            float                         scalingFactor)
    : mModel(model)
    , mPosition(position)
-   , mRotation(angleAxis(glm::radians(angleOfRotInDeg), axisOfRot))
+   , mRotation(Q::angleAxis(glm::radians(angleOfRotInDeg), axisOfRot))
    , mScalingFactor(scalingFactor != 0.0f ? scalingFactor : 1.0f)
    , mModelMatrix(1.0f)
    , mCalculateModelMatrix(true)
@@ -20,7 +20,7 @@ GameObject3D::GameObject3D(const std::shared_ptr<Model>& model,
 GameObject3D::GameObject3D(GameObject3D&& rhs) noexcept
    : mModel(std::move(rhs.mModel))
    , mPosition(std::exchange(rhs.mPosition, glm::vec3(0.0f)))
-   , mRotation(std::exchange(rhs.mRotation, quat()))
+   , mRotation(std::exchange(rhs.mRotation, Q::quat()))
    , mScalingFactor(std::exchange(rhs.mScalingFactor, 1.0f))
    , mModelMatrix(std::exchange(rhs.mModelMatrix, glm::mat4(1.0f)))
    , mCalculateModelMatrix(std::exchange(rhs.mCalculateModelMatrix, true))
@@ -32,7 +32,7 @@ GameObject3D& GameObject3D::operator=(GameObject3D&& rhs) noexcept
 {
    mModel                = std::move(rhs.mModel);
    mPosition             = std::exchange(rhs.mPosition, glm::vec3(0.0f));
-   mRotation             = std::exchange(rhs.mRotation, quat());
+   mRotation             = std::exchange(rhs.mRotation, Q::quat());
    mScalingFactor        = std::exchange(rhs.mScalingFactor, 1.0f);
    mModelMatrix          = std::exchange(rhs.mModelMatrix, glm::mat4(1.0f));
    mCalculateModelMatrix = std::exchange(rhs.mCalculateModelMatrix, true);
@@ -67,7 +67,7 @@ float GameObject3D::getScalingFactor() const
    return mScalingFactor;
 }
 
-void GameObject3D::setRotation(const quat& rotation)
+void GameObject3D::setRotation(const Q::quat& rotation)
 {
    mRotation = rotation;
    mCalculateModelMatrix = true;
@@ -79,13 +79,13 @@ void GameObject3D::translate(const glm::vec3& translation)
    mCalculateModelMatrix = true;
 }
 
-void GameObject3D::rotateByMultiplyingCurrentRotationFromTheLeft(const quat& rotation)
+void GameObject3D::rotateByMultiplyingCurrentRotationFromTheLeft(const Q::quat& rotation)
 {
    mRotation = rotation * mRotation;
    mCalculateModelMatrix = true;
 }
 
-void GameObject3D::rotateByMultiplyingCurrentRotationFromTheRight(const quat& rotation)
+void GameObject3D::rotateByMultiplyingCurrentRotationFromTheRight(const Q::quat& rotation)
 {
    mRotation = mRotation * rotation;
    mCalculateModelMatrix = true;

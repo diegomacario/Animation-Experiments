@@ -1,328 +1,415 @@
 #include <glm/gtx/norm.hpp>
 
 #include "quat.h"
-#include <cmath>
-#include <iostream>
 
-// Note: I will need a normalize function that checks that the length of the vector is not 0
-
-glm::vec3 normalize(const glm::vec3& vec)
+// This helper function is not declared in quat.h
+// It's identical to glm::normalize, except that it checks if the length of the vector
+// we want to normalize is zero, and if it is then it doesn't normalize it
+glm::vec3 normalizeWithZeroLengthCheck(const glm::vec3& v)
 {
-	float lengthSquared = glm::length2(vec);
-	if (lengthSquared == 0.0f) // TODO: Use threshold here
-	{
-		return vec;
-	}
+   float squaredLen = glm::length2(v);
+   if (squaredLen < QUAT_EPSILON)
+   {
+      return v;
+   }
 
-	return vec / glm::sqrt(lengthSquared);
+   return v / glm::sqrt(squaredLen);
 }
 
-quat angleAxis(float angle, const glm::vec3& axis)
+Q::quat Q::angleAxis(float angle, const glm::vec3& axis)
 {
-	glm::vec3 normalizedAxis = normalize(axis);
+   glm::vec3 nAxis = normalizeWithZeroLengthCheck(axis);
 
-	float s = sinf(angle * 0.5f);
+   float halfSin = glm::sin(angle * 0.5f);
 
-	return quat(
-		normalizedAxis.x * s,
-		normalizedAxis.y * s,
-		normalizedAxis.z * s,
-		cosf(angle * 0.5f)
-	);
+   return Q::quat(nAxis.x * halfSin,
+                  nAxis.y * halfSin,
+                  nAxis.z * halfSin,
+                  glm::cos(angle * 0.5f));
 }
 
-quat fromTo(const glm::vec3& from, const glm::vec3& to) {
-	glm::vec3 f = normalize(from);
-	glm::vec3 t = normalize(to);
-
-	if (f == t) {
-		return quat();
-	}
-	else if (f == t * -1.0f) {
-		glm::vec3 ortho = glm::vec3(1, 0, 0);
-		if (fabsf(f.y) < fabsf(f.x)) {
-			ortho = glm::vec3(0, 1, 0);
-		}
-		if (fabsf(f.z) < fabs(f.y) && fabs(f.z) < fabsf(f.x)) {
-			ortho = glm::vec3(0, 0, 1);
-		}
-
-		glm::vec3 axis = normalize(glm::cross(f, ortho));
-		return quat(axis.x, axis.y, axis.z, 0);
-	}
-
-	glm::vec3 half = normalize(f + t);
-	glm::vec3 axis = glm::cross(f, half);
-
-	return quat(
-		axis.x,
-		axis.y,
-		axis.z,
-		dot(f, half)
-	);
+float Q::getAngle(const Q::quat& q)
+{
+   return 2.0f * glm::acos(q.w);
 }
 
-glm::vec3 getAxis(const quat& quat) {
-	return normalize(glm::vec3(quat.x, quat.y, quat.z));
+glm::vec3 Q::getAxis(const Q::quat& q)
+{
+   return normalizeWithZeroLengthCheck(glm::vec3(q.x, q.y, q.z));
 }
 
-float getAngle(const quat& quat) {
-	return 2.0f * acosf(quat.w);
+Q::quat Q::fromTo(const glm::vec3& from, const glm::vec3& to)
+{
+   glm::vec3 nFrom = normalizeWithZeroLengthCheck(from);
+   glm::vec3 nTo   = normalizeWithZeroLengthCheck(to);
+
+   if (nFrom == nTo)
+   {
+      // If from and to are the same, then we return a unit quaternion
+      return Q::quat();
+   }
+   else if (nFrom == nTo * -1.0f)
+   {
+      // If from and to point in opposite directions, then there is no unique half vector between the two
+      // In that case, we use the most orthogonal basis vector with respect to from to find the axis of rotation
+
+      // The smallest absolute component of the from vector tells us which basis vector is more orthogonal
+      glm::vec3 mostOrthogBasis = glm::vec3(1, 0, 0);
+      if (glm::abs(nFrom.y) < glm::abs(nFrom.x))
+      {
+         mostOrthogBasis = glm::vec3(0, 1, 0);
+      }
+      if (glm::abs(nFrom.z) < glm::abs(nFrom.y) && glm::abs(nFrom.z) < glm::abs(nFrom.x))
+      {
+         mostOrthogBasis = glm::vec3(0, 0, 1);
+      }
+
+      // The axis of rotation can be found by taking the cross product of the from vector and its most orthogonal basis vector
+      glm::vec3 axisOfRot = normalizeWithZeroLengthCheck(glm::cross(nFrom, mostOrthogBasis));
+
+      // Remember that a quaternion is constructed in this way:
+      //
+      // quat(axisOfRot.x * halfSin,
+      //      axisOfRot.y * halfSin,
+      //      axisOfRot.z * halfSin,
+      //      glm::cos(angle * 0.5f));
+      //
+      // Since the angle between the from and to vectors is 180 degrees, the half angle is 90 degrees
+      // This means that the half sines evaluate to 1 and that the half cosine evaluates to 0, leaving our quaternion looking as it does below:
+      return Q::quat(axisOfRot.x, axisOfRot.y, axisOfRot.z, 0);
+   }
+
+   // If from and to are not the same and if they don't point in opposite directions,
+   // then we find the half vector between the two and we use it to construct a quaternion that rotates half of the desired angle
+   // Why half? Because when we use the formula q * v * q^-1 to rotate a vector, the two multiplications will make us rotate the desired angle
+   glm::vec3 halfVecBetweenFromAndTo = normalizeWithZeroLengthCheck(nFrom + nTo);
+
+   // The cross product of unit vectors is equal to a vector orthogonal to both times the sine of the angle between them
+   glm::vec3 axisOfRot = glm::cross(nFrom, halfVecBetweenFromAndTo);
+
+   return Q::quat(axisOfRot.x, // The multiplication by the sine is already encoded in the axis of rotation
+                  axisOfRot.y,
+                  axisOfRot.z,
+                  glm::dot(nFrom, halfVecBetweenFromAndTo)); // The dot product of unit vectors is equal to the cosine of the angle between them
 }
 
-quat operator+(const quat& a, const quat& b) {
-	return quat(
-		a.x + b.x,
-		a.y + b.y,
-		a.z + b.z,
-		a.w + b.w
-	);
+Q::quat Q::operator+(const Q::quat& a, const Q::quat& b)
+{
+   return Q::quat(a.x + b.x,
+                  a.y + b.y,
+                  a.z + b.z,
+                  a.w + b.w);
 }
 
-quat operator-(const quat& a, const quat& b) {
-	return quat(
-		a.x - b.x,
-		a.y - b.y,
-		a.z - b.z,
-		a.w - b.w
-	);
+Q::quat Q::operator-(const Q::quat& a, const Q::quat& b)
+{
+   return Q::quat(a.x - b.x,
+                  a.y - b.y,
+                  a.z - b.z,
+                  a.w - b.w);
 }
 
-quat operator*(const quat& a, float b) {
-	return quat(
-		a.x * b,
-		a.y * b,
-		a.z * b,
-		a.w * b
-	);
+// Negation operator
+Q::quat Q::operator-(const Q::quat& q)
+{
+   return Q::quat(-q.x, -q.y, -q.z, -q.w);
 }
 
-quat operator-(const quat& q) {
-	return quat(
-		-q.x,
-		-q.y,
-		-q.z,
-		-q.w
-	);
+Q::quat Q::operator*(const Q::quat& q, float f)
+{
+   return Q::quat(q.x * f,
+                  q.y * f,
+                  q.z * f,
+                  q.w * f);
 }
 
-bool operator==(const quat& left, const quat& right) {
-	return (fabsf(left.x - right.x) <= QUAT_EPSILON && fabsf(left.y - right.y) <= QUAT_EPSILON && fabsf(left.z - right.z) <= QUAT_EPSILON && fabsf(left.w - left.w) <= QUAT_EPSILON);
+Q::quat Q::operator*(float f, const Q::quat& q)
+{
+   return Q::quat(f * q.x,
+                  f * q.y,
+                  f * q.z,
+                  f * q.w);
 }
 
-bool operator!=(const quat& a, const quat& b) {
-	return !(a == b);
+// This multiplication operator reverses the order of the arguments it receives
+// So if we multiply q * p in the code, we are really multiplying p * q
+// The advantages of doing this are the following:
+// - Multiplying from the left now causes an object to rotate with respect to its local coordinate axes
+// - Multiplying from the right now causes an object to rotate with respect to the world's coordinate axes
+// This means that we can apply children rotations from the left: Qch * Qparent
+Q::quat Q::operator*(const Q::quat& q, const Q::quat& p)
+{
+   // The block of operations we return in this function is simply an optimized version of the commented code below,
+   // which implements the general equation of the p * q quaternion product.
+   /*
+   quat result;
+   result.scalar = p.scalar * q.scalar - glm::dot(p.vector, q.vector);
+   result.vector = (p.scalar * q.vector) + (q.scalar * p.vector) + glm::cross(p.vector, q.vector);
+   return result;
+   */
+
+   return Q::quat( p.x * q.w + p.y * q.z - p.z * q.y + p.w * q.x,
+                  -p.x * q.z + p.y * q.w + p.z * q.x + p.w * q.y,
+                   p.x * q.y - p.y * q.x + p.z * q.w + p.w * q.z,
+                  -p.x * q.x - p.y * q.y - p.z * q.z + p.w * q.w);
 }
 
-bool sameOrientation(const quat& left, const quat& right) {
-	return (fabsf(left.x - right.x) <= QUAT_EPSILON && fabsf(left.y - right.y) <= QUAT_EPSILON && fabsf(left.z - right.z) <= QUAT_EPSILON && fabsf(left.w - left.w) <= QUAT_EPSILON)
-		|| (fabsf(left.x + right.x) <= QUAT_EPSILON && fabsf(left.y + right.y) <= QUAT_EPSILON && fabsf(left.z + right.z) <= QUAT_EPSILON && fabsf(left.w + left.w) <= QUAT_EPSILON);
+glm::vec3 Q::operator*(const Q::quat& q, const glm::vec3& v)
+{
+   // The block of operations we return in this function is simply an optimized version of the commented code below,
+   // which implements the equation used to rotate a vector using a quaternion.
+   // Note that the order of the equation is reversed (q^-1 * v * q instead of q * v *q^-1) because of the way we implemented
+   // the multiplication operator
+   /*
+   quat result = inverse(q) * quat(v.x, v.y, v.z, 0) * q;
+   return glm::vec3(result.x, result.y, result.z);
+   */
+
+   // Also note that this assumes that the quaterion q is normalized, unlike the commented code above
+   return q.vector * 2.0f * glm::dot(q.vector, v) +
+          v * (q.scalar * q.scalar - glm::dot(q.vector, q.vector)) +
+          glm::cross(q.vector, v) * 2.0f * q.scalar;
 }
 
-float dot(const quat& a, const quat& b) {
-	return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
-}
-
-float lenSq(const quat& q) {
-	return q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
-}
-
-float len(const quat& q) {
-	float lenSq = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
-	if (lenSq < QUAT_EPSILON) {
-		return 0.0f;
-	}
-	return sqrtf(lenSq);
-}
-
-void normalize(quat& q) {
-	float lenSq = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
-	if (lenSq < QUAT_EPSILON) {
-		return;
-	}
-	float i_len = 1.0f / sqrtf(lenSq);
-
-	q.x *= i_len;
-	q.y *= i_len;
-	q.z *= i_len;
-	q.w *= i_len;
-}
-
-quat normalized(const quat& q) {
-	float lenSq = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
-	if (lenSq < QUAT_EPSILON) {
-		return quat();
-	}
-	float i_len = 1.0f / sqrtf(lenSq);
-
-	return quat(
-		q.x * i_len,
-		q.y * i_len,
-		q.z * i_len,
-		q.w * i_len
-	);
-}
-
-quat conjugate(const quat& q) {
-	return quat(
-		-q.x,
-		-q.y,
-		-q.z,
-		q.w
-	);
-}
-
-quat inverse(const quat& q) {
-	float lenSq = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
-	if (lenSq < QUAT_EPSILON) {
-		return quat();
-	}
-	float recip = 1.0f / lenSq;
-
-	// conjugate / norm
-	return quat(
-		-q.x * recip,
-		-q.y * recip,
-		-q.z * recip,
-		q.w * recip
-	);
-}
-
-// By Gabor
+// The multiplication operator below doesn't reverse the order of the arguments it receives
+// I'm leaving it here along with its corresponding quaternion-vector multiplication operator as a reference
+// The consequences of not reversing the order of the arguments are the following:
+// - Multiplying from the left causes an object to rotate with respect to the world's coordinate axes
+// - Multiplying from the right causes an object to rotate with respect to its local coordinate axes
+// This means that children rotations must be applied from the right: Qparent * Qch
 /*
-quat operator*(const quat& Q1, const quat& Q2) {
-	return quat(
-		Q2.x * Q1.w + Q2.y * Q1.z - Q2.z * Q1.y + Q2.w * Q1.x,
-		-Q2.x * Q1.z + Q2.y * Q1.w + Q2.z * Q1.x + Q2.w * Q1.y,
-		Q2.x * Q1.y - Q2.y * Q1.x + Q2.z * Q1.w + Q2.w * Q1.z,
-		-Q2.x * Q1.x - Q2.y * Q1.y - Q2.z * Q1.z + Q2.w * Q1.w
-	);
-}
-*/
-
-// By Gabor
-quat operator*(const quat& Q, const quat& P)
+quat operator*(const quat& q, const quat& p)
 {
-	quat result;
-	result.scalar = P.scalar * Q.scalar - dot(P.vector, Q.vector);
-	result.vector = (Q.vector * P.scalar) + (P.vector * Q.scalar) + cross(P.vector, Q.vector);
-	return result;
+   quat result;
+   result.scalar = q.scalar * p.scalar - glm::dot(q.vector, p.vector);
+   result.vector = (q.scalar * p.vector) + (p.scalar * q.vector) + glm::cross(q.vector, p.vector);
+   return result;
 }
 
-// By Gabor
-/*
-glm::vec3 operator*(const quat& q, const glm::vec3& v) {
-	return    q.vector * 2.0f * dot(q.vector, v) +
-		v * (q.scalar * q.scalar - dot(q.vector, q.vector)) +
-		cross(q.vector, v) * 2.0f * q.scalar;
-}
-*/
-
-// By Gabor
 glm::vec3 operator*(const quat& q, const glm::vec3& v)
 {
-	quat result = inverse(q) * (quat(v.x, v.y, v.z, 0) * q);
-	return glm::vec3(result.x, result.y, result.z);
-}
-
-// By 3DGEP
-/*
-quat operator*(const quat& Q, const quat& P)
-{
-	quat result;
-	result.scalar = Q.scalar * P.scalar - dot(Q.vector, P.vector);
-	result.vector = (Q.scalar * P.vector) + (P.scalar * Q.vector) + cross(Q.vector, P.vector);
-	return result;
+   quat result = q * quat(v.x, v.y, v.z, 0) * inverse(q);
+   return glm::vec3(result.x, result.y, result.z);
 }
 */
 
-// By 3DGEP
-/*
-glm::vec3 operator*(const quat& q, const glm::vec3& v)
+Q::quat Q::operator^(const Q::quat& q, float exponent)
 {
-	quat result = q * quat(v.x, v.y, v.z, 0) * inverse(q);
-	return glm::vec3(result.x, result.y, result.z);
-}
-*/
+   // Raising a quaternion to some power simply means scaling its angle
+   // Here we decompose the quaternion into its axis and angle,
+   // we scale its angle, and then we put it back together
+   float halfAngle = glm::acos(q.scalar);
+   glm::vec3 axisOfRot = normalizeWithZeroLengthCheck(q.vector);
 
-quat mix(const quat& from, const quat& to, float t) {
-	return from * (1.0f - t) + to * t;
-}
+   float halfCos = glm::cos(exponent * halfAngle);
+   float halfSin = glm::sin(exponent * halfAngle);
 
-quat nlerp(const quat& from, const quat& to, float t) {
-	return normalized(from + (to - from) * t);
-}
-
-quat operator^(const quat& q, float f) {
-	float angle = 2.0f * acosf(q.scalar);
-	glm::vec3 axis = normalize(q.vector);
-
-	float halfCos = cosf(f * angle * 0.5f);
-	float halfSin = sinf(f * angle * 0.5f);
-
-	return quat(
-		axis.x * halfSin,
-		axis.y * halfSin,
-		axis.z * halfSin,
-		halfCos
-	);
+   return Q::quat(axisOfRot.x * halfSin,
+                  axisOfRot.y * halfSin,
+                  axisOfRot.z * halfSin,
+                  halfCos);
 }
 
-quat slerp(const quat& start, const quat& end, float t) {
-	if (fabsf(dot(start, end)) > 1.0f - QUAT_EPSILON) {
-		return nlerp(start, end, t);
-	}
-
-	// TODO: In Gabor's written description this is (end * inverse(start))
-	//return normalized(((inverse(start) * end) ^ t) * start);
-   return normalized(start * ((inverse(start) * end) ^ t));
+bool Q::operator==(const Q::quat& a, const Q::quat& b)
+{
+   return (glm::abs(a.x - b.x) <= QUAT_EPSILON &&
+           glm::abs(a.y - b.y) <= QUAT_EPSILON &&
+           glm::abs(a.z - b.z) <= QUAT_EPSILON &&
+           glm::abs(a.w - b.w) <= QUAT_EPSILON);
 }
 
-// TODO: Will play with this
-// This is still mysterious to me
-quat lookRotation(const glm::vec3& direction, const glm::vec3& up) {
-	// Find orthonormal basis vectors
-	glm::vec3 f = normalize(direction);
-	glm::vec3 u = normalize(up);
-	glm::vec3 r = cross(u, f);
-	u = cross(f, r);
-
-	// From world forward to object forward
-	quat f2d = fromTo(glm::vec3(0, 0, 1), f);
-
-	// what direction is the new object up?
-	glm::vec3 objectUp = f2d * glm::vec3(0, 1, 0);
-	// From object up to desired up
-	quat u2u = fromTo(objectUp, u);
-
-	// TODO: The comment below is weird, isn't it? If we want to rotate to fwd first and then twist to correct up, should we be doing this? u2u * f2d
-	// Rotate to forward direction first, then twist to correct up
-	quat result = f2d * u2u;
-	// Don’t forget to normalize the result
-	return normalized(result);
+bool Q::operator!=(const Q::quat& a, const Q::quat& b)
+{
+   return !(a == b);
 }
 
-// TODO: Need to make sure this plays well with GLM
-glm::mat4 quatToMat4(const quat& q) {
-	glm::vec3 r = q * glm::vec3(1, 0, 0);
-	glm::vec3 u = q * glm::vec3(0, 1, 0);
-	glm::vec3 f = q * glm::vec3(0, 0, 1);
-
-	return glm::mat4(
-		r.x, r.y, r.z, 0,
-		u.x, u.y, u.z, 0,
-		f.x, f.y, f.z, 0,
-		0, 0, 0, 1
-	);
+bool Q::sameOrientation(const Q::quat& a, const Q::quat& b)
+{
+   // A quaternion and its inverse represent the same rotation
+   // They simply take different routes to get there
+   // That's why we consider a quaternion and its inverse to have the same orientation
+   return (glm::abs(a.x - b.x) <= QUAT_EPSILON &&
+           glm::abs(a.y - b.y) <= QUAT_EPSILON &&
+           glm::abs(a.z - b.z) <= QUAT_EPSILON &&
+           glm::abs(a.w - b.w) <= QUAT_EPSILON) ||
+          (glm::abs(a.x + b.x) <= QUAT_EPSILON &&
+           glm::abs(a.y + b.y) <= QUAT_EPSILON &&
+           glm::abs(a.z + b.z) <= QUAT_EPSILON &&
+           glm::abs(a.w + b.w) <= QUAT_EPSILON);
 }
 
-// TODO: Need to make sure this plays well with GLM
-// How do I access up and forward in glm?
-quat mat4ToQuat(const glm::mat4& m) {
-	glm::vec3 up = normalize(glm::vec3(m[1].x, m[1].y, m[1].z));
-	glm::vec3 forward = normalize(glm::vec3(m[2].x, m[2].y, m[2].z));
-	glm::vec3 right = cross(up, forward);
-	up = glm::cross(forward, right);
+float Q::dot(const Q::quat& a, const Q::quat& b)
+{
+   return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+}
 
-	return lookRotation(forward, up);
+float Q::squaredLength(const Q::quat& q)
+{
+   return q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
+}
+
+float Q::length(const Q::quat& q)
+{
+   float squaredLen = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
+   if (squaredLen < QUAT_EPSILON)
+   {
+      return 0.0f;
+   }
+   return glm::sqrt(squaredLen);
+}
+
+void Q::normalize(Q::quat& q)
+{
+   float squaredLen = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
+   if (squaredLen < QUAT_EPSILON)
+   {
+      return;
+   }
+   float invertedLen = 1.0f / glm::sqrt(squaredLen);
+
+   q.x *= invertedLen;
+   q.y *= invertedLen;
+   q.z *= invertedLen;
+   q.w *= invertedLen;
+}
+
+Q::quat Q::normalized(const Q::quat& q)
+{
+   float squaredLen = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
+   if (squaredLen < QUAT_EPSILON)
+   {
+      return Q::quat();
+   }
+   float invertedLen = 1.0f / glm::sqrt(squaredLen);
+
+   return Q::quat(q.x * invertedLen,
+                  q.y * invertedLen,
+                  q.z * invertedLen,
+                  q.w * invertedLen);
+}
+
+Q::quat Q::conjugate(const Q::quat& q)
+{
+   // Note that the inverse of a unit quaternion is equal to its conjugate
+   return Q::quat(-q.x,
+                  -q.y,
+                  -q.z,
+                   q.w);
+}
+
+Q::quat Q::inverse(const Q::quat& q)
+{
+   float squaredLen = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
+   if (squaredLen < QUAT_EPSILON)
+   {
+      return Q::quat();
+   }
+   float invertedSquaredLen = 1.0f / squaredLen;
+
+   // The inverse of a quaternion is equal to its conjugate divided by its squared length
+   return Q::quat(-q.x * invertedSquaredLen,
+                  -q.y * invertedSquaredLen,
+                  -q.z * invertedSquaredLen,
+                   q.w * invertedSquaredLen);
+}
+
+// Note: This function assumes that from and to are in the appropriate neighborhood
+Q::quat Q::mix(const Q::quat& start, const Q::quat& end, float t)
+{
+   // This function is similar to a lerp function,
+   // with the only difference being that the resulting interpolation traces an arc
+
+   // The formula for linerarly interpolating two things is the following:
+   // a + (b - a) * t
+   // a + (b * t) - (a * t)
+   // a * (1 - t) + (b * t)
+   // That last version is how it's implemented here
+   // Note that this function doesn't return a normalized quaternion
+   return start * (1.0f - t) + end * t;
+}
+
+// Note: This function assumes that from and to are in the appropriate neighborhood
+Q::quat Q::nlerp(const Q::quat& start, const Q::quat& end, float t)
+{
+   // nlerp is a fast and good approximation of slerp
+   // It's identical to the mix function except that we normalize the result
+   return Q::normalized(start + (end - start) * t);
+}
+
+// Note: This function assumes that from and to are in the appropriate neighborhood
+Q::quat Q::slerp(const Q::quat& start, const Q::quat& end, float t)
+{
+   // If the start and end quaternions are really close together slerp breaks down,
+   // so we fall back on nlerp in that case
+   if (glm::abs(dot(start, end)) > 1.0f - QUAT_EPSILON)
+   {
+      return Q::nlerp(start, end, t);
+   }
+
+   // Remember that the formula for linearly interpolating two things is the following:
+   // start + (end - start) * t
+   // Here is how we adapt that formula for slerp:
+   // - The quaternion that rotates from start to end is:
+   //   delta = end * start^-1
+   // - Raising the delta quaternion to the power of t allows us to scale it without affecting its length
+   //   (end * start^-1)^t
+   // - Finally, multiplying by the start quaternion gives us our default value for when t is equal to zero:
+   //   (end * start^-1)^t * start
+   // Notice what happens when t is equal to zero:
+   // (end * start^-1)^0 * start = unit * start = start
+   // Also notice what happens when t is equal to one
+   // (end * start^-1)^1 * start = end * start^-1 * start = end
+
+   return Q::normalized(start * ((Q::inverse(start) * end) ^ t));
+}
+
+// lookRotation returns a quaternion that rotates from the world's forward vector (Z) to a desired direction
+// This means that the direction that's passed in becomes the forward vector of the rotated basis vectors
+Q::quat Q::lookRotation(const glm::vec3& direction, const glm::vec3& upReference)
+{
+   // Calculate the rotated basis vectors
+   glm::vec3 fwd   = normalizeWithZeroLengthCheck(direction);
+   glm::vec3 up    = normalizeWithZeroLengthCheck(upReference);
+   glm::vec3 right = glm::cross(up, fwd);
+   up = glm::cross(fwd, right);
+
+   // Calculate a quaternion that rotates from the world forward to the desired forward
+   Q::quat fromWorldFwdToDesiredFwd = Q::fromTo(glm::vec3(0, 0, 1), fwd);
+
+   // Calculate what happens to the world up when we rotate from the world forward to the desired forward
+   glm::vec3 rotatedWorldUp = fromWorldFwdToDesiredFwd * glm::vec3(0, 1, 0);
+
+   // Calculate a quaternion that rotates from the rotated world up to the desired up
+   Q::quat fromRotatedWorldUpToDesiredUp = Q::fromTo(rotatedWorldUp, up);
+
+   // Calculate a quaternion that rotates to the desired forward first and then to the desired up
+   Q::quat result = fromWorldFwdToDesiredFwd * fromRotatedWorldUpToDesiredUp;
+
+   return Q::normalized(result);
+}
+
+glm::mat4 Q::quatToMat4(const Q::quat& q)
+{
+   // Rotate the world's basis vectors using the quaternion
+   glm::vec3 right = q * glm::vec3(1, 0, 0);
+   glm::vec3 up    = q * glm::vec3(0, 1, 0);
+   glm::vec3 fwd   = q * glm::vec3(0, 0, 1);
+
+   // Compose a rotation matrix using the rotated basis vectors
+   return glm::mat4(right.x, right.y, right.z, 0,  // Column 0 (X)
+                    up.x,    up.y,    up.z,    0,  // Column 1 (Y)
+                    fwd.x,   fwd.y,   fwd.z,   0,  // Column 2 (Z)
+                    0,       0,       0,       1); // Column 3
+}
+
+Q::quat Q::mat4ToQuat(const glm::mat4& m)
+{
+   // Get the rotated basis vectors from the matrix
+   glm::vec3 up      = normalizeWithZeroLengthCheck(glm::vec3(m[1].x, m[1].y, m[1].z));
+   glm::vec3 forward = normalizeWithZeroLengthCheck(glm::vec3(m[2].x, m[2].y, m[2].z));
+   glm::vec3 right   = glm::cross(up, forward);
+   up = glm::cross(forward, right);
+
+   // Use the lookRotation function to compose a quaternion that rotates from the world's basis vectors to the rotated basis vectors
+   return Q::lookRotation(forward, up);
 }

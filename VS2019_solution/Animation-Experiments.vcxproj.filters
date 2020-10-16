@@ -1,51 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\src\camera.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\finite_state_machine.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\game.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\game_object_3D.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\main.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mesh.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\model.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\model_loader.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\play_state.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\shader.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\shader_loader.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\texture.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\texture_loader.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\window.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\line.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\dependencies\win\src\glad\glad.c">
       <Filter>glad\Source Files</Filter>
     </ClCompile>
@@ -70,59 +25,56 @@
     <ClCompile Include="..\dependencies\win\src\imgui\imgui_widgets.cpp">
       <Filter>imgui\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\camera.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\finite_state_machine.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\game.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\game_object_3D.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\line.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\main.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\mesh.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\model.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\model_loader.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\play_state.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shader.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shader_loader.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\texture.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\texture_loader.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\window.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\quat.cpp">
-      <Filter>Animation-Experiments\Source Files</Filter>
+      <Filter>Animation-Experiments\Source Files\Math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\inc\camera.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\finite_state_machine.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\game.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\game_object_3D.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\mesh.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\model.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\model_loader.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\play_state.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\shader.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\resource_manager.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\shader_loader.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\state.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\texture.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\texture_loader.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\window.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\line.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
       <Filter>stb_image\Header Files</Filter>
     </ClInclude>
@@ -150,8 +102,56 @@
     <ClInclude Include="..\dependencies\win\inc\imgui\imstb_truetype.h">
       <Filter>imgui\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\inc\camera.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\finite_state_machine.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\game.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\game_object_3D.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\line.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\mesh.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\model.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\model_loader.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\play_state.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\resource_manager.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\shader.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\shader_loader.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\state.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\texture.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\texture_loader.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\window.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
     <ClInclude Include="..\inc\quat.h">
-      <Filter>Animation-Experiments\Header Files</Filter>
+      <Filter>Animation-Experiments\Header Files\Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -187,6 +187,18 @@
     </Filter>
     <Filter Include="imgui\Source Files">
       <UniqueIdentifier>{c202f461-3133-4161-af24-7b42ab803601}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation-Experiments\Header Files\Base">
+      <UniqueIdentifier>{57494713-732a-4c22-a4e1-a89a13b061cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation-Experiments\Source Files\Base">
+      <UniqueIdentifier>{b6598835-209d-499c-ad6f-4a959307165e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation-Experiments\Header Files\Math">
+      <UniqueIdentifier>{5faa0a4a-724c-4990-8f17-e2fc0a02df0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation-Experiments\Source Files\Math">
+      <UniqueIdentifier>{5e6627a8-3e2f-4380-bd2b-a691b9fc952f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

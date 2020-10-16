@@ -162,7 +162,7 @@ void PlayState::update(float deltaTime)
 //bool show_another_window = false;
 //ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-void PlayState::rotateSceneByMultiplyingCurrentRotationFromTheLeft(const quat& rot)
+void PlayState::rotateSceneByMultiplyingCurrentRotationFromTheLeft(const Q::quat& rot)
 {
    mTeapot->rotateByMultiplyingCurrentRotationFromTheLeft(rot);
    mLocalXAxis.rotateByMultiplyingCurrentRotationFromTheLeft(rot);
@@ -170,7 +170,7 @@ void PlayState::rotateSceneByMultiplyingCurrentRotationFromTheLeft(const quat& r
    mLocalZAxis.rotateByMultiplyingCurrentRotationFromTheLeft(rot);
 }
 
-void PlayState::rotateSceneByMultiplyingCurrentRotationFromTheRight(const quat& rot)
+void PlayState::rotateSceneByMultiplyingCurrentRotationFromTheRight(const Q::quat& rot)
 {
    mTeapot->rotateByMultiplyingCurrentRotationFromTheRight(rot);
    mLocalXAxis.rotateByMultiplyingCurrentRotationFromTheRight(rot);
@@ -213,10 +213,10 @@ void PlayState::render()
 
       if (ImGui::Button("Reset rotation"))
       {
-         mTeapot->setRotation(quat());
-         mLocalXAxis.setRotation(quat());
-         mLocalYAxis.setRotation(quat());
-         mLocalZAxis.setRotation(quat());
+         mTeapot->setRotation(Q::quat());
+         mLocalXAxis.setRotation(Q::quat());
+         mLocalYAxis.setRotation(Q::quat());
+         mLocalZAxis.setRotation(Q::quat());
       }
 
       ImGui::Spacing();
@@ -225,59 +225,59 @@ void PlayState::render()
 
       if (ImGui::Button("Rotate by 45 degrees around Y from the left"))
       {
-         quat rot = angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+         Q::quat rot = Q::angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
          rotateSceneByMultiplyingCurrentRotationFromTheLeft(rot);
       }
 
       if (ImGui::Button("Rotate by 45 degrees around Z from the left"))
       {
-         quat rot = angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+         Q::quat rot = Q::angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
          rotateSceneByMultiplyingCurrentRotationFromTheLeft(rot);
       }
 
       if (ImGui::Button("Rotate by 45 degrees around Y from the right"))
       {
-         quat rot = angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+         Q::quat rot = Q::angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
          rotateSceneByMultiplyingCurrentRotationFromTheRight(rot);
       }
 
       if (ImGui::Button("Rotate by 90 degrees around Z from the right"))
       {
-         quat rot = angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+         Q::quat rot = Q::angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
          rotateSceneByMultiplyingCurrentRotationFromTheRight(rot);
       }
 
       if (ImGui::Button("Rotate by 45 degrees around (1, 1, 1) from the left"))
       {
-         quat rot = angleAxis(glm::radians(45.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+         Q::quat rot = Q::angleAxis(glm::radians(45.0f), glm::vec3(1.0f, 1.0f, 1.0f));
          rotateSceneByMultiplyingCurrentRotationFromTheLeft(rot);
       }
 
       if (ImGui::Button("Rotate by 90 degrees around X from the right"))
       {
-         quat rot = angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+         Q::quat rot = Q::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
          rotateSceneByMultiplyingCurrentRotationFromTheRight(rot);
       }
 
       if (ImGui::Button("Rotate by 90 degrees around X from the left"))
       {
-         quat rot = angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+         Q::quat rot = Q::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
          rotateSceneByMultiplyingCurrentRotationFromTheLeft(rot);
       }
 
       if (ImGui::Button("Qp (90 Z) * Qch (90 X) * Teapot"))
       {
-         quat rotZParent = angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-         quat rotXChild  = angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-         quat rot = rotZParent * rotXChild;
+         Q::quat rotZParent = Q::angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+         Q::quat rotXChild  = Q::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+         Q::quat rot = rotZParent * rotXChild;
          rotateSceneByMultiplyingCurrentRotationFromTheLeft(rot);
       }
 
       if (ImGui::Button("Qch (90 X) * Qp (90 Z) * Teapot"))
       {
-         quat rotZParent = angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-         quat rotXChild  = angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-         quat rot =  rotXChild * rotZParent;
+         Q::quat rotZParent = Q::angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+         Q::quat rotXChild  = Q::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+         Q::quat rot =  rotXChild * rotZParent;
          rotateSceneByMultiplyingCurrentRotationFromTheLeft(rot);
       }
 
@@ -291,7 +291,7 @@ void PlayState::render()
       ImGui::InputFloat3("Up Vector", up);
       if (ImGui::Button("Look Rotate"))
       {
-         quat lookRot = lookRotation(glm::vec3(fwd[0], fwd[1], fwd[2]), glm::vec3(up[0], up[1], up[2]));
+         Q::quat lookRot = Q::lookRotation(glm::vec3(fwd[0], fwd[1], fwd[2]), glm::vec3(up[0], up[1], up[2]));
 
          //mTeapot->setRotation(lookRot);
          //mLocalXAxis.setRotation(lookRot);
@@ -310,7 +310,7 @@ void PlayState::render()
       ImGui::InputFloat3("To Vector", to);
       if (ImGui::Button("From To"))
       {
-         quat fromToRot = fromTo(glm::vec3(from[0], from[1], from[2]), glm::vec3(to[0], to[1], to[2]));
+         Q::quat fromToRot = Q::fromTo(glm::vec3(from[0], from[1], from[2]), glm::vec3(to[0], to[1], to[2]));
 
          //mTeapot->setRotation(fromToRot);
          //mLocalXAxis.setRotation(fromToRot);
@@ -332,9 +332,9 @@ void PlayState::render()
       ImGui::SliderFloat("Interpolation Val", &t, 0.0f, 1.0f);
       if (enableInterpolation)
       {
-         quat start = angleAxis(glm::radians(-45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-         quat end   = angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f)) * angleAxis(glm::radians(135.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-         quat rot;
+         Q::quat start = Q::angleAxis(glm::radians(-45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+         Q::quat end   = Q::angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f)) * Q::angleAxis(glm::radians(135.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+         Q::quat rot;
          switch (selectedItem)
          {
          case 0:
@@ -349,6 +349,8 @@ void PlayState::render()
          default:
             std::cout << "Unknown combo box value!" << '\n';
          }
+
+         float len = Q::length(rot);
 
          mTeapot->setRotation(rot);
          mLocalXAxis.setRotation(rot);

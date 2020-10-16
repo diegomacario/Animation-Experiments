@@ -45,10 +45,10 @@ int main(int argc, char* argv[])
    glm::quat resGlm = myQuatA * myQuatB;
 
    // x, y, z, w
-   quat myQuatAA(1.0f, 2.0f, 3.0f, 4.0f);
-   quat myQuatBB(5.0f, 6.0f, 7.0f, 8.0f);
-   quat resGab = myQuatAA * myQuatBB;
-   quat resGab2 = myQuatBB * myQuatAA;
+   Q::quat myQuatAA(1.0f, 2.0f, 3.0f, 4.0f);
+   Q::quat myQuatBB(5.0f, 6.0f, 7.0f, 8.0f);
+   Q::quat resGab = myQuatAA * myQuatBB;
+   Q::quat resGab2 = myQuatBB * myQuatAA;
 
    std::cout << "glm::quat AB: " << resGlm.x << " " << resGlm.y << " " << resGlm.z << " " << resGlm.w << '\n';
    std::cout << "quat AB:      " << resGab.x << " " << resGab.y << " " << resGab.z << " " << resGab.w << '\n';
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 
    Game game;
 
-   if (!game.initialize("Quaternion-Experiments"))
+   if (!game.initialize("Animation-Experiments"))
    {
       std::cout << "Error - main - Failed to initialize the game" << "\n";
       return -1;
