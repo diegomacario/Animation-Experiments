@@ -140,6 +140,25 @@ void Line::scale(float scalingFactor)
    }
 }
 
+void Line::setModelMatrix(const Transform& transform)
+{
+   mPosition = transform.position;
+   mRotation = transform.rotation;
+   mScalingFactor = transform.scale.x;
+   mModelMatrix = transformToMat4(transform);
+   mCalculateModelMatrix = false;
+}
+
+glm::mat4 Line::getModelMatrix()
+{
+   if (mCalculateModelMatrix)
+   {
+      calculateModelMatrix();
+   }
+
+   return mModelMatrix;
+}
+
 void Line::calculateModelMatrix() const
 {
    // 3) Translate the model

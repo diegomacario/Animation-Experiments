@@ -100,6 +100,25 @@ void GameObject3D::scale(float scalingFactor)
    }
 }
 
+void GameObject3D::setModelMatrix(const Transform& transform)
+{
+   mPosition = transform.position;
+   mRotation = transform.rotation;
+   mScalingFactor = transform.scale.x;
+   mModelMatrix = transformToMat4(transform);
+   mCalculateModelMatrix = false;
+}
+
+glm::mat4 GameObject3D::getModelMatrix()
+{
+   if (mCalculateModelMatrix)
+   {
+      calculateModelMatrix();
+   }
+
+   return mModelMatrix;
+}
+
 void GameObject3D::calculateModelMatrix() const
 {
    // 3) Translate the model

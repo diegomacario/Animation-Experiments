@@ -5,6 +5,7 @@
 
 #include "shader.h"
 #include "quat.h"
+#include "Transform.h"
 
 class Line
 {
@@ -41,6 +42,9 @@ public:
    void      rotateByMultiplyingCurrentRotationFromTheLeft(const Q::quat& rotation);
    void      rotateByMultiplyingCurrentRotationFromTheRight(const Q::quat& rotation);
    void      scale(float scalingFactor);
+
+   void      setModelMatrix(const Transform& transform);
+   glm::mat4 getModelMatrix();
 
 private:
 

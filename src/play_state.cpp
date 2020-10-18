@@ -358,6 +358,72 @@ void PlayState::render()
          mLocalZAxis.setRotation(rot);
       }
 
+      ImGui::Spacing();
+      ImGui::Spacing();
+      ImGui::Spacing();
+
+      if (ImGui::Button("Reset Transform"))
+      {
+         Transform unitTransform;
+
+         mTeapot->setModelMatrix(unitTransform);
+         mLocalXAxis.setModelMatrix(unitTransform);
+         mLocalYAxis.setModelMatrix(unitTransform);
+         mLocalZAxis.setModelMatrix(unitTransform);
+      }
+
+      if (ImGui::Button("Set Initial Transform"))
+      {
+         Transform transform;
+         transform.position = glm::vec3(10.0f, 0.0f, -10.0f);
+         //transform.scale    = glm::vec3(2.5f, 2.5f, 2.5f);
+         transform.scale    = glm::vec3(1.0f);
+         transform.rotation = Q::angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+         mTeapot->setModelMatrix(transform);
+         mLocalXAxis.setModelMatrix(transform);
+         mLocalYAxis.setModelMatrix(transform);
+         mLocalZAxis.setModelMatrix(transform);
+      }
+
+      if (ImGui::Button("Apply parent transform"))
+      {
+         Transform currTransform = mat4ToTransform(mTeapot->getModelMatrix());
+
+         Transform parentTransform;
+         parentTransform.position = glm::vec3(0.0f, 10.0f, 0.0f);
+         //parentTransform.scale    = glm::vec3(1.0f / 2.5f, 1.0f / 2.5f, 1.0f / 2.5f);
+         parentTransform.scale    = glm::vec3(1.0f);
+         //parentTransform.rotation = Q::angleAxis(glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+         parentTransform.rotation = Q::quat();
+
+         Transform result = combine(parentTransform, currTransform);
+
+         mTeapot->setModelMatrix(result);
+         mLocalXAxis.setModelMatrix(result);
+         mLocalYAxis.setModelMatrix(result);
+         mLocalZAxis.setModelMatrix(result);
+      }
+
+      if (ImGui::Button("Apply child transform"))
+      {
+         Transform currTransform = mat4ToTransform(mTeapot->getModelMatrix());
+
+         Transform childTransform;
+         childTransform.position = glm::vec3(0.0f, 10.0f, 0.0f);
+         //childTransform.scale    = glm::vec3(1.0f / 2.5f, 1.0f / 2.5f, 1.0f / 2.5f);
+         childTransform.scale    = glm::vec3(1.0f);
+         //childTransform.rotation = Q::angleAxis(glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+         childTransform.rotation = Q::quat();
+
+         Transform result = combine(currTransform, childTransform);
+
+         mTeapot->setModelMatrix(result);
+         mLocalXAxis.setModelMatrix(result);
+         mLocalYAxis.setModelMatrix(result);
+         mLocalZAxis.setModelMatrix(result);
+      }
+
       ImGui::End();
    }
 
