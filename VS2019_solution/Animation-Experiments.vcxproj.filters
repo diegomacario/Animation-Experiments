@@ -73,6 +73,9 @@
     <ClCompile Include="..\src\quat.cpp">
       <Filter>Animation-Experiments\Source Files\Math</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Transform.cpp">
+      <Filter>Animation-Experiments\Source Files\Math</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -151,6 +154,9 @@
       <Filter>Animation-Experiments\Header Files\Base</Filter>
     </ClInclude>
     <ClInclude Include="..\inc\quat.h">
+      <Filter>Animation-Experiments\Header Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\Transform.h">
       <Filter>Animation-Experiments\Header Files\Math</Filter>
     </ClInclude>
   </ItemGroup>

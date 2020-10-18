@@ -1,6 +1,8 @@
 #ifndef QUAT_H
 #define QUAT_H
 
+#include <glm/glm.hpp>
+
 #define QUAT_EPSILON 0.000001f
 
 namespace Q
@@ -10,10 +12,10 @@ namespace Q
    public:
 
       quat()
-         : x(0)
-         , y(0)
-         , z(0)
-         , w(1)
+         : x(0.0f)
+         , y(0.0f)
+         , z(0.0f)
+         , w(1.0f)
       {
 
       }
@@ -40,7 +42,7 @@ namespace Q
          struct
          {
             glm::vec3 vector;
-            float scalar;
+            float     scalar;
          };
 
          float v[4];

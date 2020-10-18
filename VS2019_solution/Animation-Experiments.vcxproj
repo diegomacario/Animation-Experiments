@@ -44,6 +44,7 @@
     <ClInclude Include="..\inc\state.h" />
     <ClInclude Include="..\inc\texture.h" />
     <ClInclude Include="..\inc\texture_loader.h" />
+    <ClInclude Include="..\inc\Transform.h" />
     <ClInclude Include="..\inc\window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -70,6 +71,7 @@
     <ClCompile Include="..\src\shader_loader.cpp" />
     <ClCompile Include="..\src\texture.cpp" />
     <ClCompile Include="..\src\texture_loader.cpp" />
+    <ClCompile Include="..\src\Transform.cpp" />
     <ClCompile Include="..\src\window.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

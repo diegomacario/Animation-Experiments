@@ -137,6 +137,8 @@ Q::quat Q::operator*(float f, const Q::quat& q)
 // - Multiplying from the left now causes an object to rotate with respect to its local coordinate axes
 // - Multiplying from the right now causes an object to rotate with respect to the world's coordinate axes
 // This means that we can apply children rotations from the left: Qch * Qparent
+// So the signature of this function could also be written like this:
+// Q::quat Q::operator*(const Q::quat& child, const Q::quat& parent)
 Q::quat Q::operator*(const Q::quat& q, const Q::quat& p)
 {
    // The block of operations we return in this function is simply an optimized version of the commented code below,
@@ -165,7 +167,8 @@ glm::vec3 Q::operator*(const Q::quat& q, const glm::vec3& v)
    return glm::vec3(result.x, result.y, result.z);
    */
 
-   // Also note that this assumes that the quaterion q is normalized, unlike the commented code above
+   // Also note that this assumes that the inverse of the quaterion q is its conjugate,
+   // which in other words means that it assumes that the quaternion q is normalized, unlike the commented code above
    return q.vector * 2.0f * glm::dot(q.vector, v) +
           v * (q.scalar * q.scalar - glm::dot(q.vector, q.vector)) +
           glm::cross(q.vector, v) * 2.0f * q.scalar;
@@ -177,6 +180,8 @@ glm::vec3 Q::operator*(const Q::quat& q, const glm::vec3& v)
 // - Multiplying from the left causes an object to rotate with respect to the world's coordinate axes
 // - Multiplying from the right causes an object to rotate with respect to its local coordinate axes
 // This means that children rotations must be applied from the right: Qparent * Qch
+// So the signature of this function could also be written like this:
+// Q::quat Q::operator*(const Q::quat& parent, const Q::quat& child)
 /*
 quat operator*(const quat& q, const quat& p)
 {
@@ -360,6 +365,7 @@ Q::quat Q::slerp(const Q::quat& start, const Q::quat& end, float t)
    // Also notice what happens when t is equal to one
    // (end * start^-1)^1 * start = end * start^-1 * start = end
 
+   // NOTE: Reversed because q * p is implemented as p * q
    return Q::normalized(start * ((Q::inverse(start) * end) ^ t));
 }
 
@@ -383,6 +389,7 @@ Q::quat Q::lookRotation(const glm::vec3& direction, const glm::vec3& upReference
    Q::quat fromRotatedWorldUpToDesiredUp = Q::fromTo(rotatedWorldUp, up);
 
    // Calculate a quaternion that rotates to the desired forward first and then to the desired up
+   // NOTE: Reversed because q * p is implemented as p * q
    Q::quat result = fromWorldFwdToDesiredFwd * fromRotatedWorldUpToDesiredUp;
 
    return Q::normalized(result);
