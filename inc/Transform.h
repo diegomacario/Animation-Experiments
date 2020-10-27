@@ -1,5 +1,5 @@
-#ifndef _H_TRANSFORM_
-#define _H_TRANSFORM_
+#ifndef TRANSFORM_H
+#define TRANSFORM_H
 
 #include "quat.h"
 
@@ -7,25 +7,27 @@
 
 struct Transform
 {
-	Transform()
-		: position(glm::vec3(0.0f))
-		, rotation(Q::quat()) // Identity quaternion (w = 1.0f)
-		, scale(glm::vec3(1.0f))
-	{
+public:
 
-	}
+   Transform()
+      : position(glm::vec3(0.0f))
+      , rotation(Q::quat()) // Identity quaternion (w = 1.0f)
+      , scale(glm::vec3(1.0f))
+   {
 
-	Transform(const glm::vec3& p, const Q::quat& r, const glm::vec3& s)
-		: position(p)
-		, rotation(r)
-		, scale(s)
-	{
+   }
 
-	}
+   Transform(const glm::vec3& p, const Q::quat& r, const glm::vec3& s)
+      : position(p)
+      , rotation(r)
+      , scale(s)
+   {
 
-	glm::vec3 position;
-	Q::quat   rotation;
-	glm::vec3 scale;
+   }
+
+   glm::vec3 position;
+   Q::quat   rotation;
+   glm::vec3 scale;
 };
 
 bool operator==(const Transform& a, const Transform& b);

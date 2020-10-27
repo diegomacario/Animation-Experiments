@@ -76,6 +76,9 @@
     <ClCompile Include="..\src\Transform.cpp">
       <Filter>Animation-Experiments\Source Files\Math</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Track.cpp">
+      <Filter>Animation-Experiments\Source Files\Animation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -159,6 +162,15 @@
     <ClInclude Include="..\inc\Transform.h">
       <Filter>Animation-Experiments\Header Files\Math</Filter>
     </ClInclude>
+    <ClInclude Include="..\inc\Frame.h">
+      <Filter>Animation-Experiments\Header Files\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\Interpolation.h">
+      <Filter>Animation-Experiments\Header Files\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\Track.h">
+      <Filter>Animation-Experiments\Header Files\Animation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Animation-Experiments">
@@ -205,6 +217,12 @@
     </Filter>
     <Filter Include="Animation-Experiments\Source Files\Math">
       <UniqueIdentifier>{5e6627a8-3e2f-4380-bd2b-a691b9fc952f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation-Experiments\Header Files\Animation">
+      <UniqueIdentifier>{2f1c2aab-3dba-4fc6-b593-3db84c628e44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation-Experiments\Source Files\Animation">
+      <UniqueIdentifier>{6970468a-f448-42eb-879d-892784e8da63}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -30,8 +30,10 @@
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h" />
     <ClInclude Include="..\inc\camera.h" />
     <ClInclude Include="..\inc\finite_state_machine.h" />
+    <ClInclude Include="..\inc\Frame.h" />
     <ClInclude Include="..\inc\game.h" />
     <ClInclude Include="..\inc\game_object_3D.h" />
+    <ClInclude Include="..\inc\Interpolation.h" />
     <ClInclude Include="..\inc\line.h" />
     <ClInclude Include="..\inc\mesh.h" />
     <ClInclude Include="..\inc\model.h" />
@@ -44,6 +46,7 @@
     <ClInclude Include="..\inc\state.h" />
     <ClInclude Include="..\inc\texture.h" />
     <ClInclude Include="..\inc\texture_loader.h" />
+    <ClInclude Include="..\inc\Track.h" />
     <ClInclude Include="..\inc\Transform.h" />
     <ClInclude Include="..\inc\window.h" />
   </ItemGroup>
@@ -71,6 +74,7 @@
     <ClCompile Include="..\src\shader_loader.cpp" />
     <ClCompile Include="..\src\texture.cpp" />
     <ClCompile Include="..\src\texture_loader.cpp" />
+    <ClCompile Include="..\src\Track.cpp" />
     <ClCompile Include="..\src\Transform.cpp" />
     <ClCompile Include="..\src\window.cpp" />
   </ItemGroup>
