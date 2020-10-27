@@ -431,34 +431,37 @@ void FastTrack<T, N>::GenerateSampleToFrameIndexMap()
    unsigned int numSamples = 60 + static_cast<unsigned int>(durationOfTrack * 60.0f);
    // Loop over all the samples and store their corresponding frame indices in the map
    mSampleToFrameIndexMap.resize(numSamples);
-   for (unsigned int i = 0; i < numSamples; ++i)
+   for (unsigned int sampleIndex = 0; sampleIndex < numSamples; ++sampleIndex)
    {
       // Calculate the normalized sample
-      float nSample = static_cast<float>(i) / static_cast<float>(numSamples - 1);
+      float nSample = static_cast<float>(sampleIndex) / static_cast<float>(numSamples - 1);
 
       // Calculate the time of the sample
       float sampleTime = nSample * durationOfTrack + this->GetStartTime();
 
       // Loop backwards over the array of frames until we find the first one that comes
       // before the time of the sample
-      unsigned int frameIndex = 0;
-      for (int j = numFrames - 1; j >= 0; --j)
+      // TODO: This can be optimized further
+      //       If we remember the indexOfFirstFrameBeforeSample of the previous iteration,
+      //       we can start the next iteration there, since the time of each sample only increases
+      unsigned int indexOfFirstFrameBeforeSample = 0;
+      for (int frameIndex = numFrames - 1; frameIndex >= 0; --frameIndex)
       {
-         if (sampleTime >= this->mFrames[j].mTime)
+         if (sampleTime >= this->mFrames[frameIndex].mTime)
          {
-            frameIndex = static_cast<unsigned int>(j);
+            indexOfFirstFrameBeforeSample = static_cast<unsigned int>(frameIndex);
 
             // If the first frame that comes before the time of the sample is the last frame,
             // store the index of the second to last frame instead
-            if (static_cast<int>(frameIndex) >= numFrames - 2)
+            if (static_cast<int>(indexOfFirstFrameBeforeSample) >= numFrames - 2)
             {
-               frameIndex = numFrames - 2;
+               indexOfFirstFrameBeforeSample = numFrames - 2;
             }
             break;
          }
       }
 
-      mSampleToFrameIndexMap[i] = frameIndex;
+      mSampleToFrameIndexMap[sampleIndex] = indexOfFirstFrameBeforeSample;
    }
 }
 

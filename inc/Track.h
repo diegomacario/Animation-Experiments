@@ -68,6 +68,7 @@ typedef Track<Q::quat, 4>   QuaternionTrack;
 //   load-time to find the right frame
 // The only drawback of this technique is the additional memory used by the map of samples to frame indices
 
+// TODO: We can probably unify the Track and FastTrack classes, which would allow us to delete the OptimizeTrack function
 template<typename T, unsigned int N>
 class FastTrack : public Track<T, N>
 {

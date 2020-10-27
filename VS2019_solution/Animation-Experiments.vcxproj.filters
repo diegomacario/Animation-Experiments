@@ -79,6 +79,9 @@
     <ClCompile Include="..\src\Track.cpp">
       <Filter>Animation-Experiments\Source Files\Animation</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TransformTrack.cpp">
+      <Filter>Animation-Experiments\Source Files\Animation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -169,6 +172,9 @@
       <Filter>Animation-Experiments\Header Files\Animation</Filter>
     </ClInclude>
     <ClInclude Include="..\inc\Track.h">
+      <Filter>Animation-Experiments\Header Files\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\TransformTrack.h">
       <Filter>Animation-Experiments\Header Files\Animation</Filter>
     </ClInclude>
   </ItemGroup>
