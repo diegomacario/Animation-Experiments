@@ -17,24 +17,24 @@ Pose& Pose::operator=(const Pose& rhs)
       return *this;
    }
 
-   if (mJoints.size() != rhs.mJoints.size())
+   if (mJointLocalTransforms.size() != rhs.mJointLocalTransforms.size())
    {
-      mJoints.resize(rhs.mJoints.size());
+      mJointLocalTransforms.resize(rhs.mJointLocalTransforms.size());
    }
 
-   if (mParents.size() != rhs.mParents.size())
+   if (mParentIndices.size() != rhs.mParentIndices.size())
    {
-      mParents.resize(rhs.mParents.size());
+      mParentIndices.resize(rhs.mParentIndices.size());
    }
 
-   if (mJoints.size() != 0)
+   if (mJointLocalTransforms.size() != 0)
    {
-      memcpy(&mJoints[0], &rhs.mJoints[0], sizeof(Transform) * mJoints.size());
+      memcpy(&mJointLocalTransforms[0], &rhs.mJointLocalTransforms[0], sizeof(Transform) * mJointLocalTransforms.size());
    }
 
-   if (mParents.size() != 0)
+   if (mParentIndices.size() != 0)
    {
-      memcpy(&mParents[0], &rhs.mParents[0], sizeof(int) * mParents.size());
+      memcpy(&mParentIndices[0], &rhs.mParentIndices[0], sizeof(int) * mParentIndices.size());
    }
 
    return *this;
@@ -42,25 +42,25 @@ Pose& Pose::operator=(const Pose& rhs)
 
 bool Pose::operator==(const Pose& rhs)
 {
-   if (mJoints.size() != rhs.mJoints.size())
+   if (mJointLocalTransforms.size() != rhs.mJointLocalTransforms.size())
    {
       return false;
    }
 
-   if (mParents.size() != rhs.mParents.size())
+   if (mParentIndices.size() != rhs.mParentIndices.size())
    {
       return false;
    }
 
-   unsigned int numJoints = static_cast<unsigned int>(mJoints.size());
+   unsigned int numJoints = static_cast<unsigned int>(mJointLocalTransforms.size());
    for (unsigned int jointIndex = 0; jointIndex < numJoints; ++jointIndex)
    {
-      if (mParents[jointIndex] != rhs.mParents[jointIndex])
+      if (mParentIndices[jointIndex] != rhs.mParentIndices[jointIndex])
       {
          return false;
       }
 
-      if (mJoints[jointIndex] != rhs.mJoints[jointIndex])
+      if (mJointLocalTransforms[jointIndex] != rhs.mJointLocalTransforms[jointIndex])
       {
          return false;
       }
@@ -81,23 +81,23 @@ Transform Pose::operator[](unsigned int jointIndex)
 
 unsigned int Pose::GetNumberOfJoints()
 {
-   return static_cast<unsigned int>(mJoints.size());
+   return static_cast<unsigned int>(mJointLocalTransforms.size());
 }
 
 void Pose::SetNumberOfJoints(unsigned int numJoints)
 {
-   mJoints.resize(numJoints);
-   mParents.resize(numJoints);
+   mJointLocalTransforms.resize(numJoints);
+   mParentIndices.resize(numJoints);
 }
 
 Transform Pose::GetLocalTransform(unsigned int jointIndex)
 {
-   return mJoints[jointIndex];
+   return mJointLocalTransforms[jointIndex];
 }
 
 void Pose::SetLocalTransform(unsigned int jointIndex, const Transform& transform)
 {
-   mJoints[jointIndex] = transform;
+   mJointLocalTransforms[jointIndex] = transform;
 }
 
 Transform Pose::GetGlobalTransform(unsigned int jointIndex)
@@ -127,13 +127,13 @@ Transform Pose::GetGlobalTransform(unsigned int jointIndex)
    */
 
    // Start with the local transform of the desired joint
-   Transform result = mJoints[jointIndex];
+   Transform result = mJointLocalTransforms[jointIndex];
 
    // Iterate over the parents of the desired joint, combining their local transforms one by one
-   for (int parentIndex = mParents[jointIndex]; parentIndex >= 0; parentIndex = mParents[parentIndex])
+   for (int parentIndex = mParentIndices[jointIndex]; parentIndex >= 0; parentIndex = mParentIndices[parentIndex])
    {
       // Remember that the Transform::combine function takes the parent first and then the child
-      result = combine(mJoints[parentIndex], result);
+      result = combine(mJointLocalTransforms[parentIndex], result);
    }
 
    return result;
@@ -213,31 +213,31 @@ void Pose::GetMatrixPalette(std::vector<glm::mat4>& palette)
    for (; jointIndex < numJoints; ++jointIndex)
    {
       // Get the index of the current joint's parent
-      int parent = mParents[jointIndex];
+      int parentIndex = mParentIndices[jointIndex];
 
       // Remember that for the optimization described above to work, the parent joints must have a lower index than their child joints in the array of joints
       // In other words, the parent joints must come first in the array of joints and their children must come after them
       // If the index of the current joint's parent is greater than the index of the current joint, then that means that the parent comes after the child in the array
       // If this is the case, then the joints haven't been reorganized as needed to use the optimized method to generate the matrix palette,
       // so we fall back on the inefficient method
-      if (parent > jointIndex)
+      if (parentIndex > jointIndex)
       {
          break;
       }
 
       glm::mat4 globalTransform;
-      if (parent >= 0)
+      if (parentIndex >= 0)
       {
          // If the current joint is not a root joint, then combine the global transform of its parent with its local transform
          // Note that since the parent joints come first in the reorganized array of joints, we process the parent joints first,
          // so palette[parent] is guaranteed to contain the global transform of the parent
          // This is what powers the optimization - reusing previous calculations
-         globalTransform = palette[parent] * transformToMat4(mJoints[jointIndex]);
+         globalTransform = palette[parentIndex] * transformToMat4(mJointLocalTransforms[jointIndex]);
       }
       else
       {
          // If the current joint is a root joint, then its global transform is equal to its local transform
-         globalTransform = transformToMat4(mJoints[jointIndex]);
+         globalTransform = transformToMat4(mJointLocalTransforms[jointIndex]);
       }
 
       // Store the global transform of the current joint
@@ -255,10 +255,10 @@ void Pose::GetMatrixPalette(std::vector<glm::mat4>& palette)
 
 int Pose::GetParent(unsigned int jointIndex)
 {
-   return mParents[jointIndex];
+   return mParentIndices[jointIndex];
 }
 
 void Pose::SetParent(unsigned int jointIndex, int parentIndex)
 {
-   mParents[jointIndex] = parentIndex;
+   mParentIndices[jointIndex] = parentIndex;
 }

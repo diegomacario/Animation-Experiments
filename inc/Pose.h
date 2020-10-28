@@ -5,7 +5,7 @@
 #include "Transform.h"
 
 /*
-   A Pose stores a collection of joints, which are represented as transforms,
+   A Pose stores a collection of joints, which are represented as local transforms,
    and a parallel list of their parents, as illustrated below:
 
       0 (root)
@@ -17,7 +17,7 @@
       2
 
               +----+----+----+
-     Node IDs |  0 |  1 |  2 |
+    Joint IDs |  0 |  1 |  2 |
               +----+----+----+
    Parent IDs | -1 |  0 |  1 |
               +----+----+----+
@@ -51,8 +51,8 @@ public:
 
 protected:
 
-   std::vector<Transform> mJoints;
-   std::vector<int>       mParents;
+   std::vector<Transform> mJointLocalTransforms;
+   std::vector<int>       mParentIndices;
 };
 
 #endif
