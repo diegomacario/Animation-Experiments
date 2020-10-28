@@ -39,6 +39,7 @@
     <ClInclude Include="..\inc\model.h" />
     <ClInclude Include="..\inc\model_loader.h" />
     <ClInclude Include="..\inc\play_state.h" />
+    <ClInclude Include="..\inc\Pose.h" />
     <ClInclude Include="..\inc\quat.h" />
     <ClInclude Include="..\inc\resource_manager.h" />
     <ClInclude Include="..\inc\shader.h" />
@@ -70,6 +71,7 @@
     <ClCompile Include="..\src\model.cpp" />
     <ClCompile Include="..\src\model_loader.cpp" />
     <ClCompile Include="..\src\play_state.cpp" />
+    <ClCompile Include="..\src\Pose.cpp" />
     <ClCompile Include="..\src\quat.cpp" />
     <ClCompile Include="..\src\shader.cpp" />
     <ClCompile Include="..\src\shader_loader.cpp" />

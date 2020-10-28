@@ -30,8 +30,9 @@ public:
    glm::vec3 scale;
 };
 
-bool operator==(const Transform& a, const Transform& b);
-bool operator!=(const Transform& a, const Transform& b);
+// TODO: Update all operators in this project to use rhs/lhs notation
+bool      operator==(const Transform& a, const Transform& b);
+bool      operator!=(const Transform& a, const Transform& b);
 
 Transform combine(const Transform& parent, const Transform& child);
 

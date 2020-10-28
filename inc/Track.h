@@ -28,6 +28,7 @@ public:
 
    T             Sample(float time, bool looping);
 
+   // TODO: Replace this operator with a GetFrame function
    Frame<N>&     operator[](unsigned int index);
 
 protected:
