@@ -33,8 +33,9 @@ namespace TrackHelpers
 
 template<typename T, unsigned int N>
 Track<T, N>::Track()
+   : mInterpolation(Interpolation::Linear)
 {
-   mInterpolation = Interpolation::Linear;
+
 }
 
 template<typename T, unsigned int N>
@@ -134,6 +135,7 @@ int Track<T, N>::GetIndexOfLastFrameBeforeTime(float time, bool looping)
       {
          return 0;
       }
+
       if (time >= mFrames[numFrames - 2].mTime)
       {
          return static_cast<int>(numFrames - 2);
@@ -194,6 +196,7 @@ float Track<T, N>::AdjustTimeToBeWithinTrack(float time, bool looping)
       {
          time = startTime;
       }
+
       if (time >= mFrames[numFrames - 1].mTime)
       {
          time = endTime;
@@ -385,6 +388,7 @@ int FastTrack<T, N>::GetIndexOfLastFrameBeforeTime(float time, bool looping)
       {
          return 0;
       }
+
       if (time >= this->mFrames[numFrames - 2].mTime)
       {
          return static_cast<int>(numFrames - 2);

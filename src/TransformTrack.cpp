@@ -5,20 +5,21 @@ template TTransformTrack<FastVectorTrack, FastQuaternionTrack>;
 
 template <typename VTRACK, typename QTRACK>
 TTransformTrack<VTRACK, QTRACK>::TTransformTrack()
+   : mJointID(0)
 {
-   mID = 0;
+
 }
 
 template <typename VTRACK, typename QTRACK>
-unsigned int TTransformTrack<VTRACK, QTRACK>::GetID()
+unsigned int TTransformTrack<VTRACK, QTRACK>::GetJointID()
 {
-   return mID;
+   return mJointID;
 }
 
 template <typename VTRACK, typename QTRACK>
-void TTransformTrack<VTRACK, QTRACK>::SetID(unsigned int id)
+void TTransformTrack<VTRACK, QTRACK>::SetJointID(unsigned int id)
 {
-   mID = id;
+   mJointID = id;
 }
 
 template <typename VTRACK, typename QTRACK>
@@ -53,31 +54,31 @@ float TTransformTrack<VTRACK, QTRACK>::GetStartTime()
    // Find the earliest start time out of the position, rotation and scale tracks
 
    float startTime = 0.0f;
-   bool  foundValidValue = false;
+   bool  initialStartTimeFound = false;
 
    if (mPosition.GetNumberOfFrames() > 1)
    {
       startTime = mPosition.GetStartTime();
-      foundValidValue = true;
+      initialStartTimeFound = true;
    }
 
    if (mRotation.GetNumberOfFrames() > 1)
    {
       float rotStartTime = mRotation.GetStartTime();
-      if (rotStartTime < startTime || !foundValidValue)
+      if (rotStartTime < startTime || !initialStartTimeFound)
       {
          startTime = rotStartTime;
-         foundValidValue = true;
+         initialStartTimeFound = true;
       }
    }
 
    if (mScale.GetNumberOfFrames() > 1)
    {
       float scaleStartTime = mScale.GetStartTime();
-      if (scaleStartTime < startTime || !foundValidValue)
+      if (scaleStartTime < startTime || !initialStartTimeFound)
       {
          startTime = scaleStartTime;
-         foundValidValue = true;
+         initialStartTimeFound = true;
       }
    }
 
@@ -90,31 +91,31 @@ float TTransformTrack<VTRACK, QTRACK>::GetEndTime()
    // Find the latest end time out of the position, rotation and scale tracks
 
    float endTime = 0.0f;
-   bool  foundValidValue = false;
+   bool  initialEndTimeFound = false;
 
    if (mPosition.GetNumberOfFrames() > 1)
    {
       endTime = mPosition.GetEndTime();
-      foundValidValue = true;
+      initialEndTimeFound = true;
    }
 
    if (mRotation.GetNumberOfFrames() > 1)
    {
       float rotEndTime = mRotation.GetEndTime();
-      if (rotEndTime > endTime || !foundValidValue)
+      if (rotEndTime > endTime || !initialEndTimeFound)
       {
          endTime = rotEndTime;
-         foundValidValue = true;
+         initialEndTimeFound = true;
       }
    }
 
    if (mScale.GetNumberOfFrames() > 1)
    {
       float scaleEndTime = mScale.GetEndTime();
-      if (scaleEndTime > endTime || !foundValidValue)
+      if (scaleEndTime > endTime || !initialEndTimeFound)
       {
          endTime = scaleEndTime;
-         foundValidValue = true;
+         initialEndTimeFound = true;
       }
    }
 
@@ -151,7 +152,7 @@ FastTransformTrack OptimizeTransformTrack(TransformTrack& transformTrack)
 {
    FastTransformTrack result;
 
-   result.SetID(transformTrack.GetID());
+   result.SetJointID(transformTrack.GetJointID());
 
    result.GetPositionTrack() = OptimizeTrack<glm::vec3, 3>(transformTrack.GetPositionTrack());
    result.GetRotationTrack() = OptimizeTrack<Q::quat, 4>(transformTrack.GetRotationTrack());

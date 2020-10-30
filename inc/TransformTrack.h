@@ -13,8 +13,8 @@ public:
 
    TTransformTrack();
 
-   unsigned int GetID();
-   void         SetID(unsigned int id);
+   unsigned int GetJointID();
+   void         SetJointID(unsigned int id);
 
    VTRACK&      GetPositionTrack();
    QTRACK&      GetRotationTrack();
@@ -29,7 +29,9 @@ public:
 
 protected:
 
-   unsigned int mID;
+   // Each TransformTrack stores the ID of the joint it animates
+   unsigned int mJointID;
+
    VTRACK       mPosition;
    QTRACK       mRotation;
    VTRACK       mScale;
