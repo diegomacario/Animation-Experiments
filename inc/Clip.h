@@ -15,30 +15,30 @@ public:
 
    TClip();
 
-   // TODO: Replace this operator with a GetTransformTrackOfJoint method
-   TRACK&       operator[](unsigned int jointID);
+   unsigned int GetNumberOfTransformTracks() const;
 
-   unsigned int GetNumberOfTransformTracks();
-
-   unsigned int GetJointIDOfTransformTrack(unsigned int transfTrackIndex);
+   unsigned int GetJointIDOfTransformTrack(unsigned int transfTrackIndex) const;
    void         SetJointIDOfTransformTrack(unsigned int transfTrackIndex, unsigned int jointID);
 
-   std::string& GetName();
+   const TRACK& GetTransformTrackOfJoint(unsigned int jointID);
+   void         SetTransformTrackOfJoint(unsigned int jointID, const TRACK& transfTrack);
+
+   std::string  GetName() const;
    void         SetName(const std::string& name);
 
-   float        GetStartTime();
-   float        GetEndTime();
-   float        GetDuration();
+   float        GetStartTime() const;
+   float        GetEndTime() const;
+   float        GetDuration() const;
    void         RecalculateDuration();
 
-   bool         GetLooping();
+   bool         GetLooping() const;
    void         SetLooping(bool looping);
 
-   float        Sample(Pose& ioPose, float time);
+   float        Sample(Pose& ioPose, float time) const;
 
 protected:
 
-   float        AdjustTimeToBeWithinClip(float time);
+   float        AdjustTimeToBeWithinClip(float time) const;
 
    std::vector<TRACK> mTransformTracks;
    std::string        mName;

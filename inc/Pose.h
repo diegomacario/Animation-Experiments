@@ -34,19 +34,17 @@ public:
 
    bool         operator==(const Pose& rhs);
    bool         operator!=(const Pose& rhs);
-   // TODO: Remove this operator. Call GetGlobalTransform directly instead
-   Transform    operator[](unsigned int jointIndex);
 
-   unsigned int GetNumberOfJoints();
+   unsigned int GetNumberOfJoints() const;
    void         SetNumberOfJoints(unsigned int numJoints);
 
-   Transform    GetLocalTransform(unsigned int jointIndex);
+   Transform    GetLocalTransform(unsigned int jointIndex) const;
    void         SetLocalTransform(unsigned int jointIndex, const Transform& transform);
-   Transform    GetGlobalTransform(unsigned int jointIndex);
+   Transform    GetGlobalTransform(unsigned int jointIndex) const;
 
-   void         GetMatrixPalette(std::vector<glm::mat4>& palette);
+   void         GetMatrixPalette(std::vector<glm::mat4>& palette) const;
 
-   int          GetParent(unsigned int jointIndex);
+   int          GetParent(unsigned int jointIndex) const;
    void         SetParent(unsigned int jointIndex, int parentIndex);
 
 protected:

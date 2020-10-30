@@ -17,33 +17,33 @@ public:
    Track();
    virtual ~Track() = default;
 
-   unsigned int  GetNumberOfFrames();
-   void          SetNumberOfFrames(unsigned int numFrames);
+   const Frame<N>& GetFrame(unsigned int frameIndex) const;
+   void            SetFrame(unsigned int frameIndex, const Frame<N>& frame);
 
-   Interpolation GetInterpolation();
-   void          SetInterpolation(Interpolation interpolation);
+   unsigned int    GetNumberOfFrames() const;
+   void            SetNumberOfFrames(unsigned int numFrames);
 
-   float         GetStartTime();
-   float         GetEndTime();
+   Interpolation   GetInterpolation() const;
+   void            SetInterpolation(Interpolation interpolation);
 
-   T             Sample(float time, bool looping);
+   float           GetStartTime() const;
+   float           GetEndTime() const;
 
-   // TODO: Replace this operator with a GetFrame method
-   Frame<N>&     operator[](unsigned int index);
+   T               Sample(float time, bool looping) const;
 
 protected:
 
-   virtual int   GetIndexOfLastFrameBeforeTime(float time, bool looping);
-   float         AdjustTimeToBeWithinTrack(float time, bool looping);
+   virtual int     GetIndexOfLastFrameBeforeTime(float time, bool looping) const;
+   float           AdjustTimeToBeWithinTrack(float time, bool looping) const;
 
-   T             InterpolateUsingCubicHermiteSpline(float t, const T& p1, const T& outTangentOfP1, const T& p2, const T& inTangentOfP2);
+   T               InterpolateUsingCubicHermiteSpline(float t, const T& p1, const T& outTangentOfP1, const T& p2, const T& inTangentOfP2) const;
 
    // TODO: Is there a cleaner way of doing this?
-   T             Cast(float* value);
+   T               Cast(const float* value) const;
 
-   T             SampleConstant(float time, bool looping);
-   T             SampleLinear(float time, bool looping);
-   T             SampleCubic(float time, bool looping);
+   T               SampleConstant(float time, bool looping) const;
+   T               SampleLinear(float time, bool looping) const;
+   T               SampleCubic(float time, bool looping) const;
 
    std::vector<Frame<N>> mFrames;
    Interpolation         mInterpolation;
@@ -82,7 +82,7 @@ public:
 
 protected:
 
-   virtual int GetIndexOfLastFrameBeforeTime(float time, bool looping) override;
+   virtual int GetIndexOfLastFrameBeforeTime(float time, bool looping) const override;
 
    std::vector<unsigned int> mSampleToFrameIndexMap;
 };
@@ -92,6 +92,6 @@ typedef FastTrack<glm::vec3, 3> FastVectorTrack;
 typedef FastTrack<Q::quat, 4>   FastQuaternionTrack;
 
 template<typename T, unsigned int N>
-FastTrack<T, N> OptimizeTrack(Track<T, N>& track);
+FastTrack<T, N> OptimizeTrack(const Track<T, N>& track);
 
 #endif

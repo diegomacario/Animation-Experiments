@@ -74,12 +74,7 @@ bool Pose::operator!=(const Pose& rhs)
    return !(*this == rhs);
 }
 
-Transform Pose::operator[](unsigned int jointIndex)
-{
-   return GetGlobalTransform(jointIndex);
-}
-
-unsigned int Pose::GetNumberOfJoints()
+unsigned int Pose::GetNumberOfJoints() const
 {
    return static_cast<unsigned int>(mJointLocalTransforms.size());
 }
@@ -90,7 +85,7 @@ void Pose::SetNumberOfJoints(unsigned int numJoints)
    mParentIndices.resize(numJoints);
 }
 
-Transform Pose::GetLocalTransform(unsigned int jointIndex)
+Transform Pose::GetLocalTransform(unsigned int jointIndex) const
 {
    return mJointLocalTransforms[jointIndex];
 }
@@ -100,7 +95,7 @@ void Pose::SetLocalTransform(unsigned int jointIndex, const Transform& transform
    mJointLocalTransforms[jointIndex] = transform;
 }
 
-Transform Pose::GetGlobalTransform(unsigned int jointIndex)
+Transform Pose::GetGlobalTransform(unsigned int jointIndex) const
 {
    /*
       To calculate the global transform of a joint, we iterate over the parents of that joint, combining their local transforms one by one
@@ -139,7 +134,7 @@ Transform Pose::GetGlobalTransform(unsigned int jointIndex)
    return result;
 }
 
-void Pose::GetMatrixPalette(std::vector<glm::mat4>& palette)
+void Pose::GetMatrixPalette(std::vector<glm::mat4>& palette) const
 {
    /*
       A matrix palette is a list of all the global transforms of a pose
@@ -253,7 +248,7 @@ void Pose::GetMatrixPalette(std::vector<glm::mat4>& palette)
    }
 }
 
-int Pose::GetParent(unsigned int jointIndex)
+int Pose::GetParent(unsigned int jointIndex) const
 {
    return mParentIndices[jointIndex];
 }

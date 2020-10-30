@@ -39,7 +39,19 @@ Track<T, N>::Track()
 }
 
 template<typename T, unsigned int N>
-unsigned int Track<T, N>::GetNumberOfFrames()
+const Frame<N>& Track<T, N>::GetFrame(unsigned int frameIndex) const
+{
+   return mFrames[frameIndex];
+}
+
+template<typename T, unsigned int N>
+void Track<T, N>::SetFrame(unsigned int frameIndex, const Frame<N>& frame)
+{
+   mFrames[frameIndex] = frame;
+}
+
+template<typename T, unsigned int N>
+unsigned int Track<T, N>::GetNumberOfFrames() const
 {
    return static_cast<unsigned int>(mFrames.size());
 }
@@ -51,7 +63,7 @@ void Track<T, N>::SetNumberOfFrames(unsigned int numFrames)
 }
 
 template<typename T, unsigned int N>
-Interpolation Track<T, N>::GetInterpolation()
+Interpolation Track<T, N>::GetInterpolation() const
 {
    return mInterpolation;
 }
@@ -63,19 +75,19 @@ void Track<T, N>::SetInterpolation(Interpolation interpolation)
 }
 
 template<typename T, unsigned int N>
-float Track<T, N>::GetStartTime()
+float Track<T, N>::GetStartTime() const
 {
    return mFrames[0].mTime;
 }
 
 template<typename T, unsigned int N>
-float Track<T, N>::GetEndTime()
+float Track<T, N>::GetEndTime() const
 {
    return mFrames[mFrames.size() - 1].mTime;
 }
 
 template<typename T, unsigned int N>
-T Track<T, N>::Sample(float time, bool looping)
+T Track<T, N>::Sample(float time, bool looping) const
 {
    if (mInterpolation == Interpolation::Constant)
    {
@@ -92,13 +104,7 @@ T Track<T, N>::Sample(float time, bool looping)
 }
 
 template<typename T, unsigned int N>
-Frame<N>& Track<T, N>::operator[](unsigned int index)
-{
-   return mFrames[index];
-}
-
-template<typename T, unsigned int N>
-int Track<T, N>::GetIndexOfLastFrameBeforeTime(float time, bool looping)
+int Track<T, N>::GetIndexOfLastFrameBeforeTime(float time, bool looping) const
 {
    unsigned int numFrames = static_cast<unsigned int>(mFrames.size());
    if (numFrames <= 1)
@@ -157,7 +163,7 @@ int Track<T, N>::GetIndexOfLastFrameBeforeTime(float time, bool looping)
 }
 
 template<typename T, unsigned int N>
-float Track<T, N>::AdjustTimeToBeWithinTrack(float time, bool looping)
+float Track<T, N>::AdjustTimeToBeWithinTrack(float time, bool looping) const
 {
    unsigned int numFrames = static_cast<unsigned int>(mFrames.size());
    if (numFrames <= 1)
@@ -207,7 +213,7 @@ float Track<T, N>::AdjustTimeToBeWithinTrack(float time, bool looping)
 }
 
 template<typename T, unsigned int N>
-T Track<T, N>::InterpolateUsingCubicHermiteSpline(float t, const T& p1, const T& outTangentOfP1, const T& p2, const T& inTangentOfP2)
+T Track<T, N>::InterpolateUsingCubicHermiteSpline(float t, const T& p1, const T& outTangentOfP1, const T& p2, const T& inTangentOfP2) const
 {
    // A cubic Hermite spline is defined using two points and two tangents:
    // - Start point p1 and its output tangent
@@ -237,19 +243,19 @@ T Track<T, N>::InterpolateUsingCubicHermiteSpline(float t, const T& p1, const T&
 }
 
 template<>
-float Track<float, 1>::Cast(float* value)
+float Track<float, 1>::Cast(const float* value) const
 {
    return value[0];
 }
 
 template<>
-glm::vec3 Track<glm::vec3, 3>::Cast(float* value)
+glm::vec3 Track<glm::vec3, 3>::Cast(const float* value) const
 {
    return glm::vec3(value[0], value[1], value[2]);
 }
 
 template<>
-Q::quat Track<Q::quat, 4>::Cast(float* value)
+Q::quat Track<Q::quat, 4>::Cast(const float* value) const
 {
    // Note that this explicit specialization of the Cast function for quaternions normalizes them
    Q::quat r = Q::quat(value[0], value[1], value[2], value[3]);
@@ -257,7 +263,7 @@ Q::quat Track<Q::quat, 4>::Cast(float* value)
 }
 
 template<typename T, unsigned int N>
-T Track<T, N>::SampleConstant(float time, bool looping)
+T Track<T, N>::SampleConstant(float time, bool looping) const
 {
    int frame = GetIndexOfLastFrameBeforeTime(time, looping);
    if (frame < 0 || frame >= static_cast<int>(mFrames.size()))
@@ -272,7 +278,7 @@ T Track<T, N>::SampleConstant(float time, bool looping)
 }
 
 template<typename T, unsigned int N>
-T Track<T, N>::SampleLinear(float time, bool looping)
+T Track<T, N>::SampleLinear(float time, bool looping) const
 {
    int thisFrame = GetIndexOfLastFrameBeforeTime(time, looping);
    if (thisFrame < 0 || thisFrame >= static_cast<int>(mFrames.size() - 1))
@@ -304,7 +310,7 @@ T Track<T, N>::SampleLinear(float time, bool looping)
 }
 
 template<typename T, unsigned int N>
-T Track<T, N>::SampleCubic(float time, bool looping)
+T Track<T, N>::SampleCubic(float time, bool looping) const
 {
    int thisFrame = GetIndexOfLastFrameBeforeTime(time, looping);
    if (thisFrame < 0 || thisFrame >= static_cast<int>(mFrames.size() - 1))
@@ -351,7 +357,7 @@ T Track<T, N>::SampleCubic(float time, bool looping)
 // FastTrack
 
 template<typename T, unsigned int N>
-int FastTrack<T, N>::GetIndexOfLastFrameBeforeTime(float time, bool looping)
+int FastTrack<T, N>::GetIndexOfLastFrameBeforeTime(float time, bool looping) const
 {
    unsigned int numFrames = static_cast<unsigned int>(this->mFrames.size());
    if (numFrames <= 1)
@@ -470,12 +476,12 @@ void FastTrack<T, N>::GenerateSampleToFrameIndexMap()
 }
 
 // Instantiate the desired OptimizeTrack functions from the OptimizeTrack function template
-template FastTrack<float, 1>     OptimizeTrack(Track<float, 1>& input);
-template FastTrack<glm::vec3, 3> OptimizeTrack(Track<glm::vec3, 3>& input);
-template FastTrack<Q::quat, 4>   OptimizeTrack(Track<Q::quat, 4>& input);
+template FastTrack<float, 1>     OptimizeTrack(const Track<float, 1>& input);
+template FastTrack<glm::vec3, 3> OptimizeTrack(const Track<glm::vec3, 3>& input);
+template FastTrack<Q::quat, 4>   OptimizeTrack(const Track<Q::quat, 4>& input);
 
 template<typename T, unsigned int N>
-FastTrack<T, N> OptimizeTrack(Track<T, N>& track)
+FastTrack<T, N> OptimizeTrack(const Track<T, N>& track)
 {
    FastTrack<T, N> result;
 
@@ -485,9 +491,9 @@ FastTrack<T, N> OptimizeTrack(Track<T, N>& track)
    // Copy the frames
    unsigned int numFrames = track.GetNumberOfFrames();
    result.SetNumberOfFrames(numFrames);
-   for (unsigned int i = 0; i < numFrames; ++i)
+   for (unsigned int frameIndex = 0; frameIndex < numFrames; ++frameIndex)
    {
-      result[i] = track[i];
+      result.SetFrame(frameIndex, track.GetFrame(frameIndex));
    }
 
    // Generate the map

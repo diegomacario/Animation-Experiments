@@ -13,19 +13,24 @@ public:
 
    TTransformTrack();
 
-   unsigned int GetJointID();
-   void         SetJointID(unsigned int id);
+   unsigned int  GetJointID() const;
+   void          SetJointID(unsigned int id);
 
-   VTRACK&      GetPositionTrack();
-   QTRACK&      GetRotationTrack();
-   VTRACK&      GetScaleTrack();
+   const VTRACK& GetPositionTrack() const;
+   void          SetPositionTrack(const VTRACK& positionTrack);
 
-   float        GetStartTime();
-   float        GetEndTime();
+   const QTRACK& GetRotationTrack() const;
+   void          SetRotationTrack(const QTRACK& rotationTrack);
 
-   bool         IsValid();
+   const VTRACK& GetScaleTrack() const;
+   void          SetScaleTrack(const VTRACK& scaleTrack);
 
-   Transform    Sample(const Transform& defaultTransform, float time, bool looping);
+   float         GetStartTime() const;
+   float         GetEndTime() const;
+
+   bool          IsValid() const;
+
+   Transform     Sample(const Transform& defaultTransform, float time, bool looping) const;
 
 protected:
 
@@ -40,6 +45,6 @@ protected:
 typedef TTransformTrack<VectorTrack, QuaternionTrack>         TransformTrack;
 typedef TTransformTrack<FastVectorTrack, FastQuaternionTrack> FastTransformTrack;
 
-FastTransformTrack OptimizeTransformTrack(TransformTrack& transformTrack);
+FastTransformTrack OptimizeTransformTrack(const TransformTrack& transformTrack);
 
 #endif

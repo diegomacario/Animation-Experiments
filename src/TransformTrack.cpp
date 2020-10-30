@@ -11,7 +11,7 @@ TTransformTrack<VTRACK, QTRACK>::TTransformTrack()
 }
 
 template <typename VTRACK, typename QTRACK>
-unsigned int TTransformTrack<VTRACK, QTRACK>::GetJointID()
+unsigned int TTransformTrack<VTRACK, QTRACK>::GetJointID() const
 {
    return mJointID;
 }
@@ -23,25 +23,43 @@ void TTransformTrack<VTRACK, QTRACK>::SetJointID(unsigned int id)
 }
 
 template <typename VTRACK, typename QTRACK>
-VTRACK& TTransformTrack<VTRACK, QTRACK>::GetPositionTrack()
+const VTRACK& TTransformTrack<VTRACK, QTRACK>::GetPositionTrack() const
 {
    return mPosition;
 }
 
 template <typename VTRACK, typename QTRACK>
-QTRACK& TTransformTrack<VTRACK, QTRACK>::GetRotationTrack()
+void TTransformTrack<VTRACK, QTRACK>::SetPositionTrack(const VTRACK& positionTrack)
+{
+   mPosition = positionTrack;
+}
+
+template <typename VTRACK, typename QTRACK>
+const QTRACK& TTransformTrack<VTRACK, QTRACK>::GetRotationTrack() const
 {
    return mRotation;
 }
 
 template <typename VTRACK, typename QTRACK>
-VTRACK& TTransformTrack<VTRACK, QTRACK>::GetScaleTrack()
+void TTransformTrack<VTRACK, QTRACK>::SetRotationTrack(const QTRACK& rotationTrack)
+{
+   mRotation = rotationTrack;
+}
+
+template <typename VTRACK, typename QTRACK>
+const VTRACK& TTransformTrack<VTRACK, QTRACK>::GetScaleTrack() const
 {
    return mScale;
 }
 
 template <typename VTRACK, typename QTRACK>
-bool TTransformTrack<VTRACK, QTRACK>::IsValid()
+void TTransformTrack<VTRACK, QTRACK>::SetScaleTrack(const VTRACK& scaleTrack)
+{
+   mScale = scaleTrack;
+}
+
+template <typename VTRACK, typename QTRACK>
+bool TTransformTrack<VTRACK, QTRACK>::IsValid() const
 {
    return (mPosition.GetNumberOfFrames() > 1 ||
            mRotation.GetNumberOfFrames() > 1 ||
@@ -49,7 +67,7 @@ bool TTransformTrack<VTRACK, QTRACK>::IsValid()
 }
 
 template <typename VTRACK, typename QTRACK>
-float TTransformTrack<VTRACK, QTRACK>::GetStartTime()
+float TTransformTrack<VTRACK, QTRACK>::GetStartTime() const
 {
    // Find the earliest start time out of the position, rotation and scale tracks
 
@@ -86,7 +104,7 @@ float TTransformTrack<VTRACK, QTRACK>::GetStartTime()
 }
 
 template <typename VTRACK, typename QTRACK>
-float TTransformTrack<VTRACK, QTRACK>::GetEndTime()
+float TTransformTrack<VTRACK, QTRACK>::GetEndTime() const
 {
    // Find the latest end time out of the position, rotation and scale tracks
 
@@ -123,7 +141,7 @@ float TTransformTrack<VTRACK, QTRACK>::GetEndTime()
 }
 
 template <typename VTRACK, typename QTRACK>
-Transform TTransformTrack<VTRACK, QTRACK>::Sample(const Transform& defaultTransform, float time, bool looping)
+Transform TTransformTrack<VTRACK, QTRACK>::Sample(const Transform& defaultTransform, float time, bool looping) const
 {
    // Assign default values in case any of the tracks is invalid
    Transform result = defaultTransform;
@@ -148,15 +166,15 @@ Transform TTransformTrack<VTRACK, QTRACK>::Sample(const Transform& defaultTransf
    return result;
 }
 
-FastTransformTrack OptimizeTransformTrack(TransformTrack& transformTrack)
+FastTransformTrack OptimizeTransformTrack(const TransformTrack& transformTrack)
 {
    FastTransformTrack result;
 
    result.SetJointID(transformTrack.GetJointID());
 
-   result.GetPositionTrack() = OptimizeTrack<glm::vec3, 3>(transformTrack.GetPositionTrack());
-   result.GetRotationTrack() = OptimizeTrack<Q::quat, 4>(transformTrack.GetRotationTrack());
-   result.GetScaleTrack()    = OptimizeTrack<glm::vec3, 3>(transformTrack.GetScaleTrack());
+   result.SetPositionTrack(OptimizeTrack<glm::vec3, 3>(transformTrack.GetPositionTrack()));
+   result.SetRotationTrack(OptimizeTrack<Q::quat, 4>(transformTrack.GetRotationTrack()));
+   result.SetScaleTrack(OptimizeTrack<glm::vec3, 3>(transformTrack.GetScaleTrack()));
 
    return result;
 }

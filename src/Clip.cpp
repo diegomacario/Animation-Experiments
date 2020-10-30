@@ -14,7 +14,25 @@ TClip<TRACK>::TClip()
 }
 
 template <typename TRACK>
-TRACK& TClip<TRACK>::operator[](unsigned int jointID)
+unsigned int TClip<TRACK>::GetNumberOfTransformTracks() const
+{
+   return static_cast<unsigned int>(mTransformTracks.size());
+}
+
+template <typename TRACK>
+unsigned int TClip<TRACK>::GetJointIDOfTransformTrack(unsigned int transfTrackIndex) const
+{
+   return mTransformTracks[transfTrackIndex].GetJointID();
+}
+
+template <typename TRACK>
+void TClip<TRACK>::SetJointIDOfTransformTrack(unsigned int transfTrackIndex, unsigned int jointID)
+{
+   return mTransformTracks[transfTrackIndex].SetJointID(jointID);
+}
+
+template <typename TRACK>
+const TRACK& TClip<TRACK>::GetTransformTrackOfJoint(unsigned int jointID)
 {
    // Loop over the transform tracks and compare their joint IDs with the desired one
    for (unsigned int transfTrackIndex = 0,
@@ -36,25 +54,29 @@ TRACK& TClip<TRACK>::operator[](unsigned int jointID)
 }
 
 template <typename TRACK>
-unsigned int TClip<TRACK>::GetNumberOfTransformTracks()
+void TClip<TRACK>::SetTransformTrackOfJoint(unsigned int jointID, const TRACK& transfTrack)
 {
-   return static_cast<unsigned int>(mTransformTracks.size());
+   // Loop over the transform tracks and compare their joint IDs with the desired one
+   for (unsigned int transfTrackIndex = 0,
+        numTransfTracks = static_cast<unsigned int>(mTransformTracks.size());
+        transfTrackIndex < numTransfTracks;
+        ++transfTrackIndex)
+   {
+      if (mTransformTracks[transfTrackIndex].GetJointID() == jointID)
+      {
+         mTransformTracks[transfTrackIndex] = transfTrack;
+         return;
+      }
+   }
+
+   // If a transform track that animates the desired joint doesn't exist,
+   // we create a new one
+   mTransformTracks.push_back(transfTrack);
+   mTransformTracks[mTransformTracks.size() - 1].SetJointID(jointID);
 }
 
 template <typename TRACK>
-unsigned int TClip<TRACK>::GetJointIDOfTransformTrack(unsigned int transfTrackIndex)
-{
-   return mTransformTracks[transfTrackIndex].GetJointID();
-}
-
-template <typename TRACK>
-void TClip<TRACK>::SetJointIDOfTransformTrack(unsigned int transfTrackIndex, unsigned int jointID)
-{
-   return mTransformTracks[transfTrackIndex].SetJointID(jointID);
-}
-
-template <typename TRACK>
-std::string& TClip<TRACK>::GetName()
+std::string TClip<TRACK>::GetName() const
 {
    return mName;
 }
@@ -66,19 +88,19 @@ void TClip<TRACK>::SetName(const std::string& name)
 }
 
 template <typename TRACK>
-float TClip<TRACK>::GetStartTime()
+float TClip<TRACK>::GetStartTime() const
 {
    return mStartTime;
 }
 
 template <typename TRACK>
-float TClip<TRACK>::GetEndTime()
+float TClip<TRACK>::GetEndTime() const
 {
    return mEndTime;
 }
 
 template <typename TRACK>
-float TClip<TRACK>::GetDuration()
+float TClip<TRACK>::GetDuration() const
 {
    return mEndTime - mStartTime;
 }
@@ -119,7 +141,7 @@ void TClip<TRACK>::RecalculateDuration()
 }
 
 template <typename TRACK>
-bool TClip<TRACK>::GetLooping()
+bool TClip<TRACK>::GetLooping() const
 {
    return mLooping;
 }
@@ -131,7 +153,7 @@ void TClip<TRACK>::SetLooping(bool looping)
 }
 
 template <typename TRACK>
-float TClip<TRACK>::Sample(Pose& ioPose, float time)
+float TClip<TRACK>::Sample(Pose& ioPose, float time) const
 {
    if (GetDuration() <= 0.0f)
    {
@@ -166,7 +188,7 @@ float TClip<TRACK>::Sample(Pose& ioPose, float time)
 }
 
 template <typename TRACK>
-float TClip<TRACK>::AdjustTimeToBeWithinClip(float time)
+float TClip<TRACK>::AdjustTimeToBeWithinClip(float time) const
 {
    if (mLooping)
    {
@@ -217,7 +239,7 @@ FastClip OptimizeClip(Clip& clip)
         ++transfTrackIndex)
    {
       unsigned int jointID = clip.GetJointIDOfTransformTrack(transfTrackIndex);
-      result[jointID] = OptimizeTransformTrack(clip[jointID]);
+      result.SetTransformTrackOfJoint(jointID, OptimizeTransformTrack(clip.GetTransformTrackOfJoint(jointID)));
    }
 
    result.RecalculateDuration();
