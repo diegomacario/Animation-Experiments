@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\dependencies\win\inc\cgltf\cgltf.h" />
     <ClInclude Include="..\dependencies\win\inc\imgui\imconfig.h" />
     <ClInclude Include="..\dependencies\win\inc\imgui\imgui.h" />
     <ClInclude Include="..\dependencies\win\inc\imgui\imgui_impl_glfw.h" />
@@ -55,6 +56,7 @@
     <ClInclude Include="..\inc\window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\dependencies\win\src\cgltf\cgltf.c" />
     <ClCompile Include="..\dependencies\win\src\glad\glad.c" />
     <ClCompile Include="..\dependencies\win\src\imgui\imgui.cpp" />
     <ClCompile Include="..\dependencies\win\src\imgui\imgui_demo.cpp" />

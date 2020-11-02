@@ -91,6 +91,9 @@
     <ClCompile Include="..\src\Skeleton.cpp">
       <Filter>Animation-Experiments\Source Files\Animation</Filter>
     </ClCompile>
+    <ClCompile Include="..\dependencies\win\src\cgltf\cgltf.c">
+      <Filter>cgltf\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -195,6 +198,9 @@
     <ClInclude Include="..\inc\Skeleton.h">
       <Filter>Animation-Experiments\Header Files\Animation</Filter>
     </ClInclude>
+    <ClInclude Include="..\dependencies\win\inc\cgltf\cgltf.h">
+      <Filter>cgltf\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Animation-Experiments">
@@ -247,6 +253,21 @@
     </Filter>
     <Filter Include="Animation-Experiments\Source Files\Animation">
       <UniqueIdentifier>{6970468a-f448-42eb-879d-892784e8da63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation-Experiments\Header Files\GLTF">
+      <UniqueIdentifier>{e19a1c59-38db-4803-866e-c82d941736b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation-Experiments\Source Files\GLTF">
+      <UniqueIdentifier>{15bc05b7-8bc3-4c1c-8aea-143e188e7ecb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cgltf">
+      <UniqueIdentifier>{2258a12e-e88c-4122-9296-65e21333fb6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cgltf\Header Files">
+      <UniqueIdentifier>{cb44ea0f-0562-49b8-8248-03464fbad116}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cgltf\Source Files">
+      <UniqueIdentifier>{ca63f70b-bad1-4bde-bf0c-d2a927512633}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
