@@ -45,6 +45,7 @@
     <ClInclude Include="..\inc\resource_manager.h" />
     <ClInclude Include="..\inc\shader.h" />
     <ClInclude Include="..\inc\shader_loader.h" />
+    <ClInclude Include="..\inc\Skeleton.h" />
     <ClInclude Include="..\inc\state.h" />
     <ClInclude Include="..\inc\texture.h" />
     <ClInclude Include="..\inc\texture_loader.h" />
@@ -77,6 +78,7 @@
     <ClCompile Include="..\src\quat.cpp" />
     <ClCompile Include="..\src\shader.cpp" />
     <ClCompile Include="..\src\shader_loader.cpp" />
+    <ClCompile Include="..\src\Skeleton.cpp" />
     <ClCompile Include="..\src\texture.cpp" />
     <ClCompile Include="..\src\texture_loader.cpp" />
     <ClCompile Include="..\src\Track.cpp" />

@@ -88,6 +88,9 @@
     <ClCompile Include="..\src\Clip.cpp">
       <Filter>Animation-Experiments\Source Files\Animation</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Skeleton.cpp">
+      <Filter>Animation-Experiments\Source Files\Animation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -187,6 +190,9 @@
       <Filter>Animation-Experiments\Header Files\Animation</Filter>
     </ClInclude>
     <ClInclude Include="..\inc\Clip.h">
+      <Filter>Animation-Experiments\Header Files\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\Skeleton.h">
       <Filter>Animation-Experiments\Header Files\Animation</Filter>
     </ClInclude>
   </ItemGroup>
