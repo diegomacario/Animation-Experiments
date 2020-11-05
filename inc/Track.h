@@ -17,7 +17,7 @@ public:
    Track();
    virtual ~Track() = default;
 
-   const Frame<N>& GetFrame(unsigned int frameIndex) const;
+   Frame<N>&       GetFrame(unsigned int frameIndex);
    void            SetFrame(unsigned int frameIndex, const Frame<N>& frame);
 
    unsigned int    GetNumberOfFrames() const;
@@ -92,6 +92,6 @@ typedef FastTrack<glm::vec3, 3> FastVectorTrack;
 typedef FastTrack<Q::quat, 4>   FastQuaternionTrack;
 
 template<typename T, unsigned int N>
-FastTrack<T, N> OptimizeTrack(const Track<T, N>& track);
+FastTrack<T, N> OptimizeTrack(Track<T, N>& track);
 
 #endif

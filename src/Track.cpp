@@ -39,7 +39,7 @@ Track<T, N>::Track()
 }
 
 template<typename T, unsigned int N>
-const Frame<N>& Track<T, N>::GetFrame(unsigned int frameIndex) const
+Frame<N>& Track<T, N>::GetFrame(unsigned int frameIndex)
 {
    return mFrames[frameIndex];
 }
@@ -476,12 +476,12 @@ void FastTrack<T, N>::GenerateSampleToFrameIndexMap()
 }
 
 // Instantiate the desired OptimizeTrack functions from the OptimizeTrack function template
-template FastTrack<float, 1>     OptimizeTrack(const Track<float, 1>& input);
-template FastTrack<glm::vec3, 3> OptimizeTrack(const Track<glm::vec3, 3>& input);
-template FastTrack<Q::quat, 4>   OptimizeTrack(const Track<Q::quat, 4>& input);
+template FastTrack<float, 1>     OptimizeTrack(Track<float, 1>& input);
+template FastTrack<glm::vec3, 3> OptimizeTrack(Track<glm::vec3, 3>& input);
+template FastTrack<Q::quat, 4>   OptimizeTrack(Track<Q::quat, 4>& input);
 
 template<typename T, unsigned int N>
-FastTrack<T, N> OptimizeTrack(const Track<T, N>& track)
+FastTrack<T, N> OptimizeTrack(Track<T, N>& track)
 {
    FastTrack<T, N> result;
 

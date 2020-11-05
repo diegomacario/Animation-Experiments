@@ -94,6 +94,9 @@
     <ClCompile Include="..\dependencies\win\src\cgltf\cgltf.c">
       <Filter>cgltf\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\GLTFLoader.cpp">
+      <Filter>Animation-Experiments\Source Files\GLTF</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -200,6 +203,9 @@
     </ClInclude>
     <ClInclude Include="..\dependencies\win\inc\cgltf\cgltf.h">
       <Filter>cgltf\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\GLTFLoader.h">
+      <Filter>Animation-Experiments\Header Files\GLTF</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

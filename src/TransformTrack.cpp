@@ -23,7 +23,7 @@ void TTransformTrack<VTRACK, QTRACK>::SetJointID(unsigned int id)
 }
 
 template <typename VTRACK, typename QTRACK>
-const VTRACK& TTransformTrack<VTRACK, QTRACK>::GetPositionTrack() const
+VTRACK& TTransformTrack<VTRACK, QTRACK>::GetPositionTrack()
 {
    return mPosition;
 }
@@ -35,7 +35,7 @@ void TTransformTrack<VTRACK, QTRACK>::SetPositionTrack(const VTRACK& positionTra
 }
 
 template <typename VTRACK, typename QTRACK>
-const QTRACK& TTransformTrack<VTRACK, QTRACK>::GetRotationTrack() const
+QTRACK& TTransformTrack<VTRACK, QTRACK>::GetRotationTrack()
 {
    return mRotation;
 }
@@ -47,7 +47,7 @@ void TTransformTrack<VTRACK, QTRACK>::SetRotationTrack(const QTRACK& rotationTra
 }
 
 template <typename VTRACK, typename QTRACK>
-const VTRACK& TTransformTrack<VTRACK, QTRACK>::GetScaleTrack() const
+VTRACK& TTransformTrack<VTRACK, QTRACK>::GetScaleTrack()
 {
    return mScale;
 }
@@ -166,7 +166,7 @@ Transform TTransformTrack<VTRACK, QTRACK>::Sample(const Transform& defaultTransf
    return result;
 }
 
-FastTransformTrack OptimizeTransformTrack(const TransformTrack& transformTrack)
+FastTransformTrack OptimizeTransformTrack(TransformTrack& transformTrack)
 {
    FastTransformTrack result;
 

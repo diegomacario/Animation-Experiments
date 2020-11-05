@@ -32,7 +32,7 @@ void TClip<TRACK>::SetJointIDOfTransformTrack(unsigned int transfTrackIndex, uns
 }
 
 template <typename TRACK>
-const TRACK& TClip<TRACK>::GetTransformTrackOfJoint(unsigned int jointID)
+TRACK& TClip<TRACK>::GetTransformTrackOfJoint(unsigned int jointID)
 {
    // Loop over the transform tracks and compare their joint IDs with the desired one
    for (unsigned int transfTrackIndex = 0,

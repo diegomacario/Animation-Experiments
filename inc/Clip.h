@@ -20,7 +20,7 @@ public:
    unsigned int GetJointIDOfTransformTrack(unsigned int transfTrackIndex) const;
    void         SetJointIDOfTransformTrack(unsigned int transfTrackIndex, unsigned int jointID);
 
-   const TRACK& GetTransformTrackOfJoint(unsigned int jointID);
+   TRACK&       GetTransformTrackOfJoint(unsigned int jointID);
    void         SetTransformTrackOfJoint(unsigned int jointID, const TRACK& transfTrack);
 
    std::string  GetName() const;
