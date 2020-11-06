@@ -44,6 +44,7 @@
     <ClInclude Include="..\inc\play_state.h" />
     <ClInclude Include="..\inc\Pose.h" />
     <ClInclude Include="..\inc\quat.h" />
+    <ClInclude Include="..\inc\RearrangeBones.h" />
     <ClInclude Include="..\inc\resource_manager.h" />
     <ClInclude Include="..\inc\shader.h" />
     <ClInclude Include="..\inc\shader_loader.h" />
@@ -80,6 +81,7 @@
     <ClCompile Include="..\src\play_state.cpp" />
     <ClCompile Include="..\src\Pose.cpp" />
     <ClCompile Include="..\src\quat.cpp" />
+    <ClCompile Include="..\src\RearrangeBones.cpp" />
     <ClCompile Include="..\src\shader.cpp" />
     <ClCompile Include="..\src\shader_loader.cpp" />
     <ClCompile Include="..\src\Skeleton.cpp" />

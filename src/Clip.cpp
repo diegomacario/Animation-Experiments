@@ -228,21 +228,22 @@ float TClip<TRACK>::AdjustTimeToBeWithinClip(float time) const
 
 FastClip OptimizeClip(Clip& clip)
 {
-   FastClip result;
+   FastClip fastClip;
 
-   result.SetName(clip.GetName());
-   result.SetLooping(clip.GetLooping());
+   fastClip.SetName(clip.GetName());
+   fastClip.SetLooping(clip.GetLooping());
 
+   // Loop over the transform tracks and optimize them one by one
    for (unsigned int transfTrackIndex = 0,
         numTransfTracks = clip.GetNumberOfTransformTracks();
         transfTrackIndex < numTransfTracks;
         ++transfTrackIndex)
    {
       unsigned int jointID = clip.GetJointIDOfTransformTrack(transfTrackIndex);
-      result.SetTransformTrackOfJoint(jointID, OptimizeTransformTrack(clip.GetTransformTrackOfJoint(jointID)));
+      fastClip.SetTransformTrackOfJoint(jointID, OptimizeTransformTrack(clip.GetTransformTrackOfJoint(jointID)));
    }
 
-   result.RecalculateDuration();
+   fastClip.RecalculateDuration();
 
-   return result;
+   return fastClip;
 }

@@ -97,6 +97,9 @@
     <ClCompile Include="..\src\GLTFLoader.cpp">
       <Filter>Animation-Experiments\Source Files\GLTF</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\RearrangeBones.cpp">
+      <Filter>Animation-Experiments\Source Files\Animation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -206,6 +209,9 @@
     </ClInclude>
     <ClInclude Include="..\inc\GLTFLoader.h">
       <Filter>Animation-Experiments\Header Files\GLTF</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\RearrangeBones.h">
+      <Filter>Animation-Experiments\Header Files\Animation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
