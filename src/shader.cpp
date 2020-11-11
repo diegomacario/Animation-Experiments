@@ -2,8 +2,12 @@
 
 #include "shader.h"
 
-Shader::Shader(unsigned int shaderProgID)
+Shader::Shader(unsigned int shaderProgID,
+               std::map<std::string, unsigned int>&& attributes,
+               std::map<std::string, unsigned int>&& uniforms)
    : mShaderProgID(shaderProgID)
+   , mAttributes(std::move(attributes))
+   , mUniforms(std::move(uniforms))
 {
 
 }
@@ -15,6 +19,8 @@ Shader::~Shader()
 
 Shader::Shader(Shader&& rhs) noexcept
    : mShaderProgID(std::exchange(rhs.mShaderProgID, 0))
+   , mAttributes(std::move(rhs.mAttributes))
+   , mUniforms(std::move(rhs.mUniforms))
 {
 
 }
@@ -22,6 +28,8 @@ Shader::Shader(Shader&& rhs) noexcept
 Shader& Shader::operator=(Shader&& rhs) noexcept
 {
    mShaderProgID = std::exchange(rhs.mShaderProgID, 0);
+   mAttributes   = std::move(rhs.mAttributes);
+   mUniforms     = std::move(rhs.mUniforms);
    return *this;
 }
 

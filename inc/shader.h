@@ -5,12 +5,15 @@
 #include <glm/glm.hpp>
 
 #include <string>
+#include <map>
 
 class Shader
 {
 public:
 
-   explicit Shader(unsigned int shaderProgID);
+   Shader(unsigned int shaderProgID,
+          std::map<std::string, unsigned int>&& attributes,
+          std::map<std::string, unsigned int>&& uniforms);
    ~Shader();
 
    Shader(const Shader&) = delete;
@@ -42,7 +45,9 @@ private:
 
    int          getUniformLocation(const std::string& name) const;
 
-   unsigned int mShaderProgID;
+   unsigned int                        mShaderProgID;
+   std::map<std::string, unsigned int> mAttributes;
+   std::map<std::string, unsigned int> mUniforms;
 };
 
 #endif

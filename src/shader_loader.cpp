@@ -64,7 +64,7 @@ std::shared_ptr<Shader> ShaderLoader::loadResource(const std::string& vShaderFil
    std::map<std::string, unsigned int> uniforms;
    readUniforms(shaderProgID, uniforms);
 
-   return std::make_shared<Shader>(shaderProgID);
+   return std::make_shared<Shader>(shaderProgID, std::move(attributes), std::move(uniforms));
 }
 
 std::shared_ptr<Shader> ShaderLoader::loadResource(const std::string& vShaderFilePath,
@@ -141,7 +141,7 @@ std::shared_ptr<Shader> ShaderLoader::loadResource(const std::string& vShaderFil
    std::map<std::string, unsigned int> uniforms;
    readUniforms(shaderProgID, uniforms);
 
-   return std::make_shared<Shader>(shaderProgID);
+   return std::make_shared<Shader>(shaderProgID, std::move(attributes), std::move(uniforms));
 }
 
 bool ShaderLoader::readShaderFile(const std::string& shaderFilePath, std::string& outShaderCode) const
@@ -269,7 +269,6 @@ void ShaderLoader::readAttributes(unsigned int shaderProgID, std::map<std::strin
       // If the location is valid, store it along with its corresponding name
       if (attributeLocation >= 0)
       {
-         std::cout << "Attrib - Name: " << attributeName.data() << " - Location: " << attributeLocation << '\n';
          outAttributes[attributeName.data()] = attributeLocation;
       }
    }
@@ -277,11 +276,6 @@ void ShaderLoader::readAttributes(unsigned int shaderProgID, std::map<std::strin
    glUseProgram(0);
 }
 
-// TODO: This code doesn't properly handle uniforms that are arrays of structs
-//       It only handles:
-//       - Uniforms that are simple types
-//       - Uniforms that are structs
-//       - Uniforms that are arrays of simple types
 void ShaderLoader::readUniforms(unsigned int shaderProgID, std::map<std::string, unsigned int>& outUniforms) const
 {
    glUseProgram(shaderProgID);
@@ -296,6 +290,7 @@ void ShaderLoader::readUniforms(unsigned int shaderProgID, std::map<std::string,
    std::vector<char> uniformName(lengthOfLongestUniformName);
 
    // Loop over the uniforms
+   int    uniformNameLength;
    int    uniformSize;
    GLenum uniformType;
    for (int uniformIndex = 0; uniformIndex < numActiveUniforms; ++uniformIndex)
@@ -305,7 +300,7 @@ void ShaderLoader::readUniforms(unsigned int shaderProgID, std::map<std::string,
       glGetActiveUniform(shaderProgID,
                          static_cast<unsigned int>(uniformIndex),
                          lengthOfLongestUniformName,
-                         nullptr,
+                         &uniformNameLength,
                          &uniformSize,
                          &uniformType,
                          &uniformName[0]);
@@ -316,18 +311,31 @@ void ShaderLoader::readUniforms(unsigned int shaderProgID, std::map<std::string,
       // If the location is valid
       if (uniformLocation >= 0)
       {
-         // Check if the uniform is an array by searching for an open square bracket in its name
-         std::string uniformNameStr = uniformName.data();
-         std::size_t indexOfOpenSquareBracket = uniformNameStr.find('[');
-         if (indexOfOpenSquareBracket != std::string::npos)
+         // Check if the uniform is an array of simple types (not structs) by checking if its last character is a closed square bracket
+         if (uniformName[uniformNameLength - 1] == ']')
          {
-            // If the uniform is an array, erase everything after the open square bracket
+            /*
+               For arrays of simple types like this one:
+
+               uniform vec3 positions[4];
+
+               The glGetActiveUniform function only returns the following name:
+
+               "positions[0]"
+
+               That's why the code below is necessary
+            */
+
+            // The uniform is an array of simple types (not structs)
+            // To store name/location pairs for each uniform in the array, we start by erasing everything after the open square bracket
             // E.g. inverseBindMatrices[0] would become inverseBindMatrices
+            std::string uniformNameStr = uniformName.data();
+            std::size_t indexOfOpenSquareBracket = uniformNameStr.find('[');
             uniformNameStr.erase(uniformNameStr.begin() + indexOfOpenSquareBracket, uniformNameStr.end());
 
             // In the loop below we add square brackets with indices to the uniform name and check if the resulting uniform exists
             // We do this until we reach an invalid index
-            // E.g. if inverseBindMatrices was an array of 3 matrices, the for loop below would store
+            // E.g. if inverseBindMatrices was an array of 3 matrices, then the for loop below would store
             // name/location pairs for inverseBindMatrices[0], inverseBindMatrices[1] and inverseBindMatrices[2]
             std::string uniformNameWithIndex;
             unsigned int uniformArrayIndex = 0;
@@ -343,15 +351,35 @@ void ShaderLoader::readUniforms(unsigned int shaderProgID, std::map<std::string,
                   break;
                }
 
-               // If the location is valid, store it along with its corresponding name-with-an-index
-               std::cout << "Uniform - Name: " << uniformNameWithIndex << " - Location: " << uniformLocation << '\n';
                outUniforms[uniformNameWithIndex] = uniformLocation;
             }
          }
+         else
+         {
+            /*
+               For arrays of structs like this one:
 
-         // If the location is valid, store it along with its corresponding name
-         std::cout << "Uniform - Name: " << uniformNameStr << " - Location: " << uniformLocation << '\n';
-         outUniforms[uniformNameStr] = uniformLocation;
+               struct PointLight
+               {
+                  vec3  worldPos;
+                  vec3  color;
+               };
+            
+               uniform PointLight pointLights[2];
+
+               The glGetActiveUniform function returns the following names:
+
+               "pointLights[0].worldPos"
+               "pointLights[0].color"
+               "pointLights[1].worldPos"
+               "pointLights[1].color"
+
+               That's why their name/location pairs can be stored without any additional work
+            */
+
+            // The uniform is not an array or its an array of structs
+            outUniforms[uniformName.data()] = uniformLocation;
+         }
       }
    }
 
