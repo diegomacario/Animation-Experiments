@@ -100,6 +100,9 @@
     <ClCompile Include="..\src\RearrangeBones.cpp">
       <Filter>Animation-Experiments\Source Files\Animation</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\AnimatedMesh.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -212,6 +215,9 @@
     </ClInclude>
     <ClInclude Include="..\inc\RearrangeBones.h">
       <Filter>Animation-Experiments\Header Files\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\AnimatedMesh.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -29,6 +29,7 @@
     <ClInclude Include="..\dependencies\win\inc\imgui\imstb_textedit.h" />
     <ClInclude Include="..\dependencies\win\inc\imgui\imstb_truetype.h" />
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h" />
+    <ClInclude Include="..\inc\AnimatedMesh.h" />
     <ClInclude Include="..\inc\camera.h" />
     <ClInclude Include="..\inc\Clip.h" />
     <ClInclude Include="..\inc\finite_state_machine.h" />
@@ -67,6 +68,7 @@
     <ClCompile Include="..\dependencies\win\src\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\dependencies\win\src\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\dependencies\win\src\stb_image\stb_image.cpp" />
+    <ClCompile Include="..\src\AnimatedMesh.cpp" />
     <ClCompile Include="..\src\camera.cpp" />
     <ClCompile Include="..\src\Clip.cpp" />
     <ClCompile Include="..\src\finite_state_machine.cpp" />
