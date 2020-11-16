@@ -55,13 +55,13 @@ bool Game::initialize(const std::string& title)
    auto gameObj3DShader = mShaderManager.loadResource<ShaderLoader>("game_object_3D",
                                                                     "resources/shaders/game_object_3D.vs",
                                                                     "resources/shaders/game_object_3D.fs");
-   gameObj3DShader->use();
-   gameObj3DShader->setVec3("pointLights[0].worldPos", glm::vec3(0.0f, 0.0f, 100.0f));
-   gameObj3DShader->setVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
-   gameObj3DShader->setFloat("pointLights[0].constantAtt", 1.0f);
-   gameObj3DShader->setFloat("pointLights[0].linearAtt", 0.01f);
-   gameObj3DShader->setFloat("pointLights[0].quadraticAtt", 0.0f);
-   gameObj3DShader->setInt("numPointLightsInScene", 1);
+   gameObj3DShader->use(true);
+   gameObj3DShader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 0.0f, 100.0f));
+   gameObj3DShader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   gameObj3DShader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
+   gameObj3DShader->setUniformFloat("pointLights[0].linearAtt", 0.01f);
+   gameObj3DShader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
+   gameObj3DShader->setUniformInt("numPointLightsInScene", 1);
 
    // Initialize the line shader
    auto lineShader = mShaderManager.loadResource<ShaderLoader>("line",

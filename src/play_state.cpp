@@ -442,8 +442,8 @@ void PlayState::render()
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
 
-   mLineShader->use();
-   mLineShader->setMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
+   mLineShader->use(true);
+   mLineShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
 
    mWorldXAxis.render(*mLineShader);
    mWorldYAxis.render(*mLineShader);
@@ -453,9 +453,9 @@ void PlayState::render()
    mLocalYAxis.render(*mLineShader);
    mLocalZAxis.render(*mLineShader);
 
-   mGameObject3DShader->use();
-   mGameObject3DShader->setMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
-   mGameObject3DShader->setVec3("cameraPos", mCamera->getPosition());
+   mGameObject3DShader->use(true);
+   mGameObject3DShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
+   mGameObject3DShader->setUniformVec3("cameraPos", mCamera->getPosition());
 
    mTable->render(*mGameObject3DShader);
 

@@ -70,8 +70,8 @@ void Line::render(const Shader& shader) const
       calculateModelMatrix();
    }
 
-   shader.setMat4("model", mModelMatrix);
-   shader.setVec3("color", mColor);
+   shader.setUniformMat4("model", mModelMatrix);
+   shader.setUniformVec3("color", mColor);
 
    // Render line
    glBindVertexArray(mVAO);

@@ -46,7 +46,7 @@ void GameObject3D::render(const Shader& shader) const
       calculateModelMatrix();
    }
 
-   shader.setMat4("model", mModelMatrix);
+   shader.setUniformMat4("model", mModelMatrix);
 
    mModel->render(shader);
 }

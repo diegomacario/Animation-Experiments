@@ -112,17 +112,17 @@ void Mesh::bindMaterialTextures(const Shader& shader) const
 
 void Mesh::setMaterialTextureAvailabilities(const Shader& shader) const
 {
-   shader.setInt("materialTextureAvailabilities.ambientTexIsAvailable", mMaterial.textureAvailabilities.test(static_cast<unsigned int>(MaterialTextureTypes::ambient)));
-   shader.setInt("materialTextureAvailabilities.emissiveTexIsAvailable", mMaterial.textureAvailabilities.test(static_cast<unsigned int>(MaterialTextureTypes::emissive)));
-   shader.setInt("materialTextureAvailabilities.diffuseTexIsAvailable", mMaterial.textureAvailabilities.test(static_cast<unsigned int>(MaterialTextureTypes::diffuse)));
-   shader.setInt("materialTextureAvailabilities.specularTexIsAvailable", mMaterial.textureAvailabilities.test(static_cast<unsigned int>(MaterialTextureTypes::specular)));
+   shader.setUniformInt("materialTextureAvailabilities.ambientTexIsAvailable", mMaterial.textureAvailabilities.test(static_cast<unsigned int>(MaterialTextureTypes::ambient)));
+   shader.setUniformInt("materialTextureAvailabilities.emissiveTexIsAvailable", mMaterial.textureAvailabilities.test(static_cast<unsigned int>(MaterialTextureTypes::emissive)));
+   shader.setUniformInt("materialTextureAvailabilities.diffuseTexIsAvailable", mMaterial.textureAvailabilities.test(static_cast<unsigned int>(MaterialTextureTypes::diffuse)));
+   shader.setUniformInt("materialTextureAvailabilities.specularTexIsAvailable", mMaterial.textureAvailabilities.test(static_cast<unsigned int>(MaterialTextureTypes::specular)));
 }
 
 void Mesh::setMaterialConstants(const Shader& shader) const
 {
-   shader.setVec3("materialConstants.ambient", mMaterial.constants.ambientColor);
-   shader.setVec3("materialConstants.emissive", mMaterial.constants.emissiveColor);
-   shader.setVec3("materialConstants.diffuse", mMaterial.constants.diffuseColor);
-   shader.setVec3("materialConstants.specular", mMaterial.constants.specularColor);
-   shader.setFloat("materialConstants.shininess", mMaterial.constants.shininess);
+   shader.setUniformVec3("materialConstants.ambient", mMaterial.constants.ambientColor);
+   shader.setUniformVec3("materialConstants.emissive", mMaterial.constants.emissiveColor);
+   shader.setUniformVec3("materialConstants.diffuse", mMaterial.constants.diffuseColor);
+   shader.setUniformVec3("materialConstants.specular", mMaterial.constants.specularColor);
+   shader.setUniformFloat("materialConstants.shininess", mMaterial.constants.shininess);
 }

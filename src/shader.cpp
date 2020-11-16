@@ -33,9 +33,9 @@ Shader& Shader::operator=(Shader&& rhs) noexcept
    return *this;
 }
 
-void Shader::use() const
+void Shader::use(bool use) const
 {
-   glUseProgram(mShaderProgID);
+   glUseProgram(use ? mShaderProgID : 0);
 }
 
 unsigned int Shader::getID() const
@@ -43,74 +43,88 @@ unsigned int Shader::getID() const
    return mShaderProgID;
 }
 
-void Shader::setBool(const std::string& name, bool value) const
+void Shader::setUniformBool(const std::string& name, bool value) const
 {
    glUniform1i(getUniformLocation(name.c_str()), static_cast<int>(value));
 }
 
-void Shader::setInt(const std::string& name, int value) const
+void Shader::setUniformInt(const std::string& name, int value) const
 {
    glUniform1i(getUniformLocation(name.c_str()), value);
 }
 
-void Shader::setFloat(const std::string& name, float value) const
+void Shader::setUniformFloat(const std::string& name, float value) const
 {
    glUniform1f(getUniformLocation(name.c_str()), value);
 }
 
-void Shader::setVec2(const std::string& name, const glm::vec2 &value) const
+void Shader::setUniformVec2(const std::string& name, const glm::vec2 &value) const
 {
    glUniform2fv(getUniformLocation(name.c_str()), 1, &value[0]);
 }
 
-void Shader::setVec2(const std::string& name, float x, float y) const
+void Shader::setUniformVec2(const std::string& name, float x, float y) const
 {
    glUniform2f(getUniformLocation(name.c_str()), x, y);
 }
 
-void Shader::setVec3(const std::string& name, const glm::vec3 &value) const
+void Shader::setUniformVec3(const std::string& name, const glm::vec3 &value) const
 {
    glUniform3fv(getUniformLocation(name.c_str()), 1, &value[0]);
 }
 
-void Shader::setVec3(const std::string& name, float x, float y, float z) const
+void Shader::setUniformVec3(const std::string& name, float x, float y, float z) const
 {
    glUniform3f(getUniformLocation(name.c_str()), x, y, z);
 }
 
-void Shader::setVec4(const std::string& name, const glm::vec4 &value) const
+void Shader::setUniformVec4(const std::string& name, const glm::vec4 &value) const
 {
    glUniform4fv(getUniformLocation(name.c_str()), 1, &value[0]);
 }
 
-void Shader::setVec4(const std::string& name, float x, float y, float z, float w) const
+void Shader::setUniformVec4(const std::string& name, float x, float y, float z, float w) const
 {
    glUniform4f(getUniformLocation(name.c_str()), x, y, z, w);
 }
 
-void Shader::setMat2(const std::string& name, const glm::mat2& value) const
+void Shader::setUniformMat2(const std::string& name, const glm::mat2& value) const
 {
    glUniformMatrix2fv(getUniformLocation(name.c_str()), 1, GL_FALSE, &value[0][0]);
 }
 
-void Shader::setMat3(const std::string& name, const glm::mat3& value) const
+void Shader::setUniformMat3(const std::string& name, const glm::mat3& value) const
 {
    glUniformMatrix3fv(getUniformLocation(name.c_str()), 1, GL_FALSE, &value[0][0]);
 }
 
-void Shader::setMat4(const std::string& name, const glm::mat4& value) const
+void Shader::setUniformMat4(const std::string& name, const glm::mat4& value) const
 {
    glUniformMatrix4fv(getUniformLocation(name.c_str()), 1, GL_FALSE, &value[0][0]);
 }
 
-int Shader::getUniformLocation(const std::string& name) const
+int Shader::getAttributeLocation(const std::string& attributeName) const
 {
-   int uniformLoc = glGetUniformLocation(mShaderProgID, name.c_str());
+   std::map<std::string, unsigned int>::const_iterator it = mAttributes.find(attributeName);
 
-   if (uniformLoc == -1)
+   if (it == mAttributes.end())
    {
-      std::cout << "Error - Shader::getUniformLocation - The following uniform does not exist: " << name << "\n";
+      std::cout << "Error - Shader::getAttributeLocation - The following uniform does not exist: " << attributeName << "\n";
+      return -1;
    }
 
-   return uniformLoc;
+   return it->second;
+}
+
+int Shader::getUniformLocation(const std::string& uniformName) const
+{
+   std::map<std::string, unsigned int>::const_iterator it = mUniforms.find(uniformName);
+
+   if (it == mUniforms.end())
+   {
+      std::cout << "Error - Shader::getUniformLocation - The following uniform does not exist: " << uniformName << "\n";
+      return -1;
+   }
+
+   return it->second;
 }

@@ -22,28 +22,29 @@ public:
    Shader(Shader&& rhs) noexcept;
    Shader& operator=(Shader&& rhs) noexcept;
 
-   void         use() const;
+   void         use(bool use) const;
 
    unsigned int getID() const;
 
-   void         setBool(const std::string& name, bool value) const;
-   void         setInt(const std::string& name, int value) const;
-   void         setFloat(const std::string& name, float value) const;
+   void         setUniformBool(const std::string& name, bool value) const;
+   void         setUniformInt(const std::string& name, int value) const;
+   void         setUniformFloat(const std::string& name, float value) const;
 
-   void         setVec2(const std::string& name, const glm::vec2& value) const;
-   void         setVec2(const std::string& name, float x, float y) const;
-   void         setVec3(const std::string& name, const glm::vec3& value) const;
-   void         setVec3(const std::string& name, float x, float y, float z) const;
-   void         setVec4(const std::string& name, const glm::vec4& value) const;
-   void         setVec4(const std::string& name, float x, float y, float z, float w) const;
+   void         setUniformVec2(const std::string& name, const glm::vec2& value) const;
+   void         setUniformVec2(const std::string& name, float x, float y) const;
+   void         setUniformVec3(const std::string& name, const glm::vec3& value) const;
+   void         setUniformVec3(const std::string& name, float x, float y, float z) const;
+   void         setUniformVec4(const std::string& name, const glm::vec4& value) const;
+   void         setUniformVec4(const std::string& name, float x, float y, float z, float w) const;
 
-   void         setMat2(const std::string& name, const glm::mat2& value) const;
-   void         setMat3(const std::string& name, const glm::mat3& value) const;
-   void         setMat4(const std::string& name, const glm::mat4& value) const;
+   void         setUniformMat2(const std::string& name, const glm::mat2& value) const;
+   void         setUniformMat3(const std::string& name, const glm::mat3& value) const;
+   void         setUniformMat4(const std::string& name, const glm::mat4& value) const;
 
 private:
 
-   int          getUniformLocation(const std::string& name) const;
+   int          getAttributeLocation(const std::string& attributeName) const;
+   int          getUniformLocation(const std::string& uniformName) const;
 
    unsigned int                        mShaderProgID;
    std::map<std::string, unsigned int> mAttributes;
