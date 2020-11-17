@@ -6,23 +6,27 @@
 AnimatedMesh::AnimatedMesh()
 {
    glGenVertexArrays(1, &mVAO);
-   glGenBuffers(1, &mVBO);
+   glGenBuffers(5, &mVBOs[0]);
    glGenBuffers(1, &mEBO);
 }
 
 AnimatedMesh::~AnimatedMesh()
 {
    glDeleteVertexArrays(1, &mVAO);
-   glDeleteBuffers(1, &mVBO);
+   glDeleteBuffers(5, &mVBOs[0]);
    glDeleteBuffers(1, &mEBO);
 }
 
 AnimatedMesh::AnimatedMesh(AnimatedMesh&& rhs) noexcept
-   : mVertices(std::move(rhs.mVertices))
+   : mPositions(std::move(rhs.mPositions))
+   , mNormals(std::move(rhs.mNormals))
+   , mTexCoords(std::move(rhs.mTexCoords))
+   , mWeights(std::move(rhs.mWeights))
+   , mInfluences(std::move(rhs.mInfluences))
    , mIndices(std::move(rhs.mIndices))
    , mNumIndices(std::exchange(rhs.mNumIndices, 0))
    , mVAO(std::exchange(rhs.mVAO, 0))
-   , mVBO(std::exchange(rhs.mVBO, 0))
+   , mVBOs(std::exchange(rhs.mVBOs, std::array<unsigned int, 5>()))
    , mEBO(std::exchange(rhs.mEBO, 0))
 {
 
@@ -30,39 +34,47 @@ AnimatedMesh::AnimatedMesh(AnimatedMesh&& rhs) noexcept
 
 AnimatedMesh& AnimatedMesh::operator=(AnimatedMesh&& rhs) noexcept
 {
-   mVertices   = std::move(rhs.mVertices);
+   mPositions  = std::move(rhs.mPositions);
+   mNormals    = std::move(rhs.mNormals);
+   mTexCoords  = std::move(rhs.mTexCoords);
+   mWeights    = std::move(rhs.mWeights);
+   mInfluences = std::move(rhs.mInfluences);
    mIndices    = std::move(rhs.mIndices);
    mNumIndices = std::exchange(rhs.mNumIndices, 0);
    mVAO        = std::exchange(rhs.mVAO, 0);
-   mVBO        = std::exchange(rhs.mVBO, 0);
+   mVBOs       = std::exchange(rhs.mVBOs, std::array<unsigned int, 5>());
    mEBO        = std::exchange(rhs.mEBO, 0);
    return *this;
 }
 
-std::vector<AnimatedVertex>& AnimatedMesh::GetVertices()
-{
-   return mVertices;
-}
-
-std::vector<unsigned int>& AnimatedMesh::GetIndices()
-{
-   return mIndices;
-}
-
+// TODO: Experiment with GL_STATIC_DRAW, GL_STREAM_DRAW and GL_DYNAMIC_DRAW to see which is faster
 void AnimatedMesh::LoadBuffers()
 {
    glBindVertexArray(mVAO);
 
    // Load the mesh's data into the buffers
 
-   // Positions, normals, texture coordinates, weights and influences
-   glBindBuffer(GL_ARRAY_BUFFER, mVBO);
-   glBufferData(GL_ARRAY_BUFFER, mVertices.size() * sizeof(AnimatedVertex), &mVertices[0], GL_STATIC_DRAW); // TODO: Is GL_STREAM_DRAW faster?
+   // Positions
+   glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::positions]);
+   glBufferData(GL_ARRAY_BUFFER, mPositions.size() * sizeof(glm::vec3), &mPositions[0], GL_STATIC_DRAW);
+   // Normals
+   glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::normals]);
+   glBufferData(GL_ARRAY_BUFFER, mNormals.size() * sizeof(glm::vec3), &mNormals[0], GL_STATIC_DRAW);
+   // Texture coordinates
+   glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::texCoords]);
+   glBufferData(GL_ARRAY_BUFFER, mTexCoords.size() * sizeof(glm::vec2), &mTexCoords[0], GL_STATIC_DRAW);
+   // Weights
+   glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::weights]);
+   glBufferData(GL_ARRAY_BUFFER, mWeights.size() * sizeof(glm::vec4), &mWeights[0], GL_STATIC_DRAW);
+   // Influences
+   glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::influences]);
+   glBufferData(GL_ARRAY_BUFFER, mInfluences.size() * sizeof(glm::ivec4), &mInfluences[0], GL_STATIC_DRAW);
+
    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
    // Indices
    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mEBO);
-   glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndices.size() * sizeof(unsigned int), &mIndices[0], GL_STATIC_DRAW); // TODO: Is GL_STREAM_DRAW faster?
+   glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndices.size() * sizeof(unsigned int), &mIndices[0], GL_STATIC_DRAW);
 
    // Unbind the VAO first, then the EBO
    glBindVertexArray(0);
@@ -71,91 +83,99 @@ void AnimatedMesh::LoadBuffers()
 
 void AnimatedMesh::ConfigureVAO(int posAttribLocation,
                                 int normalAttribLocation,
-                                int texCoordAttribLocation,
-                                int weightAttribLocation,
-                                int influenceAttribLocation)
+                                int texCoordsAttribLocation,
+                                int weightsAttribLocation,
+                                int influencesAttribLocation)
 {
    glBindVertexArray(mVAO);
-   glBindBuffer(GL_ARRAY_BUFFER, mVBO); // TODO: Is this necessary?
 
    // Set the vertex attribute pointers
 
    // Positions
    if (posAttribLocation >= 0)
    {
+      glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::positions]);
       glEnableVertexAttribArray(posAttribLocation);
-      glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, sizeof(AnimatedVertex), (void*)0);
+      glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
    }
 
    // Normals
    if (normalAttribLocation >= 0)
    {
+      glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::normals]);
       glEnableVertexAttribArray(normalAttribLocation);
-      glVertexAttribPointer(normalAttribLocation, 3, GL_FLOAT, GL_FALSE, sizeof(AnimatedVertex), (void*)offsetof(AnimatedVertex, normal));
+      glVertexAttribPointer(normalAttribLocation, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
    }
 
    // Texture coordinates
-   if (texCoordAttribLocation >= 0)
+   if (texCoordsAttribLocation >= 0)
    {
-      glEnableVertexAttribArray(texCoordAttribLocation);
-      glVertexAttribPointer(texCoordAttribLocation, 2, GL_FLOAT, GL_FALSE, sizeof(AnimatedVertex), (void*)offsetof(AnimatedVertex, texCoords));
+      glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::texCoords]);
+      glEnableVertexAttribArray(texCoordsAttribLocation);
+      glVertexAttribPointer(texCoordsAttribLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
    }
 
    // Weights
-   if (weightAttribLocation >= 0)
+   if (weightsAttribLocation >= 0)
    {
-      glEnableVertexAttribArray(weightAttribLocation);
-      glVertexAttribPointer(weightAttribLocation, 4, GL_FLOAT, GL_FALSE, sizeof(AnimatedVertex), (void*)offsetof(AnimatedVertex, weights));
+      glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::weights]);
+      glEnableVertexAttribArray(weightsAttribLocation);
+      glVertexAttribPointer(weightsAttribLocation, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
    }
 
    // Influences
-   if (influenceAttribLocation >= 0)
+   if (influencesAttribLocation >= 0)
    {
-      glEnableVertexAttribArray(influenceAttribLocation);
-      glVertexAttribPointer(influenceAttribLocation, 4, GL_INT, GL_FALSE, sizeof(AnimatedVertex), (void*)offsetof(AnimatedVertex, influences));
+      glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::influences]);
+      glEnableVertexAttribArray(influencesAttribLocation);
+      glVertexAttribPointer(influencesAttribLocation, 4, GL_INT, GL_FALSE, 4 * sizeof(int), (void*)0);
    }
 
-   glBindBuffer(GL_ARRAY_BUFFER, 0); // TODO: Is this necessary?
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
    glBindVertexArray(0);
 }
 
+// TODO: GL_TRIANGLES shouldn't be hardcoded here
+//       Can we load that from the GLTF file?
 void AnimatedMesh::Render()
 {
    glBindVertexArray(mVAO);
 
    if (mIndices.size() > 0)
    {
-      glDrawElements(GL_TRIANGLES, mNumIndices, GL_UNSIGNED_INT, 0);
+      // TODO: Use mNumIndices here
+      glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(mIndices.size()), GL_UNSIGNED_INT, 0);
    }
    else
    {
-      glDrawArrays(GL_TRIANGLES, 0, mVertices.size());
+      glDrawArrays(GL_TRIANGLES, 0, static_cast<unsigned int>(mPositions.size()));
    }
 
    glBindVertexArray(0);
 }
 
+// TODO: GL_TRIANGLES shouldn't be hardcoded here
+//       Can we load that from the GLTF file?
 void AnimatedMesh::RenderInstanced(unsigned int numInstances)
 {
    glBindVertexArray(mVAO);
 
    if (mIndices.size() > 0)
    {
-      glDrawElementsInstanced(GL_TRIANGLES, mNumIndices, GL_UNSIGNED_INT, 0, numInstances);
+      // TODO: Use mNumIndices here
+      glDrawElementsInstanced(GL_TRIANGLES, static_cast<unsigned int>(mIndices.size()), GL_UNSIGNED_INT, 0, numInstances);
    }
    else
    {
-      glDrawArraysInstanced(GL_TRIANGLES, 0, mVertices.size(), numInstances);
+      glDrawArraysInstanced(GL_TRIANGLES, 0, static_cast<unsigned int>(mPositions.size()), numInstances);
    }
 
    glBindVertexArray(0);
 }
 
-#if 1
-void AnimatedMesh::CPUSkin(Skeleton& skeleton, Pose& pose)
+void AnimatedMesh::CPUSkinWithMatrices(Skeleton& skeleton, Pose& pose)
 {
-   unsigned int numVertices = static_cast<unsigned int>(mVertices.size());
-
+   unsigned int numVertices = static_cast<unsigned int>(mPositions.size());
    if (numVertices == 0)
    {
       return;
@@ -164,13 +184,13 @@ void AnimatedMesh::CPUSkin(Skeleton& skeleton, Pose& pose)
    mSkinnedPositions.resize(numVertices);
    mSkinnedNormals.resize(numVertices);
 
+   const std::vector<glm::mat4>& invBindPosePalette = skeleton.GetInvBindPose();
    pose.GetMatrixPalette(mPosePalette);
-   std::vector<glm::mat4> invBindPosePalette = skeleton.GetInvBindPose();
 
    for (unsigned int vertexIndex = 0; vertexIndex < numVertices; ++vertexIndex)
    {
-      glm::ivec4& influencesOfCurrVertex = mVertices[vertexIndex].influences;
-      glm::vec4&  weightsOfCurrVertex    = mVertices[vertexIndex].weights;
+      const glm::ivec4& influencesOfCurrVertex = mInfluences[vertexIndex];
+      const glm::vec4&  weightsOfCurrVertex    = mWeights[vertexIndex];
 
       glm::mat4 m0 = (mPosePalette[influencesOfCurrVertex.x] * invBindPosePalette[influencesOfCurrVertex.x]) * weightsOfCurrVertex.x;
       glm::mat4 m1 = (mPosePalette[influencesOfCurrVertex.y] * invBindPosePalette[influencesOfCurrVertex.y]) * weightsOfCurrVertex.y;
@@ -179,79 +199,116 @@ void AnimatedMesh::CPUSkin(Skeleton& skeleton, Pose& pose)
 
       glm::mat4 skinMatrix = m0 + m1 + m2 + m3;
 
-      // We have reached an impasse here
-      mSkinnedPositions[vertexIndex] = skinMatrix * glm::vec4(mVertices[vertexIndex].position, 1.0f);
-      mSkinnedNormals[vertexIndex]   = skinMatrix * glm::vec4(mVertices[vertexIndex].normal, 0.0f);
+      mSkinnedPositions[vertexIndex] = skinMatrix * glm::vec4(mPositions[vertexIndex], 1.0f);
+      mSkinnedNormals[vertexIndex]   = skinMatrix * glm::vec4(mNormals[vertexIndex], 0.0f);
    }
 
-   // TODO: This is inefficient because we only modified positions/normals, but we update all buffers
-   LoadBuffers();
+   // TODO: Should I bind the VAO here?
+
+   // Load the skinned positions and normals into the buffers
+
+   // Positions
+   glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::positions]);
+   glBufferSubData(GL_ARRAY_BUFFER, 0, mSkinnedPositions.size() * sizeof(glm::vec3), &mSkinnedPositions[0]);
+   // Normals
+   glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::normals]);
+   glBufferSubData(GL_ARRAY_BUFFER, 0, mSkinnedNormals.size() * sizeof(glm::vec3), &mSkinnedNormals[0]);
+
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
-#else
-void AnimatedMesh::CPUSkin(Skeleton& skeleton, Pose& pose)
+
+void AnimatedMesh::CPUSkinWithTransforms(Skeleton& skeleton, Pose& pose)
 {
-   unsigned int numVerts = (unsigned int)mPosition.size();
-   if (numVerts == 0) { return; }
-
-   mSkinnedPosition.resize(numVerts);
-   mSkinnedNormal.resize(numVerts);
-   Pose& bindPose = skeleton.GetBindPose();
-
-   for (unsigned int i = 0; i < numVerts; ++i)
+   unsigned int numVertices = static_cast<unsigned int>(mPositions.size());
+   if (numVertices == 0)
    {
-      glm::ivec4& joint = mInfluences[i];
-      glm::vec4& weight = mWeights[i];
-
-      Transform skin0 = combine(pose[joint.x], inverse(bindPose[joint.x]));
-      glm::vec3 p0 = transformPoint(skin0, mPosition[i]);
-      glm::vec3 n0 = transformVector(skin0, mNormal[i]);
-
-      Transform skin1 = combine(pose[joint.y], inverse(bindPose[joint.y]));
-      glm::vec3 p1 = transformPoint(skin1, mPosition[i]);
-      glm::vec3 n1 = transformVector(skin1, mNormal[i]);
-
-      Transform skin2 = combine(pose[joint.z], inverse(bindPose[joint.z]));
-      glm::vec3 p2 = transformPoint(skin2, mPosition[i]);
-      glm::vec3 n2 = transformVector(skin2, mNormal[i]);
-
-      Transform skin3 = combine(pose[joint.w], inverse(bindPose[joint.w]));
-      glm::vec3 p3 = transformPoint(skin3, mPosition[i]);
-      glm::vec3 n3 = transformVector(skin3, mNormal[i]);
-      mSkinnedPosition[i] = p0 * weight.x + p1 * weight.y + p2 * weight.z + p3 * weight.w;
-      mSkinnedNormal[i] = n0 * weight.x + n1 * weight.y + n2 * weight.z + n3 * weight.w;
+      return;
    }
 
-   mPosAttrib->Set(mSkinnedPosition);
-   mNormAttrib->Set(mSkinnedNormal);
-}
-#endif
+   mSkinnedPositions.resize(numVertices);
+   mSkinnedNormals.resize(numVertices);
 
+   const Pose& bindPose = skeleton.GetBindPose();
+
+   for (unsigned int vertexIndex = 0; vertexIndex < numVertices; ++vertexIndex)
+   {
+      const glm::ivec4& influencesOfCurrVertex = mInfluences[vertexIndex];
+      const glm::vec4&  weightsOfCurrVertex    = mWeights[vertexIndex];
+
+      Transform skin0 = combine(pose.GetGlobalTransform(influencesOfCurrVertex.x), inverse(bindPose.GetGlobalTransform(influencesOfCurrVertex.x)));
+      glm::vec3 p0    = transformPoint(skin0, mPositions[vertexIndex]);
+      glm::vec3 n0    = transformVector(skin0, mNormals[vertexIndex]);
+
+      Transform skin1 = combine(pose.GetGlobalTransform(influencesOfCurrVertex.y), inverse(bindPose.GetGlobalTransform(influencesOfCurrVertex.y)));
+      glm::vec3 p1    = transformPoint(skin1, mPositions[vertexIndex]);
+      glm::vec3 n1    = transformVector(skin1, mNormals[vertexIndex]);
+
+      Transform skin2 = combine(pose.GetGlobalTransform(influencesOfCurrVertex.z), inverse(bindPose.GetGlobalTransform(influencesOfCurrVertex.z)));
+      glm::vec3 p2    = transformPoint(skin2, mPositions[vertexIndex]);
+      glm::vec3 n2    = transformVector(skin2, mNormals[vertexIndex]);
+
+      Transform skin3 = combine(pose.GetGlobalTransform(influencesOfCurrVertex.w), inverse(bindPose.GetGlobalTransform(influencesOfCurrVertex.w)));
+      glm::vec3 p3    = transformPoint(skin3, mPositions[vertexIndex]);
+      glm::vec3 n3    = transformVector(skin3, mNormals[vertexIndex]);
+
+      mSkinnedPositions[vertexIndex] = (p0 * weightsOfCurrVertex.x) + (p1 * weightsOfCurrVertex.y) + (p2 * weightsOfCurrVertex.z) + (p3 * weightsOfCurrVertex.w);
+      mSkinnedNormals[vertexIndex]   = (n0 * weightsOfCurrVertex.x) + (n1 * weightsOfCurrVertex.y) + (n2 * weightsOfCurrVertex.z) + (n3 * weightsOfCurrVertex.w);
+   }
+
+   // TODO: Should I bind the VAO here?
+
+   // Load the skinned positions and normals into the buffers
+
+   // Positions
+   glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::positions]);
+   glBufferSubData(GL_ARRAY_BUFFER, 0, mSkinnedPositions.size() * sizeof(glm::vec3), &mSkinnedPositions[0]);
+   // Normals
+   glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::normals]);
+   glBufferSubData(GL_ARRAY_BUFFER, 0, mSkinnedNormals.size() * sizeof(glm::vec3), &mSkinnedNormals[0]);
+
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+// animatedPose is simply the result of the following: mPosePalette[] * invBindPosePalette[]
 void AnimatedMesh::CPUSkin(std::vector<glm::mat4>& animatedPose)
 {
-   unsigned int numVerts = (unsigned int)mPosition.size();
-   if (numVerts == 0) { return; }
-
-   mSkinnedPosition.resize(numVerts);
-   mSkinnedNormal.resize(numVerts);
-
-   for (unsigned int i = 0; i < numVerts; ++i)
+   unsigned int numVertices = static_cast<unsigned int>(mPositions.size());
+   if (numVertices == 0)
    {
-      glm::ivec4& j = mInfluences[i];
-      glm::vec4& w  = mWeights[i];
-
-      glm::vec3 p0 = transformPoint(animatedPose[j.x], mPosition[i]);
-      glm::vec3 p1 = transformPoint(animatedPose[j.y], mPosition[i]);
-      glm::vec3 p2 = transformPoint(animatedPose[j.z], mPosition[i]);
-      glm::vec3 p3 = transformPoint(animatedPose[j.w], mPosition[i]);
-      mSkinnedPosition[i] = p0 * w.x + p1 * w.y + p2 * w.z + p3 * w.w;
-
-      glm::vec3 n0 = transformVector(animatedPose[j.x], mNormal[i]);
-      glm::vec3 n1 = transformVector(animatedPose[j.y], mNormal[i]);
-      glm::vec3 n2 = transformVector(animatedPose[j.z], mNormal[i]);
-      glm::vec3 n3 = transformVector(animatedPose[j.w], mNormal[i]);
-      mSkinnedNormal[i] = n0 * w.x + n1 * w.y + n2 * w.z + n3 * w.w;
+      return;
    }
 
-   mPosAttrib->Set(mSkinnedPosition);
-   mNormAttrib->Set(mSkinnedNormal);
+   mSkinnedPositions.resize(numVertices);
+   mSkinnedNormals.resize(numVertices);
+
+   for (unsigned int vertexIndex = 0; vertexIndex < numVertices; ++vertexIndex)
+   {
+      glm::ivec4& influencesOfCurrVertex = mInfluences[vertexIndex];
+      glm::vec4&  weightsOfCurrVertex    = mWeights[vertexIndex];
+
+      glm::vec3 p0 = animatedPose[influencesOfCurrVertex.x] * glm::vec4(mPositions[vertexIndex], 1.0f);
+      glm::vec3 p1 = animatedPose[influencesOfCurrVertex.y] * glm::vec4(mPositions[vertexIndex], 1.0f);
+      glm::vec3 p2 = animatedPose[influencesOfCurrVertex.z] * glm::vec4(mPositions[vertexIndex], 1.0f);
+      glm::vec3 p3 = animatedPose[influencesOfCurrVertex.w] * glm::vec4(mPositions[vertexIndex], 1.0f);
+      mSkinnedPositions[vertexIndex] = p0 * weightsOfCurrVertex.x + p1 * weightsOfCurrVertex.y + p2 * weightsOfCurrVertex.z + p3 * weightsOfCurrVertex.w;
+
+      glm::vec3 n0 = animatedPose[influencesOfCurrVertex.x] * glm::vec4(mNormals[vertexIndex], 0.0f);
+      glm::vec3 n1 = animatedPose[influencesOfCurrVertex.y] * glm::vec4(mNormals[vertexIndex], 0.0f);
+      glm::vec3 n2 = animatedPose[influencesOfCurrVertex.z] * glm::vec4(mNormals[vertexIndex], 0.0f);
+      glm::vec3 n3 = animatedPose[influencesOfCurrVertex.w] * glm::vec4(mNormals[vertexIndex], 0.0f);
+      mSkinnedNormals[vertexIndex] = n0 * weightsOfCurrVertex.x + n1 * weightsOfCurrVertex.y + n2 * weightsOfCurrVertex.z + n3 * weightsOfCurrVertex.w;
+   }
+
+   // TODO: Should I bind the VAO here?
+
+   // Load the skinned positions and normals into the buffers
+
+   // Positions
+   glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::positions]);
+   glBufferSubData(GL_ARRAY_BUFFER, 0, mSkinnedPositions.size() * sizeof(glm::vec3), &mSkinnedPositions[0]);
+   // Normals
+   glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::normals]);
+   glBufferSubData(GL_ARRAY_BUFFER, 0, mSkinnedNormals.size() * sizeof(glm::vec3), &mSkinnedNormals[0]);
+
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
