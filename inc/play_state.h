@@ -37,9 +37,6 @@ private:
 
    void resetCamera();
 
-   void rotateSceneByMultiplyingCurrentRotationFromTheLeft(const Q::quat& rot);
-   void rotateSceneByMultiplyingCurrentRotationFromTheRight(const Q::quat& rot);
-
    std::shared_ptr<FiniteStateMachine>     mFSM;
 
    std::shared_ptr<Window>                 mWindow;

@@ -68,6 +68,8 @@ bool Game::initialize(const std::string& title)
                                                                "resources/shaders/line.vert",
                                                                "resources/shaders/line.frag");
 
+
+
    // Load the models
    mModelManager.loadResource<ModelLoader>("table", "resources/models/table/table.obj");
    mModelManager.loadResource<ModelLoader>("teapot", "resources/models/teapot/teapot.obj");
