@@ -25,7 +25,22 @@ Texture& Texture::operator=(Texture&& rhs) noexcept
    return *this;
 }
 
-void Texture::bind() const
+void Texture::bind(unsigned int textureUnit, int uniformLocation) const
 {
+   // Activate the proper texture unit before binding the texture
+   glActiveTexture(textureUnit);
+   // Bind the texture
    glBindTexture(GL_TEXTURE_2D, mTexID);
+   // Tell the appropriate sampler2D uniform in what texture unit to look for the texture data
+   glUniform1i(uniformLocation, textureUnit);
+}
+
+void Texture::unbind(unsigned int textureUnit) const
+{
+   // Activate the proper texture unit before unbinding the texture
+   glActiveTexture(textureUnit);
+   // Unbind the texture
+   glBindTexture(GL_TEXTURE_2D, 0);
+   // Disactivate the texture unit
+   glActiveTexture(GL_TEXTURE0);
 }

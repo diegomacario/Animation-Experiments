@@ -92,13 +92,8 @@ void Mesh::bindMaterialTextures(const Shader& shader) const
 
       if (uniformLoc != -1)
       {
-         // Activate the proper texture unit before binding the current texture
-         glActiveTexture(texUnit);
-         // Tell the sampler2D uniform in what texture unit to look for the texture data
-         glUniform1i(uniformLoc, i);
          // Bind the texture
-         mMaterial.textures[i].texture->bind();
-
+         mMaterial.textures[i].texture->bind(texUnit, uniformLoc);
          ++texUnit;
       }
       else

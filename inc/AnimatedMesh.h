@@ -37,9 +37,9 @@ public:
    void                       Render();
    void                       RenderInstanced(unsigned int numInstances);
 
-   void                       CPUSkinWithMatrices(Skeleton& skeleton, Pose& pose);
-   void                       CPUSkinWithTransforms(Skeleton& skeleton, Pose& pose);
-   void                       CPUSkin(std::vector<glm::mat4>& animated);
+   void                       SkinMeshOnTheCPUUsingMatrices(Skeleton& skeleton, Pose& animatedPose);
+   void                       SkinMeshOnTheCPUUsingTransforms(Skeleton& skeleton, Pose& animatedPose);
+   void                       SkinMeshOnTheCPU(std::vector<glm::mat4>& skinMatrices);
 
 private:
 
@@ -66,7 +66,7 @@ private:
 
    std::vector<glm::vec3>      mSkinnedPositions;
    std::vector<glm::vec3>      mSkinnedNormals;
-   std::vector<glm::mat4>      mPosePalette;
+   std::vector<glm::mat4>      mAnimatedPosePalette;
 };
 
 #endif

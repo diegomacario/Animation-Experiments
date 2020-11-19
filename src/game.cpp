@@ -53,8 +53,8 @@ bool Game::initialize(const std::string& title)
 
    // Initialize the 3D shader
    auto gameObj3DShader = mShaderManager.loadResource<ShaderLoader>("game_object_3D",
-                                                                    "resources/shaders/game_object_3D.vs",
-                                                                    "resources/shaders/game_object_3D.fs");
+                                                                    "resources/shaders/game_object_3D.vert",
+                                                                    "resources/shaders/game_object_3D.frag");
    gameObj3DShader->use(true);
    gameObj3DShader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 0.0f, 100.0f));
    gameObj3DShader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
@@ -65,8 +65,8 @@ bool Game::initialize(const std::string& title)
 
    // Initialize the line shader
    auto lineShader = mShaderManager.loadResource<ShaderLoader>("line",
-                                                               "resources/shaders/line.vs",
-                                                               "resources/shaders/line.fs");
+                                                               "resources/shaders/line.vert",
+                                                               "resources/shaders/line.frag");
 
    // Load the models
    mModelManager.loadResource<ModelLoader>("table", "resources/models/table/table.obj");

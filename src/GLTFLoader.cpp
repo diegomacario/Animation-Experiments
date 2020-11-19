@@ -10,7 +10,7 @@
 
 namespace GLTFHelpers
 {
-   // A GLTF file may contain an array of scenes and an array of nodes
+   // A glTF file may contain an array of scenes and an array of nodes
    // Each scene may contain an array of indices of nodes
    // Each node may contain an array of indices of its children
    // The function below linearly searches for a specific node in the array of nodes and returns its index
@@ -63,7 +63,7 @@ namespace GLTFHelpers
       return localTransform;
    }
 
-   // In a GLTF file...
+   // In a glTF file...
    // - A buffer contains data that is read from a file
    //   Properties: byteLength, uri
    // - A bufferView defines a segment of the buffer data
@@ -83,7 +83,7 @@ namespace GLTFHelpers
       }
    }
 
-   // A GLTF file may contain an array of animations
+   // A glTF file may contain an array of animations
    // Each animation consists of two elements:
    // - An array of channels
    // - An array of samplers
@@ -189,12 +189,19 @@ namespace GLTFHelpers
       }
    } 
 
-   /*
-   void MeshFromAttribute(Mesh& outMesh, cgltf_attribute& attribute, cgltf_skin* skin, cgltf_node* nodes, unsigned int nodeCount)
+   // A glTF file may contain an array of meshes
+   // Each mesh may contain multiple mesh primitives, which refer to the geometry data that is required to render a mesh
+   // Each mesh primitive consists of:
+   // - A rendering mode (e.g. POINTS, LINES or TRIANGLES)
+   // - A set of indices
+   // - The attributes of the vertices
+   // - The material that should be used for rendering
+   // Each attribute is defined by mapping the attribute name (e.g. "POSITION", "NORMAL", etc.)
+   // to the index of the accessor that contains the attribute data
+   void StoreValuesOfAttributeInMesh(cgltf_attribute& attribute, cgltf_skin* skin, cgltf_node* nodes, unsigned int nodeCount, AnimatedMesh& outMesh)
    {
-      cgltf_attribute_type attribType = attribute.type;
+      // Get the accessor of the attribute and its component count
       cgltf_accessor& accessor = *attribute.data;
-
       unsigned int componentCount = 0;
       if (accessor.type == cgltf_type_vec2)
       {
@@ -208,63 +215,98 @@ namespace GLTFHelpers
       {
          componentCount = 4;
       }
-      std::vector<float> values;
-      GetFloatsFromAccessor(accessor, componentCount, values);
-      unsigned int acessorCount = (unsigned int)accessor.count;
 
-      std::vector<glm::vec3>& positions   = outMesh.GetPosition();
-      std::vector<glm::vec3>& normals     = outMesh.GetNormal();
-      std::vector<glm::vec2>& texCoords   = outMesh.GetTexCoord();
+      // Read the floats from the accessor
+      std::vector<float> attributeFloats;
+      GetFloatsFromAccessor(accessor, componentCount, attributeFloats);
+
+      // Get the vectors that will store the attributes of the mesh that we are loading
+      // In each call to this function we only fill one of these, since a cgltf_attribute only describes one attribute
+      std::vector<glm::vec3>&  positions  = outMesh.GetPositions();
+      std::vector<glm::vec3>&  normals    = outMesh.GetNormals();
+      std::vector<glm::vec2>&  texCoords  = outMesh.GetTexCoords();
       std::vector<glm::ivec4>& influences = outMesh.GetInfluences();
-      std::vector<glm::vec4>& weights     = outMesh.GetWeights();
+      std::vector<glm::vec4>&  weights    = outMesh.GetWeights();
 
-      for (unsigned int i = 0; i < acessorCount; ++i)
+      // Loop over all the values of the accessor
+      // Note that accessor.count is not equal to the number of floats in the accessor
+      // It's equal to the number of attribute values (e.g, vec2s, vec3s, vec4s, etc.) in the accessor
+      cgltf_attribute_type attributeType = attribute.type;
+      unsigned int numAttributeValues = static_cast<unsigned int>(accessor.count);
+      for (unsigned int attributeValueIndex = 0; attributeValueIndex < numAttributeValues; ++attributeValueIndex)
       {
-         int index = i * componentCount;
-         switch (attribType)
+         // Store the current attribute value in the correct vector of the mesh
+         // TODO: This looks inefficient. I think it would be better to have separate for loops inside if-statements
+         //       Since this function only loads one attribute type when it's called, it doesn't make sense to check
+         //       the attribute type in each iteration of this loop
+         int indexOfFirstFloatOfCurrAttribValue = attributeValueIndex * componentCount;
+         switch (attributeType)
          {
          case cgltf_attribute_type_position:
-            positions.push_back(glm::vec3(values[index + 0], values[index + 1], values[index + 2]));
+            // Store a position vec3
+            positions.push_back(glm::vec3(attributeFloats[indexOfFirstFloatOfCurrAttribValue + 0],
+                                          attributeFloats[indexOfFirstFloatOfCurrAttribValue + 1],
+                                          attributeFloats[indexOfFirstFloatOfCurrAttribValue + 2]));
             break;
          case cgltf_attribute_type_texcoord:
-            texCoords.push_back(glm::vec2(values[index + 0], values[index + 1]));
+            // Store a texture coordinates vec2
+            texCoords.push_back(glm::vec2(attributeFloats[indexOfFirstFloatOfCurrAttribValue + 0],
+                                          attributeFloats[indexOfFirstFloatOfCurrAttribValue + 1]));
             break;
          case cgltf_attribute_type_weights:
-            weights.push_back(glm::vec4(values[index + 0], values[index + 1], values[index + 2], values[index + 3]));
+            // Store a weights vec4
+            weights.push_back(glm::vec4(attributeFloats[indexOfFirstFloatOfCurrAttribValue + 0],
+                                        attributeFloats[indexOfFirstFloatOfCurrAttribValue + 1],
+                                        attributeFloats[indexOfFirstFloatOfCurrAttribValue + 2],
+                                        attributeFloats[indexOfFirstFloatOfCurrAttribValue + 3]));
             break;
          case cgltf_attribute_type_normal:
          {
-            glm::vec3 normal = glm::vec3(values[index + 0], values[index + 1], values[index + 2]);
+            // Store a normal vec3
+            glm::vec3 normal = glm::vec3(attributeFloats[indexOfFirstFloatOfCurrAttribValue + 0],
+                                         attributeFloats[indexOfFirstFloatOfCurrAttribValue + 1],
+                                         attributeFloats[indexOfFirstFloatOfCurrAttribValue + 2]);
+
+            // TODO: Use a constant here and add an error message
             if (glm::length2(normal) < 0.000001f)
             {
                normal = glm::vec3(0, 1, 0);
             }
+
             normals.push_back(glm::normalize(normal));
          }
          break;
          case cgltf_attribute_type_joints:
          {
-            // These indices are skin relative. This function has no information about the
-            // skin that is being parsed. Add +0.5f to round, since we can't read ints
-            glm::ivec4 joints(
-               (int)(values[index + 0] + 0.5f),
-               (int)(values[index + 1] + 0.5f),
-               (int)(values[index + 2] + 0.5f),
-               (int)(values[index + 3] + 0.5f)
-            );
+            // Store an influences ivec4
+            // Remember that in this function we are processing a node that has a mesh and a skin,
+            // so the indices we are storing below are indices into the array of nodes of the skin,
+            // not indices into the array of nodes of the glTF file, so we need to convert them from being
+            // skin-relative to being file-relative
 
-            joints.x = std::max(0, GetNodeIndex(skin->joints[joints.x], nodes, nodeCount));
-            joints.y = std::max(0, GetNodeIndex(skin->joints[joints.y], nodes, nodeCount));
-            joints.z = std::max(0, GetNodeIndex(skin->joints[joints.z], nodes, nodeCount));
-            joints.w = std::max(0, GetNodeIndex(skin->joints[joints.w], nodes, nodeCount));
+            // Note that we read the ints below as floats using the GetFloatsFromAccessor function,
+            // so we need to convert them into ints
+            // Why do we add 0.5 before casting? Because if an index is stored as 1.999999999999943157,
+            // it will be truncated into being equal to 1 instead of 2 by the cast
+            glm::ivec4 jointsIndices(static_cast<int>(attributeFloats[indexOfFirstFloatOfCurrAttribValue + 0] + 0.5f),
+                                     static_cast<int>(attributeFloats[indexOfFirstFloatOfCurrAttribValue + 1] + 0.5f),
+                                     static_cast<int>(attributeFloats[indexOfFirstFloatOfCurrAttribValue + 2] + 0.5f),
+                                     static_cast<int>(attributeFloats[indexOfFirstFloatOfCurrAttribValue + 3] + 0.5f));
 
-            influences.push_back(joints);
+            // TODO: Display error for negative indices
+            // Convert the indices from being skin-relative to being file-relative
+            // and store negative indices as zeroes
+            jointsIndices.x = std::max(0, GetNodeIndex(skin->joints[jointsIndices.x], nodes, nodeCount));
+            jointsIndices.y = std::max(0, GetNodeIndex(skin->joints[jointsIndices.y], nodes, nodeCount));
+            jointsIndices.z = std::max(0, GetNodeIndex(skin->joints[jointsIndices.z], nodes, nodeCount));
+            jointsIndices.w = std::max(0, GetNodeIndex(skin->joints[jointsIndices.w], nodes, nodeCount));
+
+            influences.push_back(jointsIndices);
          }
          break;
          }
       }
    }
-   */
 }
 
 cgltf_data* LoadGLTFFile(const char* path)
@@ -368,7 +410,7 @@ std::vector<std::string> LoadJointNames(cgltf_data* data)
    return jointNames;
 }
 
-// A GLTF file may contain an array of animations
+// A glTF file may contain an array of animations
 // Each animation consists of two elements:
 // - An array of channels
 // - An array of samplers
@@ -427,7 +469,7 @@ std::vector<Clip> LoadClips(cgltf_data* data)
    return clips;
 }
 
-// A GLTF file may contain an array of skins
+// A glTF file may contain an array of skins
 // Each skin consists of two elements:
 // - An array of joints, which are the indices of nodes that define the skeleton hierarchy
 // - The inverseBindMatrices, which is a a reference to an accessor that contains one matrix for each joint
@@ -529,49 +571,72 @@ Skeleton LoadSkeleton(cgltf_data* data)
                    LoadJointNames(data));
 }
 
-/*
-std::vector<Mesh> LoadMeshes(cgltf_data* data)
+// A glTF file may contain an array of meshes
+// Each mesh may contain multiple mesh primitives, which refer to the geometry data that is required to render a mesh
+// Each mesh primitive consists of:
+// - A rendering mode (e.g. POINTS, LINES or TRIANGLES)
+// - A set of indices
+// - The attributes of the vertices
+// - The material that should be used for rendering
+// This function loads the meshes of nodes that also refer to skins
+// In other words, it loads animated meshes
+std::vector<AnimatedMesh> LoadAnimatedMeshes(cgltf_data* data)
 {
-   std::vector<Mesh> result;
-   cgltf_node* nodes = data->nodes;
-   unsigned int nodeCount = (unsigned int)data->nodes_count;
+   std::vector<AnimatedMesh> animatedMeshes;
 
-   for (unsigned int i = 0; i < nodeCount; ++i)
+   // Loop over the array of nodes of the glTF file
+   unsigned int numNodes = static_cast<unsigned int>(data->nodes_count);
+   for (unsigned int nodeIndex = 0; nodeIndex < numNodes; ++nodeIndex)
    {
-      cgltf_node* node = &nodes[i];
-      if (node->mesh == 0 || node->skin == 0)
+      // This function only loads animated meshes, so the node must contain a mesh and a skin for us to process it
+      cgltf_node* currNode = &data->nodes[nodeIndex];
+      if (currNode->mesh == 0 || currNode->skin == 0)
       {
          continue;
       }
-      unsigned int numPrims = (unsigned int)node->mesh->primitives_count;
-      for (unsigned int j = 0; j < numPrims; ++j)
+
+      // Loop over the array of mesh primitives of the current node
+      unsigned int numPrimitives = static_cast<unsigned int>(currNode->mesh->primitives_count);
+      for (unsigned int primitiveIndex = 0; primitiveIndex < numPrimitives; ++primitiveIndex)
       {
-         result.push_back(Mesh());
-         Mesh& mesh = result[result.size() - 1];
+         // Get the current mesh primitive
+         cgltf_primitive* currPrimitive = &currNode->mesh->primitives[primitiveIndex];
 
-         cgltf_primitive* primitive = &node->mesh->primitives[j];
+         // Create an AnimatedMesh for the current mesh primitive
+         animatedMeshes.push_back(AnimatedMesh());
+         AnimatedMesh& currMesh = animatedMeshes[animatedMeshes.size() - 1];
 
-         unsigned int numAttributes = (unsigned int)primitive->attributes_count;
-         for (unsigned int k = 0; k < numAttributes; ++k)
+         // Loop over the attributes of the current mesh primitive
+         unsigned int numAttributes = static_cast<unsigned int>(currPrimitive->attributes_count);
+         for (unsigned int attributeIndex = 0; attributeIndex < numAttributes; ++attributeIndex)
          {
-            cgltf_attribute* attribute = &primitive->attributes[k];
-            GLTFHelpers::MeshFromAttribute(mesh, *attribute, node->skin, nodes, nodeCount);
+            // Get the current attribute
+            cgltf_attribute* attribute = &currPrimitive->attributes[attributeIndex];
+            // Read the values of the current attribute and store them in the current mesh
+            GLTFHelpers::StoreValuesOfAttributeInMesh(*attribute, currNode->skin, data->nodes, numNodes, currMesh);
          }
-         if (primitive->indices != 0)
+
+         // If the current mesh primitive has a set of indices, store them too
+         if (currPrimitive->indices != 0)
          {
-            unsigned int indexCount = (unsigned int)primitive->indices->count;
-            std::vector<unsigned int>& indices = mesh.GetIndices();
+            unsigned int indexCount = static_cast<unsigned int>(currPrimitive->indices->count);
+
+            // Get the vector that will store the indices of the current mesh
+            std::vector<unsigned int>& indices = currMesh.GetIndices();
             indices.resize(indexCount);
 
-            for (unsigned int k = 0; k < indexCount; ++k)
+            // Loop over the indices of the current mesh primitive
+            for (unsigned int i = 0; i < indexCount; ++i)
             {
-               indices[k] = (unsigned int)cgltf_accessor_read_index(primitive->indices, k);
+               indices[i] = static_cast<unsigned int>(cgltf_accessor_read_index(currPrimitive->indices, i));
             }
          }
-         mesh.UpdateOpenGLBuffers();
+
+         // TODO: Perhaps we shouldn't do this here. The user should choose when this is done
+         // Once we are done loading the current mesh, we load its VBOs with the data that we read
+         currMesh.LoadBuffers();
       }
    }
 
-   return result;
-} // End of the LoadMeshes function
-*/
+   return animatedMeshes;
+}

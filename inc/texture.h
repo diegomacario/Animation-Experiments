@@ -16,7 +16,8 @@ public:
    Texture(Texture&& rhs) noexcept;
    Texture& operator=(Texture&& rhs) noexcept;
 
-   void bind() const;
+   void bind(unsigned int textureUnit, int uniformLocation) const;
+   void unbind(unsigned int textureUnit) const;
 
 private:
 
