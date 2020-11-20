@@ -83,7 +83,7 @@ void Mesh::configureVAO(const std::vector<Vertex>& vertices, const std::vector<u
 
 void Mesh::bindMaterialTextures(const Shader& shader) const
 {
-   unsigned int texUnit = GL_TEXTURE0;
+   unsigned int texUnit = 0;
 
    for (unsigned int i = 0; i < mMaterial.textures.size(); ++i)
    {
