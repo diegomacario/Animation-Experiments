@@ -14,7 +14,7 @@ void FiniteStateMachine::initialize(std::unordered_map<std::string, std::shared_
       mCurrentState    = it->second;
       mPreviousStateID = initialStateID;
       mCurrentStateID  = initialStateID;
-      // TODO: Call the enter() function of initialState here
+      mCurrentState->enter();
    }
    else
    {

@@ -5,6 +5,8 @@
 
 #include "game.h"
 #include "line.h"
+#include "AnimatedMesh.h"
+#include "Clip.h"
 
 class PlayState : public State
 {
@@ -56,6 +58,34 @@ private:
    Line                                    mLocalXAxis;
    Line                                    mLocalYAxis;
    Line                                    mLocalZAxis;
+
+   struct AnimationData
+   {
+      AnimationData()
+         : mClip(0)
+         , mPlayTime(0.0f)
+      {
+
+      }
+
+      unsigned int           mClip;
+      float                  mPlayTime;
+      Pose                   mAnimatedPose;
+      std::vector<glm::mat4> mAnimatedPosePalette;
+      Transform              mModelTransform;
+   };
+
+   std::shared_ptr<Shader>   mAnimatedMeshShader;
+   std::shared_ptr<Shader>   mStaticMeshShader;
+   std::shared_ptr<Texture>  mDiffuseTexture;
+
+   Skeleton                  mSkeleton;
+   std::vector<AnimatedMesh> mCPUAnimatedMeshes;
+   std::vector<AnimatedMesh> mGPUAnimatedMeshes;
+   std::vector<Clip>         mClips;
+
+   AnimationData             mCPUAnimationData;
+   AnimationData             mGPUAnimationData;
 };
 
 #endif

@@ -41,10 +41,10 @@ public:
    void         setUniformMat3(const std::string& name, const glm::mat3& value) const;
    void         setUniformMat4(const std::string& name, const glm::mat4& value) const;
 
-private:
-
    int          getAttributeLocation(const std::string& attributeName) const;
    int          getUniformLocation(const std::string& uniformName) const;
+
+private:
 
    unsigned int                        mShaderProgID;
    std::map<std::string, unsigned int> mAttributes;
