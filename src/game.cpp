@@ -40,9 +40,9 @@ bool Game::initialize(const std::string& title)
    float heightInPix = 720.0f;
    float aspectRatio = (widthInPix / heightInPix);
 
-   mCamera = std::make_shared<Camera>(glm::vec3(30.0f, 30.0f, 30.0f),
+   mCamera = std::make_shared<Camera>(glm::vec3(0.0f, 9.0f, 13.0f),
                                       glm::vec3(0.0f, 1.0f, 0.0f),
-                                      -45.0f,
+                                      0,
                                       -30.0f,
                                       45.0f,       // Fovy
                                       aspectRatio, // Aspect ratio
@@ -73,16 +73,16 @@ bool Game::initialize(const std::string& title)
    mModelManager.loadResource<ModelLoader>("teapot", "resources/models/teapot/teapot.obj");
 
    mTable = std::make_shared<GameObject3D>(mModelManager.getResource("table"),
-                                           glm::vec3(0.0f, -1.96875f * (7.5f / 2.5f) * 2.5f, 0.0f),
+                                           glm::vec3(0.0f),
                                            0.0f,
                                            glm::vec3(0.0f, 0.0f, 0.0f),
-                                           1.0f);
+                                           0.15f);
 
    mTeapot = std::make_shared<GameObject3D>(mModelManager.getResource("teapot"),
-                                            glm::vec3(0.0f),
+                                            glm::vec3(0.0f, 7.5f / 22.5f, 0.0f),
                                             0.0f,
                                             glm::vec3(0.0f, 0.0f, 0.0f),
-                                            7.5f / 2.5f);
+                                            7.5f / 45.0f);
 
    // Create the FSM
    mFSM = std::make_shared<FiniteStateMachine>();

@@ -304,12 +304,12 @@ void PlayState::render()
 
    mTable->render(*mGameObject3DShader);
 
-   mGameObject3DShader->use(false);
-
    // Disable face culling so that we render the inside of the teapot
    //glDisable(GL_CULL_FACE);
    //mTeapot->render(*mGameObject3DShader);
    //glEnable(GL_CULL_FACE);
+
+   mGameObject3DShader->use(false);
 
    // Render the CPU mesh
    // -------------------------------------------------------------------------
@@ -379,9 +379,9 @@ void PlayState::resetScene()
 
 void PlayState::resetCamera()
 {
-   mCamera->reposition(glm::vec3(30.0f, 30.0f, 30.0f),
+   mCamera->reposition(glm::vec3(0.0f, 9.0f, 13.0f),
                        glm::vec3(0.0f, 1.0f, 0.0f),
-                       -45.0f,
+                       0.0f,
                        -30.0f,
                        45.0f);
 }
