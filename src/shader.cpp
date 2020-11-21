@@ -1,3 +1,5 @@
+#include <glm/gtc/type_ptr.hpp>
+
 #include <iostream>
 
 #include "shader.h"
@@ -101,6 +103,11 @@ void Shader::setUniformMat3(const std::string& name, const glm::mat3& value) con
 void Shader::setUniformMat4(const std::string& name, const glm::mat4& value) const
 {
    glUniformMatrix4fv(getUniformLocation(name.c_str()), 1, GL_FALSE, &value[0][0]);
+}
+
+void Shader::setUniformMat4Array(const std::string& name, const std::vector<glm::mat4>& values) const
+{
+   glUniformMatrix4fv(getUniformLocation(name.c_str()), values.size(), GL_FALSE, glm::value_ptr(values[0]));
 }
 
 int Shader::getAttributeLocation(const std::string& attributeName) const

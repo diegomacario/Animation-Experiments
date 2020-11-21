@@ -96,7 +96,7 @@ void AnimatedMesh::ConfigureVAO(int posAttribLocation,
    {
       glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::positions]);
       glEnableVertexAttribArray(posAttribLocation);
-      glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+      glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
    }
 
    // Normals
@@ -104,7 +104,7 @@ void AnimatedMesh::ConfigureVAO(int posAttribLocation,
    {
       glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::normals]);
       glEnableVertexAttribArray(normalAttribLocation);
-      glVertexAttribPointer(normalAttribLocation, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+      glVertexAttribPointer(normalAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
    }
 
    // Texture coordinates
@@ -112,7 +112,7 @@ void AnimatedMesh::ConfigureVAO(int posAttribLocation,
    {
       glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::texCoords]);
       glEnableVertexAttribArray(texCoordsAttribLocation);
-      glVertexAttribPointer(texCoordsAttribLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+      glVertexAttribPointer(texCoordsAttribLocation, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
    }
 
    // Weights
@@ -120,7 +120,7 @@ void AnimatedMesh::ConfigureVAO(int posAttribLocation,
    {
       glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::weights]);
       glEnableVertexAttribArray(weightsAttribLocation);
-      glVertexAttribPointer(weightsAttribLocation, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+      glVertexAttribPointer(weightsAttribLocation, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
    }
 
    // Influences
@@ -128,7 +128,7 @@ void AnimatedMesh::ConfigureVAO(int posAttribLocation,
    {
       glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::influences]);
       glEnableVertexAttribArray(influencesAttribLocation);
-      glVertexAttribPointer(influencesAttribLocation, 4, GL_INT, GL_FALSE, 4 * sizeof(int), (void*)0);
+      glVertexAttribIPointer(influencesAttribLocation, 4, GL_INT, 0, (void*)0);
    }
 
    glBindBuffer(GL_ARRAY_BUFFER, 0);

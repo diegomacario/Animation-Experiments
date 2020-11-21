@@ -6,6 +6,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 
 class Shader
 {
@@ -40,6 +41,7 @@ public:
    void         setUniformMat2(const std::string& name, const glm::mat2& value) const;
    void         setUniformMat3(const std::string& name, const glm::mat3& value) const;
    void         setUniformMat4(const std::string& name, const glm::mat4& value) const;
+   void         setUniformMat4Array(const std::string& name, const std::vector<glm::mat4>& values) const;
 
    int          getAttributeLocation(const std::string& attributeName) const;
    int          getUniformLocation(const std::string& uniformName) const;

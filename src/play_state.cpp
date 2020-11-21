@@ -52,13 +52,6 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
    int positionsAttribLocOfStaticShader  = mStaticMeshShader->getAttributeLocation("position");
    int normalsAttribLocOfStaticShader    = mStaticMeshShader->getAttributeLocation("normal");
    int texCoordsAttribLocOfStaticShader  = mStaticMeshShader->getAttributeLocation("texCoord");
-
-   int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
-   int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
-   int texCoordsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("texCoord");
-   int weightsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("weights");
-   int influencesAttribLocOfAnimatedShader = mAnimatedMeshShader->getAttributeLocation("joints");
-
    for (unsigned int i = 0,
         size = static_cast<unsigned int>(mCPUAnimatedMeshes.size());
         i < size;
@@ -69,7 +62,19 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
                                          texCoordsAttribLocOfStaticShader,
                                          -1,
                                          -1);
+   }
 
+   // Configure the VAOs of the GPU animated meshes
+   int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
+   int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
+   int texCoordsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("texCoord");
+   int weightsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("weights");
+   int influencesAttribLocOfAnimatedShader = mAnimatedMeshShader->getAttributeLocation("joints");
+   for (unsigned int i = 0,
+        size = static_cast<unsigned int>(mGPUAnimatedMeshes.size());
+        i < size;
+        ++i)
+   {
       mGPUAnimatedMeshes[i].ConfigureVAO(positionsAttribLocOfAnimatedShader,
                                          normalsAttribLocOfAnimatedShader,
                                          texCoordsAttribLocOfAnimatedShader,
@@ -95,7 +100,9 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
    mCPUAnimationData.mAnimatedPose = mSkeleton.GetRestPose();
    mGPUAnimationData.mAnimatedPose = mSkeleton.GetRestPose();
 
-   mCPUAnimationData.mAnimatedPosePalette.resize(mCPUAnimationData.mAnimatedPose.GetNumberOfJoints());
+   // Set the model transforms
+   mCPUAnimationData.mModelTransform = Transform(glm::vec3(-2.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
+   mGPUAnimationData.mModelTransform = Transform(glm::vec3(2.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
 }
 
 void PlayState::enter()
@@ -232,8 +239,9 @@ void PlayState::update(float deltaTime)
    mCPUAnimationData.mAnimatedPose.GetMatrixPalette(mCPUAnimationData.mAnimatedPosePalette);
    mGPUAnimationData.mAnimatedPose.GetMatrixPalette(mGPUAnimationData.mAnimatedPosePalette);
 
-   // Generate the skin matrices
    std::vector<glm::mat4>& inverseBindPose = mSkeleton.GetInvBindPose();
+
+   // Generate the skin matrices of the CPU meshes
    for (unsigned int i = 0,
         size = static_cast<unsigned int>(mCPUAnimationData.mAnimatedPosePalette.size());
         i < size;
@@ -241,6 +249,15 @@ void PlayState::update(float deltaTime)
    {
       // We store the skin matrices in the same vectors that we use to store the pose palettes
       mCPUAnimationData.mAnimatedPosePalette[i] = mCPUAnimationData.mAnimatedPosePalette[i] * inverseBindPose[i];
+   }
+
+   // Generate the skin matrices of the GPU meshes
+   for (unsigned int i = 0,
+        size = static_cast<unsigned int>(mGPUAnimationData.mAnimatedPosePalette.size());
+        i < size;
+        ++i)
+   {
+      // We store the skin matrices in the same vectors that we use to store the pose palettes
       mGPUAnimationData.mAnimatedPosePalette[i] = mGPUAnimationData.mAnimatedPosePalette[i] * inverseBindPose[i];
    }
 
@@ -287,20 +304,22 @@ void PlayState::render()
 
    mTable->render(*mGameObject3DShader);
 
+   mGameObject3DShader->use(false);
+
    // Disable face culling so that we render the inside of the teapot
    //glDisable(GL_CULL_FACE);
    //mTeapot->render(*mGameObject3DShader);
    //glEnable(GL_CULL_FACE);
 
-   // Render the character
+   // Render the CPU mesh
    // -------------------------------------------------------------------------
 
    mStaticMeshShader->use(true);
-   mStaticMeshShader->setUniformMat4("model", transformToMat4(mCPUAnimationData.mModelTransform));
-   mStaticMeshShader->setUniformMat4("view", mCamera->getViewMatrix());
+   mStaticMeshShader->setUniformMat4("model",      transformToMat4(mCPUAnimationData.mModelTransform));
+   mStaticMeshShader->setUniformMat4("view",       mCamera->getViewMatrix());
    mStaticMeshShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
-   mStaticMeshShader->setUniformVec3("light", glm::vec3(1, 1, 1));
-   mDiffuseTexture->bind(GL_TEXTURE0, mStaticMeshShader->getUniformLocation("tex0"));
+   mStaticMeshShader->setUniformVec3("light",      glm::vec3(1, 1, 1));
+   mDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("tex0"));
 
    // Loop over the meshes and render each one
    for (unsigned int i = 0,
@@ -311,8 +330,31 @@ void PlayState::render()
       mCPUAnimatedMeshes[i].Render();
    }
 
-   mDiffuseTexture->unbind(GL_TEXTURE0);
+   mDiffuseTexture->unbind(0);
    mStaticMeshShader->use(false);
+
+   // Render the GPU mesh
+   // -------------------------------------------------------------------------
+
+   mAnimatedMeshShader->use(true);
+   mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mGPUAnimationData.mModelTransform));
+   mAnimatedMeshShader->setUniformMat4("view",             mCamera->getViewMatrix());
+   mAnimatedMeshShader->setUniformMat4("projection",       mCamera->getPerspectiveProjectionMatrix());
+   mAnimatedMeshShader->setUniformMat4Array("animated[0]", mGPUAnimationData.mAnimatedPosePalette);
+   mAnimatedMeshShader->setUniformVec3("light",            glm::vec3(1, 1, 1));
+   mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("tex0"));
+
+   // Loop over the meshes and render each one
+   for (unsigned int i = 0,
+        size = static_cast<unsigned int>(mGPUAnimatedMeshes.size());
+        i < size;
+        ++i)
+   {
+      mGPUAnimatedMeshes[i].Render();
+   }
+
+   mDiffuseTexture->unbind(0);
+   mAnimatedMeshShader->use(false);
 
    // -------------------------------------------------------------------------
 
