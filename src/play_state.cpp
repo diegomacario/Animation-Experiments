@@ -40,7 +40,12 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
    mAnimatedMeshShader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
    mAnimatedMeshShader->setUniformFloat("pointLights[0].linearAtt", 0.01f);
    mAnimatedMeshShader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
-   mAnimatedMeshShader->setUniformInt("numPointLightsInScene", 1);
+   mAnimatedMeshShader->setUniformVec3("pointLights[1].worldPos", glm::vec3(0.0f, 2.0f, -10.0f));
+   mAnimatedMeshShader->setUniformVec3("pointLights[1].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   mAnimatedMeshShader->setUniformFloat("pointLights[1].constantAtt", 1.0f);
+   mAnimatedMeshShader->setUniformFloat("pointLights[1].linearAtt", 0.01f);
+   mAnimatedMeshShader->setUniformFloat("pointLights[1].quadraticAtt", 0.0f);
+   mAnimatedMeshShader->setUniformInt("numPointLightsInScene", 2);
    mAnimatedMeshShader->use(false);
 
    // Initialize the static mesh shader
@@ -52,7 +57,12 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
    mStaticMeshShader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
    mStaticMeshShader->setUniformFloat("pointLights[0].linearAtt", 0.01f);
    mStaticMeshShader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
-   mStaticMeshShader->setUniformInt("numPointLightsInScene", 1);
+   mStaticMeshShader->setUniformVec3("pointLights[1].worldPos", glm::vec3(0.0f, 2.0f, -10.0f));
+   mStaticMeshShader->setUniformVec3("pointLights[1].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   mStaticMeshShader->setUniformFloat("pointLights[1].constantAtt", 1.0f);
+   mStaticMeshShader->setUniformFloat("pointLights[1].linearAtt", 0.01f);
+   mStaticMeshShader->setUniformFloat("pointLights[1].quadraticAtt", 0.0f);
+   mStaticMeshShader->setUniformInt("numPointLightsInScene", 2);
    mStaticMeshShader->use(false);
 
    mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/Woman.png");
