@@ -42,7 +42,7 @@ bool Game::initialize(const std::string& title)
 
    mCamera = std::make_shared<Camera>(glm::vec3(0.0f, 9.0f, 13.0f),
                                       glm::vec3(0.0f, 1.0f, 0.0f),
-                                      0,
+                                      0.0f,
                                       -30.0f,
                                       45.0f,       // Fovy
                                       aspectRatio, // Aspect ratio
@@ -56,7 +56,7 @@ bool Game::initialize(const std::string& title)
                                                                     "resources/shaders/game_object_3D.vert",
                                                                     "resources/shaders/game_object_3D.frag");
    gameObj3DShader->use(true);
-   gameObj3DShader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 0.0f, 100.0f));
+   gameObj3DShader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
    gameObj3DShader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
    gameObj3DShader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
    gameObj3DShader->setUniformFloat("pointLights[0].linearAtt", 0.01f);

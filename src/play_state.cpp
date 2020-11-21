@@ -33,11 +33,27 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
 {
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
-                                                                                       "resources/shaders/diffuse.frag");
+                                                                                       "resources/shaders/mesh_with_simple_illumination.frag");
+   mAnimatedMeshShader->use(true);
+   mAnimatedMeshShader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
+   mAnimatedMeshShader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   mAnimatedMeshShader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
+   mAnimatedMeshShader->setUniformFloat("pointLights[0].linearAtt", 0.01f);
+   mAnimatedMeshShader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
+   mAnimatedMeshShader->setUniformInt("numPointLightsInScene", 1);
+   mAnimatedMeshShader->use(false);
 
    // Initialize the static mesh shader
    mStaticMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh.vert",
-                                                                                     "resources/shaders/diffuse.frag");
+                                                                                     "resources/shaders/mesh_with_simple_illumination.frag");
+   mStaticMeshShader->use(true);
+   mStaticMeshShader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
+   mStaticMeshShader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   mStaticMeshShader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
+   mStaticMeshShader->setUniformFloat("pointLights[0].linearAtt", 0.01f);
+   mStaticMeshShader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
+   mStaticMeshShader->setUniformInt("numPointLightsInScene", 1);
+   mStaticMeshShader->use(false);
 
    mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/Woman.png");
 
@@ -318,8 +334,8 @@ void PlayState::render()
    mStaticMeshShader->setUniformMat4("model",      transformToMat4(mCPUAnimationData.mModelTransform));
    mStaticMeshShader->setUniformMat4("view",       mCamera->getViewMatrix());
    mStaticMeshShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
-   mStaticMeshShader->setUniformVec3("light",      glm::vec3(1, 1, 1));
-   mDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("tex0"));
+   //mStaticMeshShader->setUniformVec3("cameraPos",  mCamera->getPosition());
+   mDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
 
    // Loop over the meshes and render each one
    for (unsigned int i = 0,
@@ -341,8 +357,8 @@ void PlayState::render()
    mAnimatedMeshShader->setUniformMat4("view",             mCamera->getViewMatrix());
    mAnimatedMeshShader->setUniformMat4("projection",       mCamera->getPerspectiveProjectionMatrix());
    mAnimatedMeshShader->setUniformMat4Array("animated[0]", mGPUAnimationData.mAnimatedPosePalette);
-   mAnimatedMeshShader->setUniformVec3("light",            glm::vec3(1, 1, 1));
-   mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("tex0"));
+   //mAnimatedMeshShader->setUniformVec3("cameraPos",        mCamera->getPosition());
+   mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("diffuseTex"));
 
    // Loop over the meshes and render each one
    for (unsigned int i = 0,
