@@ -217,20 +217,24 @@ void RearrangeFastClip(FastClip& fastClip, JointMap& jointMap)
    }
 }
 
-/*
-void RearrangeMesh(Mesh& mesh, JointMap& jointMap)
+void RearrangeMesh(AnimatedMesh& mesh, JointMap& jointMap)
 {
    std::vector<glm::ivec4>& influences = mesh.GetInfluences();
-   unsigned int size = static_cast<unsigned int>(influences.size());
 
-   for (unsigned int i = 0; i < size; ++i)
+   // Loop over all the influences of the mesh
+   for (unsigned int influenceIndex = 0,
+        numInfluences = static_cast<unsigned int>(influences.size());
+        influenceIndex < numInfluences;
+        ++influenceIndex)
    {
-      influences[i].x = jointMap[influences[i].x];
-      influences[i].y = jointMap[influences[i].y];
-      influences[i].z = jointMap[influences[i].z];
-      influences[i].w = jointMap[influences[i].w];
+      // Update the indices of the influencing joints
+      influences[influenceIndex].x = jointMap[influences[influenceIndex].x];
+      influences[influenceIndex].y = jointMap[influences[influenceIndex].y];
+      influences[influenceIndex].z = jointMap[influences[influenceIndex].z];
+      influences[influenceIndex].w = jointMap[influences[influenceIndex].w];
    }
 
-   mesh.UpdateOpenGLBuffers();
+   // TODO: This is inefficient. We only need to load the influences.
+   //       To fix this, create functions like LoadPositions, LoadNormals, etc.
+   mesh.LoadBuffers();
 }
-*/

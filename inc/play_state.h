@@ -62,14 +62,14 @@ private:
    struct AnimationData
    {
       AnimationData()
-         : mClip(0)
-         , mPlayTime(0.0f)
+         : mClipIndex(0)
+         , mPlaybackTime(0.0f)
       {
 
       }
 
-      unsigned int           mClip;
-      float                  mPlayTime;
+      unsigned int           mClipIndex;
+      float                  mPlaybackTime;
       Pose                   mAnimatedPose;
       std::vector<glm::mat4> mAnimatedPosePalette;
       Transform              mModelTransform;
@@ -82,7 +82,7 @@ private:
    Skeleton                  mSkeleton;
    std::vector<AnimatedMesh> mCPUAnimatedMeshes;
    std::vector<AnimatedMesh> mGPUAnimatedMeshes;
-   std::vector<Clip>         mClips;
+   std::vector<FastClip>     mClips;
 
    AnimationData             mCPUAnimationData;
    AnimationData             mGPUAnimationData;

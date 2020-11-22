@@ -8,6 +8,7 @@
 #include "shader_loader.h"
 #include "texture_loader.h"
 #include "GLTFLoader.h"
+#include "RearrangeBones.h"
 #include "play_state.h"
 
 PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateMachine,
@@ -67,17 +68,57 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
 
    mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/Woman.png");
 
-   cgltf_data* data   = LoadGLTFFile("resources/models/woman/Woman.gltf");
-   mSkeleton          = LoadSkeleton(data);
-   mCPUAnimatedMeshes = LoadAnimatedMeshes(data);
-   mGPUAnimatedMeshes = LoadAnimatedMeshes(data);
-   mClips             = LoadClips(data);
+   cgltf_data* data        = LoadGLTFFile("resources/models/woman/Woman.gltf");
+   mSkeleton               = LoadSkeleton(data);
+   mCPUAnimatedMeshes      = LoadAnimatedMeshes(data);
+   mGPUAnimatedMeshes      = LoadAnimatedMeshes(data);
+   std::vector<Clip> clips = LoadClips(data);
    FreeGLTFFile(data);
 
+   // Optimize the clips
+   mClips.resize(clips.size());
+   for (unsigned int clipIndex = 0,
+        numClips = static_cast<unsigned int>(clips.size());
+        clipIndex < numClips;
+        ++clipIndex)
+   {
+      mClips[clipIndex] = OptimizeClip(clips[clipIndex]);
+   }
+
+   // Rearrange the skeleton
+   JointMap jointMap = RearrangeSkeleton(mSkeleton);
+
+   // Rearrange the CPU meshes
+   for (unsigned int meshIndex = 0,
+        numMeshes = static_cast<unsigned int>(mCPUAnimatedMeshes.size());
+        meshIndex < numMeshes;
+        ++meshIndex)
+   {
+      RearrangeMesh(mCPUAnimatedMeshes[meshIndex], jointMap);
+   }
+
+   // Rearrange the GPU meshes
+   for (unsigned int meshIndex = 0,
+        numMeshes = static_cast<unsigned int>(mGPUAnimatedMeshes.size());
+        meshIndex < numMeshes;
+        ++meshIndex)
+   {
+      RearrangeMesh(mGPUAnimatedMeshes[meshIndex], jointMap);
+   }
+
+   // Rearrange the clips
+   for (unsigned int numClips = 0,
+        size = static_cast<unsigned int>(mClips.size());
+        numClips < size;
+        ++numClips)
+   {
+      RearrangeFastClip(mClips[numClips], jointMap);
+   }
+
    // Configure the VAOs of the CPU animated meshes
-   int positionsAttribLocOfStaticShader  = mStaticMeshShader->getAttributeLocation("position");
-   int normalsAttribLocOfStaticShader    = mStaticMeshShader->getAttributeLocation("normal");
-   int texCoordsAttribLocOfStaticShader  = mStaticMeshShader->getAttributeLocation("texCoord");
+   int positionsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("position");
+   int normalsAttribLocOfStaticShader   = mStaticMeshShader->getAttributeLocation("normal");
+   int texCoordsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("texCoord");
    for (unsigned int i = 0,
         size = static_cast<unsigned int>(mCPUAnimatedMeshes.size());
         i < size;
@@ -114,11 +155,11 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
    {
       if (mClips[clipIndex].GetName() == "Walking")
       {
-         mCPUAnimationData.mClip = clipIndex;
+         mCPUAnimationData.mClipIndex = clipIndex;
       }
       else if (mClips[clipIndex].GetName() == "Running")
       {
-         mGPUAnimationData.mClip = clipIndex;
+         mGPUAnimationData.mClipIndex = clipIndex;
       }
    }
 
@@ -254,12 +295,12 @@ void PlayState::processInput(float deltaTime)
 
 void PlayState::update(float deltaTime)
 {
-   Clip& currCPUClip = mClips[mCPUAnimationData.mClip];
-   Clip& currGPUClip = mClips[mGPUAnimationData.mClip];
+   FastClip& currCPUClip = mClips[mCPUAnimationData.mClipIndex];
+   FastClip& currGPUClip = mClips[mGPUAnimationData.mClipIndex];
 
    // Sample the CPU and GPU clips to get animated poses
-   mCPUAnimationData.mPlayTime = currCPUClip.Sample(mCPUAnimationData.mAnimatedPose, mCPUAnimationData.mPlayTime + deltaTime);
-   mGPUAnimationData.mPlayTime = currGPUClip.Sample(mGPUAnimationData.mAnimatedPose, mGPUAnimationData.mPlayTime + deltaTime);
+   mCPUAnimationData.mPlaybackTime = currCPUClip.Sample(mCPUAnimationData.mAnimatedPose, mCPUAnimationData.mPlaybackTime + deltaTime);
+   mGPUAnimationData.mPlaybackTime = currGPUClip.Sample(mGPUAnimationData.mAnimatedPose, mGPUAnimationData.mPlaybackTime + deltaTime);
 
    // Get the palettes of the CPU and GPU animated poses
    mCPUAnimationData.mAnimatedPose.GetMatrixPalette(mCPUAnimationData.mAnimatedPosePalette);
