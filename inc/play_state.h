@@ -35,6 +35,8 @@ public:
 
 private:
 
+   void userInterface();
+
    void resetScene();
 
    void resetCamera();
@@ -83,6 +85,8 @@ private:
    std::vector<AnimatedMesh> mCPUAnimatedMeshes;
    std::vector<AnimatedMesh> mGPUAnimatedMeshes;
    std::vector<FastClip>     mClips;
+   std::string               mClipNames;
+   int                       mSelectedClip;
 
    AnimationData             mCPUAnimationData;
    AnimationData             mGPUAnimationData;

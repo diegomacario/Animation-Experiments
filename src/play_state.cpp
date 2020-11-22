@@ -75,16 +75,6 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
    std::vector<Clip> clips = LoadClips(data);
    FreeGLTFFile(data);
 
-   // Optimize the clips
-   mClips.resize(clips.size());
-   for (unsigned int clipIndex = 0,
-        numClips = static_cast<unsigned int>(clips.size());
-        clipIndex < numClips;
-        ++clipIndex)
-   {
-      mClips[clipIndex] = OptimizeClip(clips[clipIndex]);
-   }
-
    // Rearrange the skeleton
    JointMap jointMap = RearrangeSkeleton(mSkeleton);
 
@@ -106,13 +96,16 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
       RearrangeMesh(mGPUAnimatedMeshes[meshIndex], jointMap);
    }
 
-   // Rearrange the clips
-   for (unsigned int numClips = 0,
-        size = static_cast<unsigned int>(mClips.size());
-        numClips < size;
-        ++numClips)
+   // Optimize and rearrange the clips, and get their names
+   mClips.resize(clips.size());
+   for (unsigned int clipIndex = 0,
+        numClips = static_cast<unsigned int>(clips.size());
+        clipIndex < numClips;
+        ++clipIndex)
    {
-      RearrangeFastClip(mClips[numClips], jointMap);
+      mClips[clipIndex] = OptimizeClip(clips[clipIndex]);
+      RearrangeFastClip(mClips[clipIndex], jointMap);
+      mClipNames += (mClips[clipIndex].GetName() + '\0');
    }
 
    // Configure the VAOs of the CPU animated meshes
@@ -157,8 +150,9 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
       {
          mCPUAnimationData.mClipIndex = clipIndex;
       }
-      else if (mClips[clipIndex].GetName() == "Running")
+      else if (mClips[clipIndex].GetName() == "Punch")
       {
+         mSelectedClip = clipIndex;
          mGPUAnimationData.mClipIndex = clipIndex;
       }
    }
@@ -295,6 +289,12 @@ void PlayState::processInput(float deltaTime)
 
 void PlayState::update(float deltaTime)
 {
+   if (mGPUAnimationData.mClipIndex != mSelectedClip)
+   {
+      mGPUAnimationData.mClipIndex = mSelectedClip;
+      mGPUAnimationData.mAnimatedPose = mSkeleton.GetRestPose();
+   }
+
    FastClip& currCPUClip = mClips[mCPUAnimationData.mClipIndex];
    FastClip& currGPUClip = mClips[mGPUAnimationData.mClipIndex];
 
@@ -341,13 +341,7 @@ void PlayState::render()
    ImGui_ImplGlfw_NewFrame();
    ImGui::NewFrame();
 
-   {
-      ImGui::Begin("Animation Controller"); // Create a window called "Animation Controller"
-
-      ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
-      ImGui::End();
-   }
+   userInterface();
 
    mWindow->clearAndBindMultisampleFramebuffer();
 
@@ -437,6 +431,17 @@ void PlayState::render()
 void PlayState::exit()
 {
 
+}
+
+void PlayState::userInterface()
+{
+   ImGui::Begin("Animation Controller"); // Create a window called "Animation Controller"
+
+   ImGui::Text("Application average: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+   ImGui::Combo("", &mSelectedClip, mClipNames.c_str());
+
+   ImGui::End();
 }
 
 void PlayState::resetScene()
