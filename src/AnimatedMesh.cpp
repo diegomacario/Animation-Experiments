@@ -90,49 +90,63 @@ void AnimatedMesh::ConfigureVAO(int posAttribLocation,
    glBindVertexArray(mVAO);
 
    // Set the vertex attribute pointers
+   BindFloatAttribute(posAttribLocation,       mVBOs[VBOTypes::positions], 3);
+   BindFloatAttribute(normalAttribLocation,    mVBOs[VBOTypes::normals], 3);
+   BindFloatAttribute(texCoordsAttribLocation, mVBOs[VBOTypes::texCoords], 2);
+   BindFloatAttribute(weightsAttribLocation,   mVBOs[VBOTypes::weights], 4);
+   BindIntAttribute(influencesAttribLocation,  mVBOs[VBOTypes::influences], 4);
 
-   // Positions
-   if (posAttribLocation >= 0)
-   {
-      glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::positions]);
-      glEnableVertexAttribArray(posAttribLocation);
-      glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-   }
-
-   // Normals
-   if (normalAttribLocation >= 0)
-   {
-      glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::normals]);
-      glEnableVertexAttribArray(normalAttribLocation);
-      glVertexAttribPointer(normalAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-   }
-
-   // Texture coordinates
-   if (texCoordsAttribLocation >= 0)
-   {
-      glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::texCoords]);
-      glEnableVertexAttribArray(texCoordsAttribLocation);
-      glVertexAttribPointer(texCoordsAttribLocation, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-   }
-
-   // Weights
-   if (weightsAttribLocation >= 0)
-   {
-      glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::weights]);
-      glEnableVertexAttribArray(weightsAttribLocation);
-      glVertexAttribPointer(weightsAttribLocation, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-   }
-
-   // Influences
-   if (influencesAttribLocation >= 0)
-   {
-      glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::influences]);
-      glEnableVertexAttribArray(influencesAttribLocation);
-      glVertexAttribIPointer(influencesAttribLocation, 4, GL_INT, 0, (void*)0);
-   }
-
-   glBindBuffer(GL_ARRAY_BUFFER, 0);
    glBindVertexArray(0);
+}
+
+void AnimatedMesh::UnconfigureVAO(int posAttribLocation,
+                                  int normalAttribLocation,
+                                  int texCoordsAttribLocation,
+                                  int weightsAttribLocation,
+                                  int influencesAttribLocation)
+{
+   glBindVertexArray(mVAO);
+
+   // Unset the vertex attribute pointers
+   UnbindAttribute(posAttribLocation,        mVBOs[VBOTypes::positions]);
+   UnbindAttribute(normalAttribLocation,     mVBOs[VBOTypes::normals]);
+   UnbindAttribute(texCoordsAttribLocation,  mVBOs[VBOTypes::texCoords]);
+   UnbindAttribute(weightsAttribLocation,    mVBOs[VBOTypes::weights]);
+   UnbindAttribute(influencesAttribLocation, mVBOs[VBOTypes::influences]);
+
+   glBindVertexArray(0);
+}
+
+void AnimatedMesh::BindFloatAttribute(int attribLocation, unsigned int VBO, int numComponents)
+{
+   if (attribLocation >= 0)
+   {
+      glBindBuffer(GL_ARRAY_BUFFER, VBO);
+      glEnableVertexAttribArray(attribLocation);
+      glVertexAttribPointer(attribLocation, numComponents, GL_FLOAT, GL_FALSE, 0, (void*)0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+   }
+}
+
+void AnimatedMesh::BindIntAttribute(int attribLocation, unsigned int VBO, int numComponents)
+{
+   if (attribLocation >= 0)
+   {
+      glBindBuffer(GL_ARRAY_BUFFER, VBO);
+      glEnableVertexAttribArray(attribLocation);
+      glVertexAttribIPointer(attribLocation, numComponents, GL_INT, 0, (void*)0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+   }
+}
+
+void AnimatedMesh::UnbindAttribute(int attribLocation, unsigned int VBO)
+{
+   if (attribLocation >= 0)
+   {
+      glBindBuffer(GL_ARRAY_BUFFER, VBO);
+      glDisableVertexAttribArray(attribLocation);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+   }
 }
 
 // TODO: GL_TRIANGLES shouldn't be hardcoded here

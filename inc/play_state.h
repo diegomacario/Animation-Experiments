@@ -61,16 +61,25 @@ private:
    Line                                    mLocalYAxis;
    Line                                    mLocalZAxis;
 
+   enum SkinningMode : int
+   {
+      GPU = 0,
+      CPU = 1,
+   };
+
    struct AnimationData
    {
       AnimationData()
-         : mClipIndex(0)
+         : mCurrentClipIndex(0)
+         , mCurrentSkinningMode(SkinningMode::GPU)
          , mPlaybackTime(0.0f)
       {
 
       }
 
-      unsigned int           mClipIndex;
+      unsigned int           mCurrentClipIndex;
+      SkinningMode           mCurrentSkinningMode;
+
       float                  mPlaybackTime;
       Pose                   mAnimatedPose;
       std::vector<glm::mat4> mAnimatedPosePalette;
@@ -82,14 +91,15 @@ private:
    std::shared_ptr<Texture>  mDiffuseTexture;
 
    Skeleton                  mSkeleton;
-   std::vector<AnimatedMesh> mCPUAnimatedMeshes;
-   std::vector<AnimatedMesh> mGPUAnimatedMeshes;
+   std::vector<AnimatedMesh> mAnimatedMeshes;
    std::vector<FastClip>     mClips;
    std::string               mClipNames;
    int                       mSelectedClip;
+   int                       mSelectedSkinningMode;
+   float                     mSelectedPlaybackSpeed;
+   bool                      mWireframeMode;
 
-   AnimationData             mCPUAnimationData;
-   AnimationData             mGPUAnimationData;
+   AnimationData             mAnimationData;
 };
 
 #endif

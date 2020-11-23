@@ -103,6 +103,9 @@
     <ClCompile Include="..\src\AnimatedMesh.cpp">
       <Filter>Animation-Experiments\Source Files\Base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SkeletonViewer.cpp">
+      <Filter>Animation-Experiments\Source Files\Animation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -218,6 +221,9 @@
     </ClInclude>
     <ClInclude Include="..\inc\AnimatedMesh.h">
       <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\SkeletonViewer.h">
+      <Filter>Animation-Experiments\Header Files\Animation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

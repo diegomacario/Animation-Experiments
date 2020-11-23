@@ -34,6 +34,16 @@ public:
                                            int weightsAttribLocation,
                                            int influencesAttribLocation);
 
+   void                       UnconfigureVAO(int posAttribLocation,
+                                             int normalAttribLocation,
+                                             int texCoordsAttribLocation,
+                                             int weightsAttribLocation,
+                                             int influencesAttribLocation);
+
+   void                       BindFloatAttribute(int attribLocation, unsigned int VBO, int numComponents);
+   void                       BindIntAttribute(int attribLocation, unsigned int VBO, int numComponents);
+   void                       UnbindAttribute(int attribLocation, unsigned int VBO);
+
    void                       Render();
    void                       RenderInstanced(unsigned int numInstances);
 
