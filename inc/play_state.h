@@ -6,6 +6,7 @@
 #include "game.h"
 #include "line.h"
 #include "AnimatedMesh.h"
+#include "SkeletonViewer.h"
 #include "Clip.h"
 
 class PlayState : public State
@@ -92,6 +93,7 @@ private:
 
    Skeleton                  mSkeleton;
    std::vector<AnimatedMesh> mAnimatedMeshes;
+   SkeletonViewer            mSkeletonViewer;
    std::vector<FastClip>     mClips;
    std::string               mClipNames;
    int                       mSelectedClip;

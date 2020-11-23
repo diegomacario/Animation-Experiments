@@ -116,6 +116,10 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
                                       influencesAttribLocOfAnimatedShader);
    }
 
+   // Configure the VAO of the skeleton viewer
+   int positionsAttribLocOfLineShader  = mLineShader->getAttributeLocation("inPos");
+   mSkeletonViewer.ConfigureVAO(positionsAttribLocOfLineShader);
+
    // Set the initial clip
    unsigned int numClips = static_cast<unsigned int>(mClips.size());
    for (unsigned int clipIndex = 0; clipIndex < numClips; ++clipIndex)
@@ -362,7 +366,9 @@ void PlayState::update(float deltaTime)
    // Get the palette of the animated pose
    mAnimationData.mAnimatedPose.GetMatrixPalette(mAnimationData.mAnimatedPosePalette);
 
-   // Generate DebugSkeleton here
+   // Update the skeleton viewer
+   mSkeletonViewer.ExtractPointsOfSkeletonFromPose(mAnimationData.mAnimatedPose, mAnimationData.mAnimatedPosePalette);
+   mSkeletonViewer.LoadBuffers();
 
    std::vector<glm::mat4>& inverseBindPose = mSkeleton.GetInvBindPose();
 
@@ -472,6 +478,18 @@ void PlayState::render()
       mDiffuseTexture->unbind(0);
       mAnimatedMeshShader->use(false);
    }
+
+   glLineWidth(2.0f);
+
+   // Render the skeleton
+   mLineShader->use(true);
+   mLineShader->setUniformMat4("model", transformToMat4(mAnimationData.mModelTransform));
+   mLineShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
+   mLineShader->setUniformVec3("color", glm::vec3(1.0f, 0.0f, 0.0f));
+   mSkeletonViewer.Render();
+   mLineShader->use(false);
+
+   glLineWidth(1.0f);
 
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 

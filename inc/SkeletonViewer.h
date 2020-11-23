@@ -1,7 +1,6 @@
 #ifndef SKELETON_VIEWER_H
 #define SKELETON_VIEWER_H
 
-#include "Skeleton.h"
 #include "Pose.h"
 
 class SkeletonViewer
@@ -17,34 +16,27 @@ public:
    SkeletonViewer(SkeletonViewer&& rhs) noexcept;
    SkeletonViewer& operator=(SkeletonViewer&& rhs) noexcept;
 
-   void                       LoadBuffers();
+   void ExtractPointsOfSkeletonFromPose(const Pose& animatedPose, const std::vector<glm::mat4>& animatedPosePalette);
 
-   void                       ConfigureVAO(int posAttribLocation,
-                                           int normalAttribLocation,
-                                           int texCoordsAttribLocation,
-                                           int weightsAttribLocation,
-                                           int influencesAttribLocation);
+   void LoadBuffers();
 
-   void                       UnconfigureVAO(int posAttribLocation,
-                                             int normalAttribLocation,
-                                             int texCoordsAttribLocation,
-                                             int weightsAttribLocation,
-                                             int influencesAttribLocation);
+   void ConfigureVAO(int posAttribLocation);
 
-   void                       BindFloatAttribute(int attribLocation, unsigned int VBO, int numComponents);
-   void                       BindIntAttribute(int attribLocation, unsigned int VBO, int numComponents);
-   void                       UnbindAttribute(int attribLocation, unsigned int VBO);
+   void UnconfigureVAO(int posAttribLocation);
 
-   void                       Render();
-   void                       RenderInstanced(unsigned int numInstances);
+   void BindFloatAttribute(int attribLocation, unsigned int VBO, int numComponents);
+   void UnbindAttribute(int attribLocation, unsigned int VBO);
+
+   void Render();
 
 private:
 
+   void ResizeContainerOfPointsOfSkeleton(const Pose& animatedPose);
+
    unsigned int           mVAO;
    unsigned int           mVBO;
-   unsigned int           mEBO;
 
-   std::vector<glm::vec3> mJointPositions;
+   std::vector<glm::vec3> mPointsOfSkeleton;
 };
 
 #endif
