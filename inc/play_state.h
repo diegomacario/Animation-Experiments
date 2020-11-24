@@ -99,7 +99,10 @@ private:
    int                       mSelectedClip;
    int                       mSelectedSkinningMode;
    float                     mSelectedPlaybackSpeed;
+   bool                      mDisplayMesh;
+   bool                      mDisplaySkeleton;
    bool                      mWireframeMode;
+   bool                      mPerformDepthTesting;
 
    AnimationData             mAnimationData;
 };

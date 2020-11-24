@@ -76,7 +76,7 @@ bool Game::initialize(const std::string& title)
                                            glm::vec3(0.0f),
                                            0.0f,
                                            glm::vec3(0.0f, 0.0f, 0.0f),
-                                           0.15f);
+                                           0.10f);
 
    mTeapot = std::make_shared<GameObject3D>(mModelManager.getResource("teapot"),
                                             glm::vec3(0.0f, 7.5f / 22.5f, 0.0f),

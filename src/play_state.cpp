@@ -132,7 +132,10 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
    // Set the initial playback speed
    mSelectedPlaybackSpeed = 1.0f;
    // Set the initial rendering options
+   mDisplayMesh = true;
+   mDisplaySkeleton = false;
    mWireframeMode = false;
+   mPerformDepthTesting = true;
 
    // Set the initial pose
    mAnimationData.mAnimatedPose = mSkeleton.GetRestPose();
@@ -165,9 +168,11 @@ void PlayState::processInput(float deltaTime)
       if (mWindow->isFullScreen())
       {
          // Disable the cursor when fullscreen
-         mWindow->enableCursor(false);
+         //mWindow->enableCursor(false);
          if (mCamera->isFree())
          {
+            // Disable the cursor when fullscreen with a free camera
+            mWindow->enableCursor(false);
             // Going from windowed to fullscreen changes the position of the cursor, so we reset the first move flag to avoid a jump
             mWindow->resetFirstMove();
          }
@@ -220,8 +225,8 @@ void PlayState::processInput(float deltaTime)
       mWindow->setKeyAsProcessed(GLFW_KEY_C);
       mCamera->setFree(!mCamera->isFree());
 
-      if (!mWindow->isFullScreen())
-      {
+      //if (!mWindow->isFullScreen())
+      //{
          if (mCamera->isFree())
          {
             // Disable the cursor when windowed with a free camera
@@ -232,7 +237,7 @@ void PlayState::processInput(float deltaTime)
             // Enable the cursor when windowed with a fixed camera
             mWindow->enableCursor(true);
          }
-      }
+      //}
 
       mWindow->resetMouseMoved();
    }
@@ -435,7 +440,7 @@ void PlayState::render()
    }
 
    // Render the animated meshes
-   if (mAnimationData.mCurrentSkinningMode == SkinningMode::CPU)
+   if (mAnimationData.mCurrentSkinningMode == SkinningMode::CPU && mDisplayMesh)
    {
       mStaticMeshShader->use(true);
       mStaticMeshShader->setUniformMat4("model",      transformToMat4(mAnimationData.mModelTransform));
@@ -456,7 +461,7 @@ void PlayState::render()
       mDiffuseTexture->unbind(0);
       mStaticMeshShader->use(false);
    }
-   else if (mAnimationData.mCurrentSkinningMode == SkinningMode::GPU)
+   else if (mAnimationData.mCurrentSkinningMode == SkinningMode::GPU && mDisplayMesh)
    {
       mAnimatedMeshShader->use(true);
       mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mAnimationData.mModelTransform));
@@ -479,17 +484,26 @@ void PlayState::render()
       mAnimatedMeshShader->use(false);
    }
 
+   if (!mPerformDepthTesting)
+   {
+      glDisable(GL_DEPTH_TEST);
+   }
+
    glLineWidth(2.0f);
 
    // Render the skeleton
-   mLineShader->use(true);
-   mLineShader->setUniformMat4("model", transformToMat4(mAnimationData.mModelTransform));
-   mLineShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
-   mSkeletonViewer.Render();
-   mLineShader->use(false);
+   if (mDisplaySkeleton)
+   {
+      mLineShader->use(true);
+      mLineShader->setUniformMat4("model", transformToMat4(mAnimationData.mModelTransform));
+      mLineShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
+      mSkeletonViewer.Render();
+      mLineShader->use(false);
+   }
 
    glLineWidth(1.0f);
 
+   glEnable(GL_DEPTH_TEST);
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
    ImGui::Render();
@@ -518,7 +532,13 @@ void PlayState::userInterface()
 
    ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
 
+   ImGui::Checkbox("Display Mesh", &mDisplayMesh);
+
+   ImGui::Checkbox("Display Skeleton", &mDisplaySkeleton);
+
    ImGui::Checkbox("Wireframe Mode", &mWireframeMode);
+
+   ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
 
    ImGui::End();
 }
@@ -530,7 +550,7 @@ void PlayState::resetScene()
 
 void PlayState::resetCamera()
 {
-   mCamera->reposition(glm::vec3(0.0f, 9.0f, 13.0f),
+   mCamera->reposition(glm::vec3(0.0f, 7.0f, 9.0f),
                        glm::vec3(0.0f, 1.0f, 0.0f),
                        0.0f,
                        -30.0f,
