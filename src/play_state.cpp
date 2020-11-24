@@ -116,10 +116,6 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
                                       influencesAttribLocOfAnimatedShader);
    }
 
-   // Configure the VAO of the skeleton viewer
-   int positionsAttribLocOfLineShader  = mLineShader->getAttributeLocation("inPos");
-   mSkeletonViewer.ConfigureVAO(positionsAttribLocOfLineShader);
-
    // Set the initial clip
    unsigned int numClips = static_cast<unsigned int>(mClips.size());
    for (unsigned int clipIndex = 0; clipIndex < numClips; ++clipIndex)
@@ -368,6 +364,10 @@ void PlayState::update(float deltaTime)
 
    // Update the skeleton viewer
    mSkeletonViewer.ExtractPointsOfSkeletonFromPose(mAnimationData.mAnimatedPose, mAnimationData.mAnimatedPosePalette);
+   int positionsAttribLocOfLineShader = mLineShader->getAttributeLocation("inPos");
+   int colorsAttribLocOfLineShader    = mLineShader->getAttributeLocation("inCol");
+   // TODO: Not cool to be configuring VAO every frame. Fix this.
+   mSkeletonViewer.ConfigureVAO(positionsAttribLocOfLineShader, colorsAttribLocOfLineShader);
    mSkeletonViewer.LoadBuffers();
 
    std::vector<glm::mat4>& inverseBindPose = mSkeleton.GetInvBindPose();
@@ -485,7 +485,6 @@ void PlayState::render()
    mLineShader->use(true);
    mLineShader->setUniformMat4("model", transformToMat4(mAnimationData.mModelTransform));
    mLineShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
-   mLineShader->setUniformVec3("color", glm::vec3(1.0f, 0.0f, 0.0f));
    mSkeletonViewer.Render();
    mLineShader->use(false);
 

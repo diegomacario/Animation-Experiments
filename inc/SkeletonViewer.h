@@ -1,6 +1,8 @@
 #ifndef SKELETON_VIEWER_H
 #define SKELETON_VIEWER_H
 
+#include <array>
+
 #include "Pose.h"
 
 class SkeletonViewer
@@ -20,9 +22,9 @@ public:
 
    void LoadBuffers();
 
-   void ConfigureVAO(int posAttribLocation);
+   void ConfigureVAO(int posAttribLocation, int colorAttribLocation);
 
-   void UnconfigureVAO(int posAttribLocation);
+   void UnconfigureVAO(int posAttribLocation, int colorAttribLocation);
 
    void BindFloatAttribute(int attribLocation, unsigned int VBO, int numComponents);
    void UnbindAttribute(int attribLocation, unsigned int VBO);
@@ -31,12 +33,14 @@ public:
 
 private:
 
-   void ResizeContainerOfPointsOfSkeleton(const Pose& animatedPose);
+   void ResizeContainers(const Pose& animatedPose);
 
    unsigned int           mVAO;
    unsigned int           mVBO;
 
-   std::vector<glm::vec3> mPointsOfSkeleton;
+   std::array<glm::vec3, 3> mColorPalette;
+   std::vector<glm::vec3>   mJointPositions;
+   std::vector<glm::vec3>   mJointColors;
 };
 
 #endif

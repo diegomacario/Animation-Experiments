@@ -4,6 +4,7 @@
 #include "Transform.h"
 
 SkeletonViewer::SkeletonViewer()
+   : mColorPalette{glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.65f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f)}
 {
    glGenVertexArrays(1, &mVAO);
    glGenBuffers(1, &mVBO);
@@ -18,23 +19,30 @@ SkeletonViewer::~SkeletonViewer()
 SkeletonViewer::SkeletonViewer(SkeletonViewer&& rhs) noexcept
    : mVAO(std::exchange(rhs.mVAO, 0))
    , mVBO(std::exchange(rhs.mVBO, 0))
-   , mPointsOfSkeleton(std::move(rhs.mPointsOfSkeleton))
+   , mColorPalette(std::move(rhs.mColorPalette))
+   , mJointPositions(std::move(rhs.mJointPositions))
+   , mJointColors(std::move(rhs.mJointColors))
 {
 
 }
 
 SkeletonViewer& SkeletonViewer::operator=(SkeletonViewer&& rhs) noexcept
 {
-   mVAO              = std::exchange(rhs.mVAO, 0);
-   mVBO              = std::exchange(rhs.mVBO, 0);
-   mPointsOfSkeleton = std::move(rhs.mPointsOfSkeleton);
+   mVAO            = std::exchange(rhs.mVAO, 0);
+   mVBO            = std::exchange(rhs.mVBO, 0);
+   mColorPalette   = std::move(rhs.mColorPalette);
+   mJointPositions = std::move(rhs.mJointPositions);
+   mJointColors    = std::move(rhs.mJointColors);
    return *this;
 }
 
 void SkeletonViewer::ExtractPointsOfSkeletonFromPose(const Pose& animatedPose, const std::vector<glm::mat4>& animatedPosePalette)
 {
-   ResizeContainerOfPointsOfSkeleton(animatedPose);
+   ResizeContainers(animatedPose);
 
+   int posIndex = 0;
+   int colorIndex = 0;
+   int colorPaletteIndex = 0;
    int parentJointIndex = -1;
    unsigned int numJoints = animatedPose.GetNumberOfJoints();
    for (unsigned int jointIndex = 0; jointIndex < numJoints; ++jointIndex)
@@ -47,8 +55,13 @@ void SkeletonViewer::ExtractPointsOfSkeletonFromPose(const Pose& animatedPose, c
 
       // Store the position of the child joint followed by the position of its parent joint
       // That way, they will be rendered as a line
-      mPointsOfSkeleton.push_back(glm::vec3(animatedPosePalette[jointIndex][3]));
-      mPointsOfSkeleton.push_back(glm::vec3(animatedPosePalette[parentJointIndex][3]));
+      mJointPositions[posIndex++] = animatedPosePalette[jointIndex][3];
+      mJointPositions[posIndex++] = animatedPosePalette[parentJointIndex][3];
+
+      colorPaletteIndex %= 3;
+      mJointColors[colorIndex++] = mColorPalette[colorPaletteIndex];
+      mJointColors[colorIndex++] = mColorPalette[colorPaletteIndex];
+      ++colorPaletteIndex;
    }
 }
 
@@ -57,30 +70,49 @@ void SkeletonViewer::LoadBuffers()
 {
    glBindVertexArray(mVAO);
 
-   // Positions
    glBindBuffer(GL_ARRAY_BUFFER, mVBO);
-   glBufferData(GL_ARRAY_BUFFER, mPointsOfSkeleton.size() * sizeof(glm::vec3), &mPointsOfSkeleton[0], GL_STATIC_DRAW); // TODO: GL_DYNAMIC?
+   glBufferData(GL_ARRAY_BUFFER, (mJointPositions.size() + mJointColors.size()) * sizeof(glm::vec3), nullptr, GL_STATIC_DRAW); // TODO: GL_DYNAMIC?
+   // Positions
+   glBufferSubData(GL_ARRAY_BUFFER, 0, mJointPositions.size() * sizeof(glm::vec3), &mJointPositions[0]); // TODO: GL_DYNAMIC?
+   // Colors
+   glBufferSubData(GL_ARRAY_BUFFER, mJointPositions.size() * sizeof(glm::vec3), mJointColors.size() * sizeof(glm::vec3), &mJointColors[0]);
    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
    glBindVertexArray(0);
 }
 
-void SkeletonViewer::ConfigureVAO(int posAttribLocation)
+void SkeletonViewer::ConfigureVAO(int posAttribLocation, int colorAttribLocation)
 {
    glBindVertexArray(mVAO);
 
    // Set the vertex attribute pointers
-   BindFloatAttribute(posAttribLocation, mVBO, 3);
+
+   if (posAttribLocation >= 0)
+   {
+      glBindBuffer(GL_ARRAY_BUFFER, mVBO);
+      glEnableVertexAttribArray(posAttribLocation);
+      glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+   }
+
+   if (colorAttribLocation >= 0)
+   {
+      glBindBuffer(GL_ARRAY_BUFFER, mVBO);
+      glEnableVertexAttribArray(colorAttribLocation);
+      glVertexAttribPointer(colorAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)(mJointPositions.size() * sizeof(glm::vec3)));
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+   }
 
    glBindVertexArray(0);
 }
 
-void SkeletonViewer::UnconfigureVAO(int posAttribLocation)
+void SkeletonViewer::UnconfigureVAO(int posAttribLocation, int colorAttribLocation)
 {
    glBindVertexArray(mVAO);
 
    // Unset the vertex attribute pointers
    UnbindAttribute(posAttribLocation, mVBO);
+   UnbindAttribute(colorAttribLocation, mVBO);
 
    glBindVertexArray(0);
 }
@@ -110,12 +142,12 @@ void SkeletonViewer::Render()
 {
    glBindVertexArray(mVAO);
 
-   glDrawArrays(GL_LINES, 0, static_cast<unsigned int>(mPointsOfSkeleton.size()));
+   glDrawArrays(GL_LINES, 0, static_cast<unsigned int>(mJointPositions.size()));
 
    glBindVertexArray(0);
 }
 
-void SkeletonViewer::ResizeContainerOfPointsOfSkeleton(const Pose& animatedPose)
+void SkeletonViewer::ResizeContainers(const Pose& animatedPose)
 {
    unsigned int numPointsOfSkeleton = 0;
    unsigned int numJoints = animatedPose.GetNumberOfJoints();
@@ -132,5 +164,6 @@ void SkeletonViewer::ResizeContainerOfPointsOfSkeleton(const Pose& animatedPose)
       numPointsOfSkeleton += 2;
    }
 
-   mPointsOfSkeleton.resize(numPointsOfSkeleton);
+   mJointPositions.resize(numPointsOfSkeleton);
+   mJointColors.resize(numPointsOfSkeleton);
 }
