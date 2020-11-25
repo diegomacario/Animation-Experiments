@@ -133,8 +133,10 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
    mSelectedPlaybackSpeed = 1.0f;
    // Set the initial rendering options
    mDisplayMesh = true;
-   mDisplaySkeleton = false;
-   mWireframeMode = false;
+   mDisplayBones = false;
+   mDisplayJoints = false;
+   mWireframeModeForMesh = false;
+   mWireframeModeForJoints = false;
    mPerformDepthTesting = true;
 
    // Set the initial pose
@@ -273,6 +275,7 @@ void PlayState::update(float deltaTime)
    {
       mAnimationData.mCurrentClipIndex = mSelectedClip;
       mAnimationData.mAnimatedPose     = mSkeleton.GetRestPose();
+      mAnimationData.mPlaybackTime     = 0.0f;
    }
 
    if (mAnimationData.mCurrentSkinningMode != mSelectedSkinningMode)
@@ -434,7 +437,7 @@ void PlayState::render()
 
    mGameObject3DShader->use(false);
 
-   if (mWireframeMode)
+   if (mWireframeModeForMesh)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
    }
@@ -484,6 +487,8 @@ void PlayState::render()
       mAnimatedMeshShader->use(false);
    }
 
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
    if (!mPerformDepthTesting)
    {
       glDisable(GL_DEPTH_TEST);
@@ -491,22 +496,31 @@ void PlayState::render()
 
    glLineWidth(2.0f);
 
-   // Render the skeleton
-   if (mDisplaySkeleton)
+   // Render the bones
+   if (mDisplayBones)
    {
       mLineShader->use(true);
       mLineShader->setUniformMat4("model", transformToMat4(mAnimationData.mModelTransform));
       mLineShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
       mSkeletonViewer.RenderBones();
       mLineShader->use(false);
-
-      mSkeletonViewer.RenderJoints(mAnimationData.mModelTransform, mCamera->getPerspectiveProjectionViewMatrix(), mAnimationData.mAnimatedPosePalette);
    }
 
    glLineWidth(1.0f);
 
-   glEnable(GL_DEPTH_TEST);
+   if (mWireframeModeForJoints)
+   {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   }
+
+   // Render the joints
+   if (mDisplayJoints)
+   {
+      mSkeletonViewer.RenderJoints(mAnimationData.mModelTransform, mCamera->getPerspectiveProjectionViewMatrix(), mAnimationData.mAnimatedPosePalette);
+   }
+
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   glEnable(GL_DEPTH_TEST);
 
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -528,17 +542,21 @@ void PlayState::userInterface()
 
    ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
-   ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
-
    ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
+
+   ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
 
    ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
 
    ImGui::Checkbox("Display Mesh", &mDisplayMesh);
 
-   ImGui::Checkbox("Display Skeleton", &mDisplaySkeleton);
+   ImGui::Checkbox("Display Bones", &mDisplayBones);
 
-   ImGui::Checkbox("Wireframe Mode", &mWireframeMode);
+   ImGui::Checkbox("Display Joints", &mDisplayJoints);
+
+   ImGui::Checkbox("Wireframe Mode for Mesh", &mWireframeModeForMesh);
+
+   ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
 
    ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
 

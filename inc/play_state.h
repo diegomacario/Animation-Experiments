@@ -101,8 +101,10 @@ private:
    int                       mSelectedSkinningMode;
    float                     mSelectedPlaybackSpeed;
    bool                      mDisplayMesh;
-   bool                      mDisplaySkeleton;
-   bool                      mWireframeMode;
+   bool                      mDisplayBones;
+   bool                      mDisplayJoints;
+   bool                      mWireframeModeForMesh;
+   bool                      mWireframeModeForJoints;
    bool                      mPerformDepthTesting;
 
    AnimationData             mAnimationData;
