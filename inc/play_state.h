@@ -84,6 +84,7 @@ private:
       float                  mPlaybackTime;
       Pose                   mAnimatedPose;
       std::vector<glm::mat4> mAnimatedPosePalette;
+      std::vector<glm::mat4> mSkinMatrices;
       Transform              mModelTransform;
    };
 

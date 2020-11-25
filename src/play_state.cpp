@@ -367,24 +367,16 @@ void PlayState::update(float deltaTime)
    // Get the palette of the animated pose
    mAnimationData.mAnimatedPose.GetMatrixPalette(mAnimationData.mAnimatedPosePalette);
 
-   // Update the skeleton viewer
-   mSkeletonViewer.ExtractPointsOfSkeletonFromPose(mAnimationData.mAnimatedPose, mAnimationData.mAnimatedPosePalette);
-   int positionsAttribLocOfLineShader = mLineShader->getAttributeLocation("inPos");
-   int colorsAttribLocOfLineShader    = mLineShader->getAttributeLocation("inCol");
-   // TODO: Not cool to be configuring VAO every frame. Fix this.
-   mSkeletonViewer.ConfigureVAO(positionsAttribLocOfLineShader, colorsAttribLocOfLineShader);
-   mSkeletonViewer.LoadBuffers();
-
    std::vector<glm::mat4>& inverseBindPose = mSkeleton.GetInvBindPose();
 
    // Generate the skin matrices
+   mAnimationData.mSkinMatrices.resize(mAnimationData.mAnimatedPosePalette.size());
    for (unsigned int i = 0,
         size = static_cast<unsigned int>(mAnimationData.mAnimatedPosePalette.size());
         i < size;
         ++i)
    {
-      // We store the skin matrices in the same vector that we use to store the pose palette
-      mAnimationData.mAnimatedPosePalette[i] = mAnimationData.mAnimatedPosePalette[i] * inverseBindPose[i];
+      mAnimationData.mSkinMatrices[i] = mAnimationData.mAnimatedPosePalette[i] * inverseBindPose[i];
    }
 
    // Skin the meshes on the CPU if that's the current skinning mode
@@ -392,9 +384,17 @@ void PlayState::update(float deltaTime)
    {
       for (unsigned int i = 0, size = (unsigned int)mAnimatedMeshes.size(); i < size; ++i)
       {
-         mAnimatedMeshes[i].SkinMeshOnTheCPU(mAnimationData.mAnimatedPosePalette);
+         mAnimatedMeshes[i].SkinMeshOnTheCPU(mAnimationData.mSkinMatrices);
       }
    }
+
+   // Update the skeleton viewer
+   mSkeletonViewer.ExtractPointsOfSkeletonFromPose(mAnimationData.mAnimatedPose, mAnimationData.mAnimatedPosePalette);
+   int positionsAttribLocOfLineShader = mLineShader->getAttributeLocation("inPos");
+   int colorsAttribLocOfLineShader    = mLineShader->getAttributeLocation("inCol");
+   // TODO: Not cool to be configuring VAO every frame. Fix this.
+   mSkeletonViewer.ConfigureBonesVAO(positionsAttribLocOfLineShader, colorsAttribLocOfLineShader);
+   mSkeletonViewer.LoadBoneBuffers();
 }
 
 void PlayState::render()
@@ -467,7 +467,7 @@ void PlayState::render()
       mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mAnimationData.mModelTransform));
       mAnimatedMeshShader->setUniformMat4("view",             mCamera->getViewMatrix());
       mAnimatedMeshShader->setUniformMat4("projection",       mCamera->getPerspectiveProjectionMatrix());
-      mAnimatedMeshShader->setUniformMat4Array("animated[0]", mAnimationData.mAnimatedPosePalette);
+      mAnimatedMeshShader->setUniformMat4Array("animated[0]", mAnimationData.mSkinMatrices);
       //mAnimatedMeshShader->setUniformVec3("cameraPos",        mCamera->getPosition());
       mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("diffuseTex"));
 
@@ -497,8 +497,10 @@ void PlayState::render()
       mLineShader->use(true);
       mLineShader->setUniformMat4("model", transformToMat4(mAnimationData.mModelTransform));
       mLineShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
-      mSkeletonViewer.Render();
+      mSkeletonViewer.RenderBones();
       mLineShader->use(false);
+
+      mSkeletonViewer.RenderJoints(mAnimationData.mModelTransform, mCamera->getPerspectiveProjectionViewMatrix(), mAnimationData.mAnimatedPosePalette);
    }
 
    glLineWidth(1.0f);
