@@ -63,11 +63,6 @@ bool Game::initialize(const std::string& title)
    gameObj3DShader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
    gameObj3DShader->setUniformInt("numPointLightsInScene", 1);
 
-   // Initialize the line shader
-   auto lineShader = mShaderManager.loadResource<ShaderLoader>("line",
-                                                               "resources/shaders/line.vert",
-                                                               "resources/shaders/line.frag");
-
    // Load the models
    mModelManager.loadResource<ModelLoader>("table", "resources/models/table/table.obj");
    mModelManager.loadResource<ModelLoader>("teapot", "resources/models/teapot/teapot.obj");
@@ -94,7 +89,6 @@ bool Game::initialize(const std::string& title)
                                                  mWindow,
                                                  mCamera,
                                                  gameObj3DShader,
-                                                 lineShader,
                                                  mTable,
                                                  mTeapot);
 

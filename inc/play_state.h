@@ -17,7 +17,6 @@ public:
              const std::shared_ptr<Window>&                 window,
              const std::shared_ptr<Camera>&                 camera,
              const std::shared_ptr<Shader>&                 gameObject3DShader,
-             const std::shared_ptr<Shader>&                 lineShader,
              const std::shared_ptr<GameObject3D>&           table,
              const std::shared_ptr<GameObject3D>&           teapot);
    ~PlayState() = default;
@@ -36,6 +35,11 @@ public:
 
 private:
 
+   void configureLights(const std::shared_ptr<Shader>& shader);
+
+   void switchFromGPUToCPU();
+   void switchFromCPUToGPU();
+
    void userInterface();
 
    void resetScene();
@@ -49,18 +53,9 @@ private:
    std::shared_ptr<Camera>                 mCamera;
 
    std::shared_ptr<Shader>                 mGameObject3DShader;
-   std::shared_ptr<Shader>                 mLineShader;
 
    std::shared_ptr<GameObject3D>           mTable;
    std::shared_ptr<GameObject3D>           mTeapot;
-
-   Line                                    mWorldXAxis;
-   Line                                    mWorldYAxis;
-   Line                                    mWorldZAxis;
-
-   Line                                    mLocalXAxis;
-   Line                                    mLocalYAxis;
-   Line                                    mLocalZAxis;
 
    enum SkinningMode : int
    {
@@ -71,21 +66,21 @@ private:
    struct AnimationData
    {
       AnimationData()
-         : mCurrentClipIndex(0)
-         , mCurrentSkinningMode(SkinningMode::GPU)
-         , mPlaybackTime(0.0f)
+         : currentClipIndex(0)
+         , currentSkinningMode(SkinningMode::GPU)
+         , playbackTime(0.0f)
       {
 
       }
 
-      unsigned int           mCurrentClipIndex;
-      SkinningMode           mCurrentSkinningMode;
+      unsigned int           currentClipIndex;
+      SkinningMode           currentSkinningMode;
 
-      float                  mPlaybackTime;
-      Pose                   mAnimatedPose;
-      std::vector<glm::mat4> mAnimatedPosePalette;
-      std::vector<glm::mat4> mSkinMatrices;
-      Transform              mModelTransform;
+      float                  playbackTime;
+      Pose                   animatedPose;
+      std::vector<glm::mat4> animatedPosePalette;
+      std::vector<glm::mat4> skinMatrices;
+      Transform              modelTransform;
    };
 
    std::shared_ptr<Shader>   mAnimatedMeshShader;

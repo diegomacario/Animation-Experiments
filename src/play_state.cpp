@@ -15,59 +15,29 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
                      const std::shared_ptr<Window>&                 window,
                      const std::shared_ptr<Camera>&                 camera,
                      const std::shared_ptr<Shader>&                 gameObject3DShader,
-                     const std::shared_ptr<Shader>&                 lineShader,
                      const std::shared_ptr<GameObject3D>&           table,
                      const std::shared_ptr<GameObject3D>&           teapot)
    : mFSM(finiteStateMachine)
    , mWindow(window)
    , mCamera(camera)
    , mGameObject3DShader(gameObject3DShader)
-   , mLineShader(lineShader)
    , mTable(table)
    , mTeapot(teapot)
-   , mWorldXAxis(glm::vec3(0.0f), glm::vec3(20.0f, 0.0f, 0.0f), glm::vec3(0.0f), 0.0f, glm::vec3(0.0f), 0.0f, glm::vec3(1.0f, 0.0f, 0.0f)) // Red
-   , mWorldYAxis(glm::vec3(0.0f), glm::vec3(0.0f, 20.0f, 0.0f), glm::vec3(0.0f), 0.0f, glm::vec3(0.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f)) // Green
-   , mWorldZAxis(glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 20.0f), glm::vec3(0.0f), 0.0f, glm::vec3(0.0f), 0.0f, glm::vec3(0.0f, 0.0f, 1.0f)) // Blue
-   , mLocalXAxis(glm::vec3(0.0f), glm::vec3(16.0f, 0.0f, 0.0f), glm::vec3(0.0f), 0.0f, glm::vec3(0.0f), 0.0f, glm::vec3(1.0f, 1.0f, 0.0f))
-   , mLocalYAxis(glm::vec3(0.0f), glm::vec3(0.0f, 16.0f, 0.0f), glm::vec3(0.0f), 0.0f, glm::vec3(0.0f), 0.0f, glm::vec3(0.0f, 1.0f, 1.0f))
-   , mLocalZAxis(glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 16.0f), glm::vec3(0.0f), 0.0f, glm::vec3(0.0f), 0.0f, glm::vec3(1.0f, 0.0f, 1.0f))
 {
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
                                                                                        "resources/shaders/mesh_with_simple_illumination.frag");
-   mAnimatedMeshShader->use(true);
-   mAnimatedMeshShader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
-   mAnimatedMeshShader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
-   mAnimatedMeshShader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
-   mAnimatedMeshShader->setUniformFloat("pointLights[0].linearAtt", 0.01f);
-   mAnimatedMeshShader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
-   mAnimatedMeshShader->setUniformVec3("pointLights[1].worldPos", glm::vec3(0.0f, 2.0f, -10.0f));
-   mAnimatedMeshShader->setUniformVec3("pointLights[1].color", glm::vec3(1.0f, 1.0f, 1.0f));
-   mAnimatedMeshShader->setUniformFloat("pointLights[1].constantAtt", 1.0f);
-   mAnimatedMeshShader->setUniformFloat("pointLights[1].linearAtt", 0.01f);
-   mAnimatedMeshShader->setUniformFloat("pointLights[1].quadraticAtt", 0.0f);
-   mAnimatedMeshShader->setUniformInt("numPointLightsInScene", 2);
-   mAnimatedMeshShader->use(false);
+   configureLights(mAnimatedMeshShader);
 
    // Initialize the static mesh shader
    mStaticMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh.vert",
                                                                                      "resources/shaders/mesh_with_simple_illumination.frag");
-   mStaticMeshShader->use(true);
-   mStaticMeshShader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
-   mStaticMeshShader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
-   mStaticMeshShader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
-   mStaticMeshShader->setUniformFloat("pointLights[0].linearAtt", 0.01f);
-   mStaticMeshShader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
-   mStaticMeshShader->setUniformVec3("pointLights[1].worldPos", glm::vec3(0.0f, 2.0f, -10.0f));
-   mStaticMeshShader->setUniformVec3("pointLights[1].color", glm::vec3(1.0f, 1.0f, 1.0f));
-   mStaticMeshShader->setUniformFloat("pointLights[1].constantAtt", 1.0f);
-   mStaticMeshShader->setUniformFloat("pointLights[1].linearAtt", 0.01f);
-   mStaticMeshShader->setUniformFloat("pointLights[1].quadraticAtt", 0.0f);
-   mStaticMeshShader->setUniformInt("numPointLightsInScene", 2);
-   mStaticMeshShader->use(false);
+   configureLights(mStaticMeshShader);
 
+   // Load the diffuse texture of the animated character
    mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/Woman.png");
 
+   // Load the animated character
    cgltf_data* data        = LoadGLTFFile("resources/models/woman/Woman.gltf");
    mSkeleton               = LoadSkeleton(data);
    mAnimatedMeshes         = LoadAnimatedMeshes(data);
@@ -123,7 +93,7 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
       if (mClips[clipIndex].GetName() == "Walking")
       {
          mSelectedClip = clipIndex;
-         mAnimationData.mCurrentClipIndex = clipIndex;
+         mAnimationData.currentClipIndex = clipIndex;
       }
    }
 
@@ -140,10 +110,13 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>&     finiteStateM
    mPerformDepthTesting = true;
 
    // Set the initial pose
-   mAnimationData.mAnimatedPose = mSkeleton.GetRestPose();
+   mAnimationData.animatedPose = mSkeleton.GetRestPose();
 
    // Set the model transform
-   mAnimationData.mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
+   mAnimationData.modelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
+
+   // Initialize the bones of the skeleton viewer
+   mSkeletonViewer.InitializeBones(mAnimationData.animatedPose);
 }
 
 void PlayState::enter()
@@ -271,133 +244,57 @@ void PlayState::processInput(float deltaTime)
 
 void PlayState::update(float deltaTime)
 {
-   if (mAnimationData.mCurrentClipIndex != mSelectedClip)
+   if (mAnimationData.currentClipIndex != mSelectedClip)
    {
-      mAnimationData.mCurrentClipIndex = mSelectedClip;
-      mAnimationData.mAnimatedPose     = mSkeleton.GetRestPose();
-      mAnimationData.mPlaybackTime     = 0.0f;
+      mAnimationData.currentClipIndex = mSelectedClip;
+      mAnimationData.animatedPose     = mSkeleton.GetRestPose();
+      mAnimationData.playbackTime     = 0.0f;
    }
 
-   if (mAnimationData.mCurrentSkinningMode != mSelectedSkinningMode)
+   if (mAnimationData.currentSkinningMode != mSelectedSkinningMode)
    {
-      if (mAnimationData.mCurrentSkinningMode == SkinningMode::GPU)
+      if (mAnimationData.currentSkinningMode == SkinningMode::GPU)
       {
-         int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
-         int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
-         int texCoordsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("texCoord");
-         int weightsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("weights");
-         int influencesAttribLocOfAnimatedShader = mAnimatedMeshShader->getAttributeLocation("joints");
-         for (unsigned int i = 0,
-              size = static_cast<unsigned int>(mAnimatedMeshes.size());
-              i < size;
-              ++i)
-         {
-            mAnimatedMeshes[i].UnconfigureVAO(positionsAttribLocOfAnimatedShader,
-                                              normalsAttribLocOfAnimatedShader,
-                                              texCoordsAttribLocOfAnimatedShader,
-                                              weightsAttribLocOfAnimatedShader,
-                                              influencesAttribLocOfAnimatedShader);
-         }
-
-         int positionsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("position");
-         int normalsAttribLocOfStaticShader   = mStaticMeshShader->getAttributeLocation("normal");
-         int texCoordsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("texCoord");
-         for (unsigned int i = 0,
-              size = static_cast<unsigned int>(mAnimatedMeshes.size());
-              i < size;
-              ++i)
-         {
-            mAnimatedMeshes[i].ConfigureVAO(positionsAttribLocOfStaticShader,
-                                            normalsAttribLocOfStaticShader,
-                                            texCoordsAttribLocOfStaticShader,
-                                            -1,
-                                            -1);
-         }
+         switchFromGPUToCPU();
       }
-      else if (mAnimationData.mCurrentSkinningMode == SkinningMode::CPU)
+      else if (mAnimationData.currentSkinningMode == SkinningMode::CPU)
       {
-         int positionsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("position");
-         int normalsAttribLocOfStaticShader   = mStaticMeshShader->getAttributeLocation("normal");
-         int texCoordsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("texCoord");
-         for (unsigned int i = 0,
-              size = static_cast<unsigned int>(mAnimatedMeshes.size());
-              i < size;
-              ++i)
-         {
-            mAnimatedMeshes[i].UnconfigureVAO(positionsAttribLocOfStaticShader,
-                                              normalsAttribLocOfStaticShader,
-                                              texCoordsAttribLocOfStaticShader,
-                                              -1,
-                                              -1);
-         }
-
-         int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
-         int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
-         int texCoordsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("texCoord");
-         int weightsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("weights");
-         int influencesAttribLocOfAnimatedShader = mAnimatedMeshShader->getAttributeLocation("joints");
-         for (unsigned int i = 0,
-              size = static_cast<unsigned int>(mAnimatedMeshes.size());
-              i < size;
-              ++i)
-         {
-            mAnimatedMeshes[i].ConfigureVAO(positionsAttribLocOfAnimatedShader,
-                                            normalsAttribLocOfAnimatedShader,
-                                            texCoordsAttribLocOfAnimatedShader,
-                                            weightsAttribLocOfAnimatedShader,
-                                            influencesAttribLocOfAnimatedShader);
-         }
-
-         // TODO: This is inefficient. We just need to load the positions and normals.
-         // Load the original positions and normals because the CPU skinning algorithm
-         // has been modifying them every frame
-         for (unsigned int i = 0,
-              size = static_cast<unsigned int>(mAnimatedMeshes.size());
-              i < size;
-              ++i)
-         {
-            mAnimatedMeshes[i].LoadBuffers();
-         }
+         switchFromCPUToGPU();
       }
 
-      mAnimationData.mCurrentSkinningMode = static_cast<SkinningMode>(mSelectedSkinningMode);
+      mAnimationData.currentSkinningMode = static_cast<SkinningMode>(mSelectedSkinningMode);
    }
 
    // Sample the clip to get the animated pose
-   FastClip& currClip = mClips[mAnimationData.mCurrentClipIndex];
-   mAnimationData.mPlaybackTime = currClip.Sample(mAnimationData.mAnimatedPose, mAnimationData.mPlaybackTime + (deltaTime * mSelectedPlaybackSpeed));
+   FastClip& currClip = mClips[mAnimationData.currentClipIndex];
+   mAnimationData.playbackTime = currClip.Sample(mAnimationData.animatedPose, mAnimationData.playbackTime + (deltaTime * mSelectedPlaybackSpeed));
 
    // Get the palette of the animated pose
-   mAnimationData.mAnimatedPose.GetMatrixPalette(mAnimationData.mAnimatedPosePalette);
+   mAnimationData.animatedPose.GetMatrixPalette(mAnimationData.animatedPosePalette);
 
    std::vector<glm::mat4>& inverseBindPose = mSkeleton.GetInvBindPose();
 
    // Generate the skin matrices
-   mAnimationData.mSkinMatrices.resize(mAnimationData.mAnimatedPosePalette.size());
+   mAnimationData.skinMatrices.resize(mAnimationData.animatedPosePalette.size());
    for (unsigned int i = 0,
-        size = static_cast<unsigned int>(mAnimationData.mAnimatedPosePalette.size());
+        size = static_cast<unsigned int>(mAnimationData.animatedPosePalette.size());
         i < size;
         ++i)
    {
-      mAnimationData.mSkinMatrices[i] = mAnimationData.mAnimatedPosePalette[i] * inverseBindPose[i];
+      mAnimationData.skinMatrices[i] = mAnimationData.animatedPosePalette[i] * inverseBindPose[i];
    }
 
    // Skin the meshes on the CPU if that's the current skinning mode
-   if (mAnimationData.mCurrentSkinningMode == SkinningMode::CPU)
+   if (mAnimationData.currentSkinningMode == SkinningMode::CPU)
    {
       for (unsigned int i = 0, size = (unsigned int)mAnimatedMeshes.size(); i < size; ++i)
       {
-         mAnimatedMeshes[i].SkinMeshOnTheCPU(mAnimationData.mSkinMatrices);
+         mAnimatedMeshes[i].SkinMeshOnTheCPU(mAnimationData.skinMatrices);
       }
    }
 
    // Update the skeleton viewer
-   mSkeletonViewer.ExtractPointsOfSkeletonFromPose(mAnimationData.mAnimatedPose, mAnimationData.mAnimatedPosePalette);
-   int positionsAttribLocOfLineShader = mLineShader->getAttributeLocation("inPos");
-   int colorsAttribLocOfLineShader    = mLineShader->getAttributeLocation("inCol");
-   // TODO: Not cool to be configuring VAO every frame. Fix this.
-   mSkeletonViewer.ConfigureBonesVAO(positionsAttribLocOfLineShader, colorsAttribLocOfLineShader);
-   mSkeletonViewer.LoadBoneBuffers();
+   mSkeletonViewer.UpdateBones(mAnimationData.animatedPose, mAnimationData.animatedPosePalette);
 }
 
 void PlayState::render()
@@ -412,17 +309,6 @@ void PlayState::render()
 
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
-
-   //mLineShader->use(true);
-   //mLineShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
-
-   //mWorldXAxis.render(*mLineShader);
-   //mWorldYAxis.render(*mLineShader);
-   //mWorldZAxis.render(*mLineShader);
-
-   //mLocalXAxis.render(*mLineShader);
-   //mLocalYAxis.render(*mLineShader);
-   //mLocalZAxis.render(*mLineShader);
 
    mGameObject3DShader->use(true);
    mGameObject3DShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
@@ -443,10 +329,10 @@ void PlayState::render()
    }
 
    // Render the animated meshes
-   if (mAnimationData.mCurrentSkinningMode == SkinningMode::CPU && mDisplayMesh)
+   if (mAnimationData.currentSkinningMode == SkinningMode::CPU && mDisplayMesh)
    {
       mStaticMeshShader->use(true);
-      mStaticMeshShader->setUniformMat4("model",      transformToMat4(mAnimationData.mModelTransform));
+      mStaticMeshShader->setUniformMat4("model",      transformToMat4(mAnimationData.modelTransform));
       mStaticMeshShader->setUniformMat4("view",       mCamera->getViewMatrix());
       mStaticMeshShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
       //mStaticMeshShader->setUniformVec3("cameraPos",  mCamera->getPosition());
@@ -464,13 +350,13 @@ void PlayState::render()
       mDiffuseTexture->unbind(0);
       mStaticMeshShader->use(false);
    }
-   else if (mAnimationData.mCurrentSkinningMode == SkinningMode::GPU && mDisplayMesh)
+   else if (mAnimationData.currentSkinningMode == SkinningMode::GPU && mDisplayMesh)
    {
       mAnimatedMeshShader->use(true);
-      mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mAnimationData.mModelTransform));
+      mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mAnimationData.modelTransform));
       mAnimatedMeshShader->setUniformMat4("view",             mCamera->getViewMatrix());
       mAnimatedMeshShader->setUniformMat4("projection",       mCamera->getPerspectiveProjectionMatrix());
-      mAnimatedMeshShader->setUniformMat4Array("animated[0]", mAnimationData.mSkinMatrices);
+      mAnimatedMeshShader->setUniformMat4Array("animated[0]", mAnimationData.skinMatrices);
       //mAnimatedMeshShader->setUniformVec3("cameraPos",        mCamera->getPosition());
       mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("diffuseTex"));
 
@@ -499,11 +385,7 @@ void PlayState::render()
    // Render the bones
    if (mDisplayBones)
    {
-      mLineShader->use(true);
-      mLineShader->setUniformMat4("model", transformToMat4(mAnimationData.mModelTransform));
-      mLineShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
-      mSkeletonViewer.RenderBones();
-      mLineShader->use(false);
+      mSkeletonViewer.RenderBones(mAnimationData.modelTransform, mCamera->getPerspectiveProjectionViewMatrix());
    }
 
    glLineWidth(1.0f);
@@ -516,7 +398,7 @@ void PlayState::render()
    // Render the joints
    if (mDisplayJoints)
    {
-      mSkeletonViewer.RenderJoints(mAnimationData.mModelTransform, mCamera->getPerspectiveProjectionViewMatrix(), mAnimationData.mAnimatedPosePalette);
+      mSkeletonViewer.RenderJoints(mAnimationData.modelTransform, mCamera->getPerspectiveProjectionViewMatrix(), mAnimationData.animatedPosePalette);
    }
 
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -534,6 +416,104 @@ void PlayState::render()
 void PlayState::exit()
 {
 
+}
+
+void PlayState::configureLights(const std::shared_ptr<Shader>& shader)
+{
+   shader->use(true);
+   shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
+   shader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   shader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
+   shader->setUniformFloat("pointLights[0].linearAtt", 0.01f);
+   shader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
+   shader->setUniformVec3("pointLights[1].worldPos", glm::vec3(0.0f, 2.0f, -10.0f));
+   shader->setUniformVec3("pointLights[1].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   shader->setUniformFloat("pointLights[1].constantAtt", 1.0f);
+   shader->setUniformFloat("pointLights[1].linearAtt", 0.01f);
+   shader->setUniformFloat("pointLights[1].quadraticAtt", 0.0f);
+   shader->setUniformInt("numPointLightsInScene", 2);
+   shader->use(false);
+}
+
+void PlayState::switchFromGPUToCPU()
+{
+   int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
+   int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
+   int texCoordsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("texCoord");
+   int weightsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("weights");
+   int influencesAttribLocOfAnimatedShader = mAnimatedMeshShader->getAttributeLocation("joints");
+   for (unsigned int i = 0,
+        size = static_cast<unsigned int>(mAnimatedMeshes.size());
+        i < size;
+        ++i)
+   {
+      mAnimatedMeshes[i].UnconfigureVAO(positionsAttribLocOfAnimatedShader,
+                                        normalsAttribLocOfAnimatedShader,
+                                        texCoordsAttribLocOfAnimatedShader,
+                                        weightsAttribLocOfAnimatedShader,
+                                        influencesAttribLocOfAnimatedShader);
+   }
+
+   int positionsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("position");
+   int normalsAttribLocOfStaticShader   = mStaticMeshShader->getAttributeLocation("normal");
+   int texCoordsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("texCoord");
+   for (unsigned int i = 0,
+        size = static_cast<unsigned int>(mAnimatedMeshes.size());
+        i < size;
+        ++i)
+   {
+      mAnimatedMeshes[i].ConfigureVAO(positionsAttribLocOfStaticShader,
+                                      normalsAttribLocOfStaticShader,
+                                      texCoordsAttribLocOfStaticShader,
+                                      -1,
+                                      -1);
+   }
+}
+
+void PlayState::switchFromCPUToGPU()
+{
+   int positionsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("position");
+   int normalsAttribLocOfStaticShader   = mStaticMeshShader->getAttributeLocation("normal");
+   int texCoordsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("texCoord");
+   for (unsigned int i = 0,
+        size = static_cast<unsigned int>(mAnimatedMeshes.size());
+        i < size;
+        ++i)
+   {
+      mAnimatedMeshes[i].UnconfigureVAO(positionsAttribLocOfStaticShader,
+                                        normalsAttribLocOfStaticShader,
+                                        texCoordsAttribLocOfStaticShader,
+                                        -1,
+                                        -1);
+   }
+
+   int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
+   int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
+   int texCoordsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("texCoord");
+   int weightsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("weights");
+   int influencesAttribLocOfAnimatedShader = mAnimatedMeshShader->getAttributeLocation("joints");
+   for (unsigned int i = 0,
+        size = static_cast<unsigned int>(mAnimatedMeshes.size());
+        i < size;
+        ++i)
+   {
+      mAnimatedMeshes[i].ConfigureVAO(positionsAttribLocOfAnimatedShader,
+                                      normalsAttribLocOfAnimatedShader,
+                                      texCoordsAttribLocOfAnimatedShader,
+                                      weightsAttribLocOfAnimatedShader,
+                                      influencesAttribLocOfAnimatedShader);
+   }
+
+   // TODO: This is inefficient. We just need to load the positions and normals.
+   // Load the original positions and normals because the CPU skinning algorithm
+   // has been modifying them every frame
+   for (unsigned int i = 0,
+        size = static_cast<unsigned int>(mAnimatedMeshes.size());
+        i < size;
+        ++i)
+   {
+      mAnimatedMeshes[i].LoadBuffers();
+   }
 }
 
 void PlayState::userInterface()

@@ -5,7 +5,16 @@
 #include "SkeletonViewer.h"
 
 SkeletonViewer::SkeletonViewer()
-   : mColorPalette{glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.65f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f)}
+   : mBonesVAO(0)
+   , mBonesVBO(0)
+   , mJointsVAO(0)
+   , mJointsVBO(0)
+   , mJointsEBO(0)
+   , mBoneShader()
+   , mJointShader()
+   , mBoneColorPalette{glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.65f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f)}
+   , mBonePositions()
+   , mBoneColors()
 {
    glGenVertexArrays(1, &mBonesVAO);
    glGenBuffers(1, &mBonesVBO);
@@ -13,6 +22,9 @@ SkeletonViewer::SkeletonViewer()
    glGenVertexArrays(1, &mJointsVAO);
    glGenBuffers(1, &mJointsVBO);
    glGenBuffers(1, &mJointsEBO);
+
+   mBoneShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/bone.vert",
+                                                                               "resources/shaders/bone.frag");
 
    mJointShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/joint.vert",
                                                                                 "resources/shaders/joint.frag");
@@ -50,30 +62,38 @@ SkeletonViewer::SkeletonViewer(SkeletonViewer&& rhs) noexcept
    , mJointsVAO(std::exchange(rhs.mJointsVAO, 0))
    , mJointsVBO(std::exchange(rhs.mJointsVBO, 0))
    , mJointsEBO(std::exchange(rhs.mJointsEBO, 0))
-   , mColorPalette(std::move(rhs.mColorPalette))
-   , mJointPositions(std::move(rhs.mJointPositions))
-   , mJointColors(std::move(rhs.mJointColors))
+   , mBoneShader(std::move(rhs.mBoneShader))
+   , mJointShader(std::move(rhs.mJointShader))
+   , mBoneColorPalette(std::move(rhs.mBoneColorPalette))
+   , mBonePositions(std::move(rhs.mBonePositions))
+   , mBoneColors(std::move(rhs.mBoneColors))
 {
 
 }
 
 SkeletonViewer& SkeletonViewer::operator=(SkeletonViewer&& rhs) noexcept
 {
-   mBonesVAO       = std::exchange(rhs.mBonesVAO, 0);
-   mBonesVBO       = std::exchange(rhs.mBonesVBO, 0);
-   mJointsVAO      = std::exchange(rhs.mJointsVAO, 0);
-   mJointsVBO      = std::exchange(rhs.mJointsVBO, 0);
-   mJointsEBO      = std::exchange(rhs.mJointsEBO, 0);
-   mColorPalette   = std::move(rhs.mColorPalette);
-   mJointPositions = std::move(rhs.mJointPositions);
-   mJointColors    = std::move(rhs.mJointColors);
+   mBonesVAO         = std::exchange(rhs.mBonesVAO, 0);
+   mBonesVBO         = std::exchange(rhs.mBonesVBO, 0);
+   mJointsVAO        = std::exchange(rhs.mJointsVAO, 0);
+   mJointsVBO        = std::exchange(rhs.mJointsVBO, 0);
+   mJointsEBO        = std::exchange(rhs.mJointsEBO, 0);
+   mBoneShader       = std::move(rhs.mBoneShader);
+   mJointShader      = std::move(rhs.mJointShader);
+   mBoneColorPalette = std::move(rhs.mBoneColorPalette);
+   mBonePositions    = std::move(rhs.mBonePositions);
+   mBoneColors       = std::move(rhs.mBoneColors);
    return *this;
 }
 
-void SkeletonViewer::ExtractPointsOfSkeletonFromPose(const Pose& animatedPose, const std::vector<glm::mat4>& animatedPosePalette)
+void SkeletonViewer::InitializeBones(const Pose& pose)
 {
-   ResizeContainers(animatedPose);
+   ResizeBoneContainers(pose);
+   ConfigureBonesVAO(mBoneShader->getAttributeLocation("inPos"), mBoneShader->getAttributeLocation("inCol"));
+}
 
+void SkeletonViewer::UpdateBones(const Pose& animatedPose, const std::vector<glm::mat4>& animatedPosePalette)
+{
    int posIndex = 0;
    int colorIndex = 0;
    int colorPaletteIndex = 0;
@@ -89,14 +109,16 @@ void SkeletonViewer::ExtractPointsOfSkeletonFromPose(const Pose& animatedPose, c
 
       // Store the position of the child joint followed by the position of its parent joint
       // That way, they will be rendered as a line
-      mJointPositions[posIndex++] = animatedPosePalette[jointIndex][3];
-      mJointPositions[posIndex++] = animatedPosePalette[parentJointIndex][3];
+      mBonePositions[posIndex++] = animatedPosePalette[jointIndex][3];
+      mBonePositions[posIndex++] = animatedPosePalette[parentJointIndex][3];
 
       colorPaletteIndex %= 3;
-      mJointColors[colorIndex++] = mColorPalette[colorPaletteIndex];
-      mJointColors[colorIndex++] = mColorPalette[colorPaletteIndex];
+      mBoneColors[colorIndex++] = mBoneColorPalette[colorPaletteIndex];
+      mBoneColors[colorIndex++] = mBoneColorPalette[colorPaletteIndex];
       ++colorPaletteIndex;
    }
+
+   LoadBoneBuffers();
 }
 
 // TODO: Experiment with GL_STATIC_DRAW, GL_STREAM_DRAW and GL_DYNAMIC_DRAW to see which is faster
@@ -105,11 +127,12 @@ void SkeletonViewer::LoadBoneBuffers()
    glBindVertexArray(mBonesVAO);
 
    glBindBuffer(GL_ARRAY_BUFFER, mBonesVBO);
-   glBufferData(GL_ARRAY_BUFFER, (mJointPositions.size() + mJointColors.size()) * sizeof(glm::vec3), nullptr, GL_STATIC_DRAW); // TODO: GL_DYNAMIC?
+   // Set the size of the buffer that contains the positions and the colors
+   glBufferData(GL_ARRAY_BUFFER, (mBonePositions.size() + mBoneColors.size()) * sizeof(glm::vec3), nullptr, GL_STATIC_DRAW); // TODO: GL_DYNAMIC?
    // Positions
-   glBufferSubData(GL_ARRAY_BUFFER, 0, mJointPositions.size() * sizeof(glm::vec3), &mJointPositions[0]); // TODO: GL_DYNAMIC?
+   glBufferSubData(GL_ARRAY_BUFFER, 0, mBonePositions.size() * sizeof(glm::vec3), &mBonePositions[0]);
    // Colors
-   glBufferSubData(GL_ARRAY_BUFFER, mJointPositions.size() * sizeof(glm::vec3), mJointColors.size() * sizeof(glm::vec3), &mJointColors[0]);
+   glBufferSubData(GL_ARRAY_BUFFER, mBonePositions.size() * sizeof(glm::vec3), mBoneColors.size() * sizeof(glm::vec3), &mBoneColors[0]);
    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
    glBindVertexArray(0);
@@ -175,7 +198,7 @@ void SkeletonViewer::ConfigureBonesVAO(int posAttribLocation, int colorAttribLoc
    {
       glBindBuffer(GL_ARRAY_BUFFER, mBonesVBO);
       glEnableVertexAttribArray(colorAttribLocation);
-      glVertexAttribPointer(colorAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)(mJointPositions.size() * sizeof(glm::vec3)));
+      glVertexAttribPointer(colorAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)(mBonePositions.size() * sizeof(glm::vec3)));
       glBindBuffer(GL_ARRAY_BUFFER, 0);
    }
 
@@ -207,40 +230,19 @@ void SkeletonViewer::ConfigureJointsVAO(int posAttribLocation, int normalAttribL
    glBindVertexArray(0);
 }
 
-void SkeletonViewer::BindFloatAttribute(int attribLocation, unsigned int VBO, int numComponents)
+void SkeletonViewer::RenderBones(const Transform& model, const glm::mat4& projectionView)
 {
-   if (attribLocation >= 0)
-   {
-      glBindBuffer(GL_ARRAY_BUFFER, VBO);
-      glEnableVertexAttribArray(attribLocation);
-      glVertexAttribPointer(attribLocation, numComponents, GL_FLOAT, GL_FALSE, 0, (void*)0);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-   }
-}
-
-void SkeletonViewer::UnbindAttribute(int attribLocation, unsigned int VBO)
-{
-   if (attribLocation >= 0)
-   {
-      glBindBuffer(GL_ARRAY_BUFFER, VBO);
-      glDisableVertexAttribArray(attribLocation);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-   }
-}
-
-void SkeletonViewer::RenderBones()
-{
+   mBoneShader->use(true);
+   mBoneShader->setUniformMat4("model", transformToMat4(model));
+   mBoneShader->setUniformMat4("projectionView", projectionView);
    glBindVertexArray(mBonesVAO);
-
-   glDrawArrays(GL_LINES, 0, static_cast<unsigned int>(mJointPositions.size()));
-
+   glDrawArrays(GL_LINES, 0, static_cast<unsigned int>(mBonePositions.size()));
    glBindVertexArray(0);
+   mBoneShader->use(false);
 }
 
 void SkeletonViewer::RenderJoints(const Transform& model, const glm::mat4& projectionView, const std::vector<glm::mat4>& animatedPosePalette)
 {
-   mJointShader->use(true);
-
    // We need to combine 3 transforms:
    // - The model transform of the entire 3D character
    // - The transform of each joint
@@ -268,6 +270,7 @@ void SkeletonViewer::RenderJoints(const Transform& model, const glm::mat4& proje
    }
 
    // Render the joints
+   mJointShader->use(true);
    mJointShader->setUniformMat4("projectionView", projectionView);
    mJointShader->setUniformMat4Array("modelMatrices[0]", combinedTransforms);
    glBindVertexArray(mJointsVAO);
@@ -276,7 +279,7 @@ void SkeletonViewer::RenderJoints(const Transform& model, const glm::mat4& proje
    mJointShader->use(false);
 }
 
-void SkeletonViewer::ResizeContainers(const Pose& animatedPose)
+void SkeletonViewer::ResizeBoneContainers(const Pose& animatedPose)
 {
    unsigned int numPointsOfSkeleton = 0;
    unsigned int numJoints = animatedPose.GetNumberOfJoints();
@@ -293,6 +296,6 @@ void SkeletonViewer::ResizeContainers(const Pose& animatedPose)
       numPointsOfSkeleton += 2;
    }
 
-   mJointPositions.resize(numPointsOfSkeleton);
-   mJointColors.resize(numPointsOfSkeleton);
+   mBonePositions.resize(numPointsOfSkeleton);
+   mBoneColors.resize(numPointsOfSkeleton);
 }

@@ -19,23 +19,22 @@ public:
    SkeletonViewer(SkeletonViewer&& rhs) noexcept;
    SkeletonViewer& operator=(SkeletonViewer&& rhs) noexcept;
 
-   void ExtractPointsOfSkeletonFromPose(const Pose& animatedPose, const std::vector<glm::mat4>& animatedPosePalette);
+   void InitializeBones(const Pose& pose);
 
-   void LoadBoneBuffers();
-   void LoadJointBuffers();
+   void UpdateBones(const Pose& animatedPose, const std::vector<glm::mat4>& animatedPosePalette);
 
-   void ConfigureBonesVAO(int posAttribLocation, int colorAttribLocation);
-   void ConfigureJointsVAO(int posAttribLocation, int normalAttribLocation);
-
-   void BindFloatAttribute(int attribLocation, unsigned int VBO, int numComponents);
-   void UnbindAttribute(int attribLocation, unsigned int VBO);
-
-   void RenderBones();
+   void RenderBones(const Transform& model, const glm::mat4& projectionView);
    void RenderJoints(const Transform& model, const glm::mat4& projectionView, const std::vector<glm::mat4>& animatedPosePalette);
 
 private:
 
-   void ResizeContainers(const Pose& animatedPose);
+   void LoadBoneBuffers();
+   void ConfigureBonesVAO(int posAttribLocation, int colorAttribLocation);
+
+   void LoadJointBuffers();
+   void ConfigureJointsVAO(int posAttribLocation, int normalAttribLocation);
+
+   void ResizeBoneContainers(const Pose& animatedPose);
 
    unsigned int             mBonesVAO;
    unsigned int             mBonesVBO;
@@ -44,11 +43,12 @@ private:
    unsigned int             mJointsVBO;
    unsigned int             mJointsEBO;
 
+   std::shared_ptr<Shader>  mBoneShader;
    std::shared_ptr<Shader>  mJointShader;
 
-   std::array<glm::vec3, 3> mColorPalette;
-   std::vector<glm::vec3>   mJointPositions;
-   std::vector<glm::vec3>   mJointColors;
+   std::array<glm::vec3, 3> mBoneColorPalette;
+   std::vector<glm::vec3>   mBonePositions;
+   std::vector<glm::vec3>   mBoneColors;
 };
 
 #endif
