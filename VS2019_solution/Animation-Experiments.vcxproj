@@ -30,8 +30,11 @@
     <ClInclude Include="..\dependencies\win\inc\imgui\imstb_truetype.h" />
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h" />
     <ClInclude Include="..\inc\AnimatedMesh.h" />
+    <ClInclude Include="..\inc\Blending.h" />
     <ClInclude Include="..\inc\camera.h" />
     <ClInclude Include="..\inc\Clip.h" />
+    <ClInclude Include="..\inc\CrossFadeController.h" />
+    <ClInclude Include="..\inc\CrossFadeTarget.h" />
     <ClInclude Include="..\inc\finite_state_machine.h" />
     <ClInclude Include="..\inc\Frame.h" />
     <ClInclude Include="..\inc\game.h" />
@@ -70,8 +73,10 @@
     <ClCompile Include="..\dependencies\win\src\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\dependencies\win\src\stb_image\stb_image.cpp" />
     <ClCompile Include="..\src\AnimatedMesh.cpp" />
+    <ClCompile Include="..\src\Blending.cpp" />
     <ClCompile Include="..\src\camera.cpp" />
     <ClCompile Include="..\src\Clip.cpp" />
+    <ClCompile Include="..\src\CrossFadeController.cpp" />
     <ClCompile Include="..\src\finite_state_machine.cpp" />
     <ClCompile Include="..\src\game.cpp" />
     <ClCompile Include="..\src\game_object_3D.cpp" />
