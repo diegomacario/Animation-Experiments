@@ -1,7 +1,7 @@
 #ifndef CROSSFADE_CONTROLLER_H
 #define CROSSFADE_CONTROLLER_H
 
-#include <vector>
+#include <queue>
 #include "CrossFadeTarget.h"
 #include "Skeleton.h"
 
@@ -28,7 +28,7 @@ protected:
    Skeleton                     mSkeleton;
    Pose                         mCurrentPose;
    bool                         mWasSkeletonSet;
-   std::vector<CrossFadeTarget> mTargets;
+   std::queue<CrossFadeTarget>  mTargets;
 };
 
 #endif
