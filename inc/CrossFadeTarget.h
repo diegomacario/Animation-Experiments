@@ -6,21 +6,30 @@
 
 struct CrossFadeTarget
 {
-   Pose mPose;
+   inline CrossFadeTarget()
+      : mClip(0)
+      , mPlaybackTime(0.0f)
+      , mFadeDuration(0.0f)
+      , mFadeTime(0.0f)
+   {
+
+   }
+
+   inline CrossFadeTarget(Clip* target, Pose& pose, float fadeDuration)
+      : mClip(target)
+      , mPlaybackTime(target->GetStartTime())
+      , mPose(pose)
+      , mFadeDuration(fadeDuration)
+      , mFadeTime(0.0f)
+   {
+
+   }
+
+   Pose  mPose;
    Clip* mClip;
-   float mTime;
-   float mDuration;
-   float mElapsed;
-
-   inline CrossFadeTarget() : mClip(0), mTime(0.0f), mDuration(0.0f), mElapsed(0.0f)
-   {
-
-   }
-
-   inline CrossFadeTarget(Clip* target, Pose& pose, float duration) : mClip(target), mTime(target->GetStartTime()), mPose(pose), mDuration(duration), mElapsed(0.0f)
-   {
-
-   }
+   float mPlaybackTime;
+   float mFadeDuration;
+   float mFadeTime;
 };
 
 #endif

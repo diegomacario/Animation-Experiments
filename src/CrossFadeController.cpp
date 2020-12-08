@@ -2,105 +2,123 @@
 #include "Blending.h"
 
 CrossFadeController::CrossFadeController()
+   : mCurrentClip(nullptr)
+   , mPlaybackTime(0.0f)
+   , mSkeleton()
+   , mCurrentPose()
+   , mWasSkeletonSet(false)
+   , mTargets()
 {
-   mClip = 0;
-   mTime = 0.0f;
-   mWasSkeletonSet = false;
+
 }
 
 CrossFadeController::CrossFadeController(Skeleton& skeleton)
+   : mCurrentClip(nullptr)
+   , mPlaybackTime(0.0f)
+   , mSkeleton()
+   , mCurrentPose()
+   , mWasSkeletonSet(false)
+   , mTargets()
 {
-   mClip = 0;
-   mTime = 0.0f;
    SetSkeleton(skeleton);
 }
 
 void CrossFadeController::SetSkeleton(Skeleton& skeleton)
 {
-   mSkeleton = skeleton;
-   mPose = mSkeleton.GetRestPose();
+   mSkeleton       = skeleton;
+   mCurrentPose    = mSkeleton.GetRestPose();
    mWasSkeletonSet = true;
 }
 
-void CrossFadeController::Play(Clip* target)
+void CrossFadeController::Play(Clip* clip)
 {
+   // When asked to play a clip, we clear all the crossfade targets
    mTargets.clear();
-   mClip = target;
-   mPose = mSkeleton.GetRestPose();
-   mTime = target->GetStartTime();
+
+   mCurrentClip  = clip;
+   mPlaybackTime = clip->GetStartTime();
+   mCurrentPose  = mSkeleton.GetRestPose();
 }
 
-void CrossFadeController::FadeTo(Clip* target, float fadeTime)
+void CrossFadeController::FadeTo(Clip* targetClip, float fadeDuration)
 {
-   if (mClip == 0)
+   // If no clip has been set, simply play the target clip since there is no clip to fade from
+   if (mCurrentClip == nullptr)
    {
-      Play(target);
+      Play(targetClip);
       return;
    }
 
    if (mTargets.size() >= 1)
    {
-      if (mTargets[mTargets.size() - 1].mClip == target)
+      // If the last clip in the queue is the same as the target clip, then don't add the target clip to the queue
+      // Otherwise, we would eventually fade between identical clips
+      if (mTargets[mTargets.size() - 1].mClip == targetClip)
       {
          return;
       }
    }
    else
    {
-      if (mClip == target)
+      // If there are no clips in the queue and the current clip is the same as the target clip, then don't add the target clip to the queue
+      // Otherwise, we would immediately fade between identical clips
+      if (mCurrentClip == targetClip)
       {
          return;
       }
    }
 
-   mTargets.push_back(CrossFadeTarget(target, mSkeleton.GetRestPose(), fadeTime));
+   // Add the target clip to the queue
+   mTargets.push_back(CrossFadeTarget(targetClip, mSkeleton.GetRestPose(), fadeDuration));
 }
 
 void CrossFadeController::Update(float dt)
 {
-   if (mClip == 0 || !mWasSkeletonSet)
+   // We cannot update without a current clip or a skeleton
+   if (mCurrentClip == nullptr || !mWasSkeletonSet)
    {
       return;
    }
 
    unsigned int numTargets = mTargets.size();
-   for (unsigned int i = 0; i < numTargets; ++i)
+   for (unsigned int targetIndex = 0; targetIndex < numTargets; ++targetIndex)
    {
-      if (mTargets[i].mElapsed >= mTargets[i].mDuration)
+      if (mTargets[targetIndex].mFadeTime >= mTargets[targetIndex].mFadeDuration)
       {
-         mClip = mTargets[i].mClip;
-         mTime = mTargets[i].mTime;
-         mPose = mTargets[i].mPose;
+         mCurrentClip  = mTargets[targetIndex].mClip;
+         mPlaybackTime = mTargets[targetIndex].mFadeTime;
+         mCurrentPose  = mTargets[targetIndex].mPose;
 
-         mTargets.erase(mTargets.begin() + i);
+         mTargets.erase(mTargets.begin() + targetIndex);
          break;
       }
    }
-   numTargets = mTargets.size();
-   mPose = mSkeleton.GetRestPose();
-   mTime = mClip->Sample(mPose, mTime + dt);
 
-   for (unsigned int i = 0; i < numTargets; ++i)
+   numTargets    = mTargets.size();
+   //mCurrentPose  = mSkeleton.GetRestPose();
+   mPlaybackTime = mCurrentClip->Sample(mCurrentPose, mPlaybackTime + dt);
+
+   for (unsigned int targetIndex = 0; targetIndex < numTargets; ++targetIndex)
    {
-      CrossFadeTarget& target = mTargets[i];
-      target.mTime = target.mClip->Sample(target.mPose, target.mTime + dt);
-      target.mElapsed += dt;
-      float t = target.mElapsed / target.mDuration;
+      CrossFadeTarget& target = mTargets[targetIndex];
+      target.mPlaybackTime = target.mClip->Sample(target.mPose, target.mPlaybackTime + dt);
+      target.mFadeTime += dt;
+      float t = target.mFadeTime / target.mFadeDuration;
       if (t > 1.0f)
       {
          t = 1.0f;
       }
 
-      Blend(mPose, mPose, target.mPose, t, -1);
+      Blend(mCurrentPose, target.mPose, t, -1, mCurrentPose);
    }
-}
-
-Pose& CrossFadeController::GetCurrentPose()
-{
-   return mPose;
 }
 
 Clip* CrossFadeController::GetcurrentClip()
 {
-   return mClip;
+   return mCurrentClip;
+}
+
+Pose& CrossFadeController::GetCurrentPose()
+{
+   return mCurrentPose;
 }
