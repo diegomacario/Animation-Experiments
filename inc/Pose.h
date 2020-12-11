@@ -38,6 +38,7 @@ public:
    unsigned int GetNumberOfJoints() const;
    void         SetNumberOfJoints(unsigned int numJoints);
 
+   // TODO: Revisit the GetXTransform functions and return const references where possible
    Transform    GetLocalTransform(unsigned int jointIndex) const;
    void         SetLocalTransform(unsigned int jointIndex, const Transform& transform);
    Transform    GetGlobalTransform(unsigned int jointIndex) const;

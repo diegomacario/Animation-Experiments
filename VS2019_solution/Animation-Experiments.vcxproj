@@ -32,6 +32,7 @@
     <ClInclude Include="..\inc\AnimatedMesh.h" />
     <ClInclude Include="..\inc\Blending.h" />
     <ClInclude Include="..\inc\camera.h" />
+    <ClInclude Include="..\inc\CCDSolver.h" />
     <ClInclude Include="..\inc\Clip.h" />
     <ClInclude Include="..\inc\CrossFadeController.h" />
     <ClInclude Include="..\inc\CrossFadeTarget.h" />
@@ -75,6 +76,7 @@
     <ClCompile Include="..\src\AnimatedMesh.cpp" />
     <ClCompile Include="..\src\Blending.cpp" />
     <ClCompile Include="..\src\camera.cpp" />
+    <ClCompile Include="..\src\CCDSolver.cpp" />
     <ClCompile Include="..\src\Clip.cpp" />
     <ClCompile Include="..\src\CrossFadeController.cpp" />
     <ClCompile Include="..\src\finite_state_machine.cpp" />

@@ -112,6 +112,9 @@
     <ClCompile Include="..\src\CrossFadeController.cpp">
       <Filter>Animation-Experiments\Source Files\Animation\Blending</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\CCDSolver.cpp">
+      <Filter>Animation-Experiments\Source Files\IK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -240,6 +243,9 @@
     <ClInclude Include="..\inc\CrossFadeTarget.h">
       <Filter>Animation-Experiments\Header Files\Animation\Blending</Filter>
     </ClInclude>
+    <ClInclude Include="..\inc\CCDSolver.h">
+      <Filter>Animation-Experiments\Header Files\IK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Animation-Experiments">
@@ -313,6 +319,12 @@
     </Filter>
     <Filter Include="Animation-Experiments\Source Files\Animation\Blending">
       <UniqueIdentifier>{6dce106b-0783-4d3d-ac53-23f34c0ee112}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation-Experiments\Header Files\IK">
+      <UniqueIdentifier>{7c48b4cb-aa80-4028-a585-fde4498cc81f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation-Experiments\Source Files\IK">
+      <UniqueIdentifier>{b70c9b28-4329-49e0-905f-cb4cf2bf644c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
