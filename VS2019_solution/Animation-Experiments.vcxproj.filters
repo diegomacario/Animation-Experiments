@@ -115,6 +115,9 @@
     <ClCompile Include="..\src\CCDSolver.cpp">
       <Filter>Animation-Experiments\Source Files\IK</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\FABRIKSolver.cpp">
+      <Filter>Animation-Experiments\Source Files\IK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -244,6 +247,9 @@
       <Filter>Animation-Experiments\Header Files\Animation\Blending</Filter>
     </ClInclude>
     <ClInclude Include="..\inc\CCDSolver.h">
+      <Filter>Animation-Experiments\Header Files\IK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\FABRIKSolver.h">
       <Filter>Animation-Experiments\Header Files\IK</Filter>
     </ClInclude>
   </ItemGroup>

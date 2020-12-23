@@ -48,7 +48,7 @@ public:
    int          GetParent(unsigned int jointIndex) const;
    void         SetParent(unsigned int jointIndex, int parentIndex);
 
-protected:
+private:
 
    std::vector<Transform> mJointLocalTransforms;
    std::vector<int>       mParentIndices;

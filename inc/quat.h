@@ -88,4 +88,6 @@ namespace Q
    quat      mat4ToQuat(const glm::mat4& m);
 }
 
+glm::vec3 normalizeWithZeroLengthCheck(const glm::vec3& v);
+
 #endif

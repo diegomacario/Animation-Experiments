@@ -36,7 +36,7 @@ public:
 
    float        Sample(Pose& ioPose, float time) const;
 
-protected:
+private:
 
    float        AdjustTimeToBeWithinClip(float time) const;
 

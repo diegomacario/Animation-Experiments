@@ -32,7 +32,7 @@ public:
 
    Transform    Sample(const Transform& defaultTransform, float time, bool looping) const;
 
-protected:
+private:
 
    // Each TransformTrack stores the ID of the joint it animates
    unsigned int mJointID;

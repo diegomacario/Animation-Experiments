@@ -2,20 +2,6 @@
 
 #include "quat.h"
 
-// This helper function is not declared in quat.h
-// It's identical to glm::normalize, except that it checks if the length of the vector
-// we want to normalize is zero, and if it is then it doesn't normalize it
-glm::vec3 normalizeWithZeroLengthCheck(const glm::vec3& v)
-{
-   float squaredLen = glm::length2(v);
-   if (squaredLen < QUAT_EPSILON)
-   {
-      return v;
-   }
-
-   return v / glm::sqrt(squaredLen);
-}
-
 Q::quat Q::angleAxis(float angle, const glm::vec3& axis)
 {
    glm::vec3 nAxis = normalizeWithZeroLengthCheck(axis);
@@ -419,4 +405,18 @@ Q::quat Q::mat4ToQuat(const glm::mat4& m)
 
    // Use the lookRotation function to compose a quaternion that rotates from the world's basis vectors to the rotated basis vectors
    return Q::lookRotation(forward, up);
+}
+
+// TODO: This function shouldn't be declared in quat.h
+// This helper function is identical to glm::normalize, except that it checks if the length of the vector
+// we want to normalize is zero, and if it is then it doesn't normalize it
+glm::vec3 normalizeWithZeroLengthCheck(const glm::vec3& v)
+{
+   float squaredLen = glm::length2(v);
+   if (squaredLen < QUAT_EPSILON)
+   {
+      return v;
+   }
+
+   return v / glm::sqrt(squaredLen);
 }

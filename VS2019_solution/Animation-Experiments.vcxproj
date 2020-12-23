@@ -36,6 +36,7 @@
     <ClInclude Include="..\inc\Clip.h" />
     <ClInclude Include="..\inc\CrossFadeController.h" />
     <ClInclude Include="..\inc\CrossFadeTarget.h" />
+    <ClInclude Include="..\inc\FABRIKSolver.h" />
     <ClInclude Include="..\inc\finite_state_machine.h" />
     <ClInclude Include="..\inc\Frame.h" />
     <ClInclude Include="..\inc\game.h" />
@@ -79,6 +80,7 @@
     <ClCompile Include="..\src\CCDSolver.cpp" />
     <ClCompile Include="..\src\Clip.cpp" />
     <ClCompile Include="..\src\CrossFadeController.cpp" />
+    <ClCompile Include="..\src\FABRIKSolver.cpp" />
     <ClCompile Include="..\src\finite_state_machine.cpp" />
     <ClCompile Include="..\src\game.cpp" />
     <ClCompile Include="..\src\game_object_3D.cpp" />

@@ -21,7 +21,7 @@ public:
    Clip* GetcurrentClip();
    Pose& GetCurrentPose();
 
-protected:
+private:
 
    Clip*                        mCurrentClip;
    float                        mPlaybackTime;

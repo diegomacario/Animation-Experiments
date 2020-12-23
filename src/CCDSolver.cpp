@@ -24,7 +24,7 @@ CCDSolver::CCDSolver()
 
 unsigned int CCDSolver::GetNumberOfJointsInIKChain()
 {
-   return mIKChain.size();
+   return static_cast<unsigned int>(mIKChain.size());
 }
 
 void CCDSolver::SetNumberOfJointsInIKChain(unsigned int numJoints)
@@ -161,7 +161,7 @@ bool CCDSolver::Solve(const Transform& goal)
                //
                // globalRotOfParent^-1 * newGlobalRotOfCurrJoint = (D * C * B)^-1 * (D * C * B * A_new) = (B^-1 * C^-1 * D^-1) * (D * C * B * A_new) = A_new
                //
-               Q::quat newLocalRotationOfJoint  = newGlobalRotationOfJoint * inverse(globalTransfOfParentJoint.rotation);
+               Q::quat newLocalRotationOfJoint = newGlobalRotationOfJoint * inverse(globalTransfOfParentJoint.rotation);
 
                // Finally, we store the new local rotation of the current joint in the IK chain
                mIKChain[j].rotation = newLocalRotationOfJoint;
