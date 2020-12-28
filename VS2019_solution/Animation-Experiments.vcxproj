@@ -43,6 +43,7 @@
     <ClInclude Include="..\inc\game_object_3D.h" />
     <ClInclude Include="..\inc\GLTFLoader.h" />
     <ClInclude Include="..\inc\Interpolation.h" />
+    <ClInclude Include="..\inc\Intersection.h" />
     <ClInclude Include="..\inc\line.h" />
     <ClInclude Include="..\inc\mesh.h" />
     <ClInclude Include="..\inc\model.h" />
@@ -50,6 +51,7 @@
     <ClInclude Include="..\inc\play_state.h" />
     <ClInclude Include="..\inc\Pose.h" />
     <ClInclude Include="..\inc\quat.h" />
+    <ClInclude Include="..\inc\Ray.h" />
     <ClInclude Include="..\inc\RearrangeBones.h" />
     <ClInclude Include="..\inc\resource_manager.h" />
     <ClInclude Include="..\inc\shader.h" />
@@ -62,6 +64,7 @@
     <ClInclude Include="..\inc\Track.h" />
     <ClInclude Include="..\inc\Transform.h" />
     <ClInclude Include="..\inc\TransformTrack.h" />
+    <ClInclude Include="..\inc\Triangle.h" />
     <ClInclude Include="..\inc\window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -85,6 +88,7 @@
     <ClCompile Include="..\src\game.cpp" />
     <ClCompile Include="..\src\game_object_3D.cpp" />
     <ClCompile Include="..\src\GLTFLoader.cpp" />
+    <ClCompile Include="..\src\Intersection.cpp" />
     <ClCompile Include="..\src\line.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\mesh.cpp" />
@@ -93,6 +97,7 @@
     <ClCompile Include="..\src\play_state.cpp" />
     <ClCompile Include="..\src\Pose.cpp" />
     <ClCompile Include="..\src\quat.cpp" />
+    <ClCompile Include="..\src\Ray.cpp" />
     <ClCompile Include="..\src\RearrangeBones.cpp" />
     <ClCompile Include="..\src\shader.cpp" />
     <ClCompile Include="..\src\shader_loader.cpp" />
@@ -103,6 +108,7 @@
     <ClCompile Include="..\src\Track.cpp" />
     <ClCompile Include="..\src\Transform.cpp" />
     <ClCompile Include="..\src\TransformTrack.cpp" />
+    <ClCompile Include="..\src\Triangle.cpp" />
     <ClCompile Include="..\src\window.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

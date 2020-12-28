@@ -118,6 +118,15 @@
     <ClCompile Include="..\src\FABRIKSolver.cpp">
       <Filter>Animation-Experiments\Source Files\IK</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Ray.cpp">
+      <Filter>Animation-Experiments\Source Files\Intersection</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Triangle.cpp">
+      <Filter>Animation-Experiments\Source Files\Intersection</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Intersection.cpp">
+      <Filter>Animation-Experiments\Source Files\Intersection</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -252,6 +261,15 @@
     <ClInclude Include="..\inc\FABRIKSolver.h">
       <Filter>Animation-Experiments\Header Files\IK</Filter>
     </ClInclude>
+    <ClInclude Include="..\inc\Ray.h">
+      <Filter>Animation-Experiments\Header Files\Intersection</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\Triangle.h">
+      <Filter>Animation-Experiments\Header Files\Intersection</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\Intersection.h">
+      <Filter>Animation-Experiments\Header Files\Intersection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Animation-Experiments">
@@ -331,6 +349,12 @@
     </Filter>
     <Filter Include="Animation-Experiments\Source Files\IK">
       <UniqueIdentifier>{b70c9b28-4329-49e0-905f-cb4cf2bf644c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation-Experiments\Header Files\Intersection">
+      <UniqueIdentifier>{ea7ed313-6963-45ff-8c96-bd00116ea60e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation-Experiments\Source Files\Intersection">
+      <UniqueIdentifier>{20a5dc86-88e4-4bc7-aa9e-8c5069027b61}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
