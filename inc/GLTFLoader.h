@@ -18,5 +18,6 @@ std::vector<Clip>         LoadClips(cgltf_data* data);
 Pose                      LoadBindPose(cgltf_data* data);
 Skeleton                  LoadSkeleton(cgltf_data* data);
 std::vector<AnimatedMesh> LoadAnimatedMeshes(cgltf_data* data);
+std::vector<AnimatedMesh> LoadStaticMeshes(cgltf_data* data);
 
 #endif

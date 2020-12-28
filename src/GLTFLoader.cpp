@@ -198,7 +198,7 @@ namespace GLTFHelpers
    // - The material that should be used for rendering
    // Each attribute is defined by mapping the attribute name (e.g. "POSITION", "NORMAL", etc.)
    // to the index of the accessor that contains the attribute data
-   void StoreValuesOfAttributeInMesh(cgltf_attribute& attribute, cgltf_skin* skin, cgltf_node* nodes, unsigned int nodeCount, AnimatedMesh& outMesh)
+   void StoreValuesOfAttributeInAnimatedMesh(cgltf_attribute& attribute, cgltf_skin* skin, cgltf_node* nodes, unsigned int nodeCount, AnimatedMesh& outMesh)
    {
       // Get the accessor of the attribute and its component count
       cgltf_accessor& accessor = *attribute.data;
@@ -302,6 +302,80 @@ namespace GLTFHelpers
             jointsIndices.w = std::max(0, GetNodeIndex(skin->joints[jointsIndices.w], nodes, nodeCount));
 
             influences.push_back(jointsIndices);
+         }
+         break;
+         }
+      }
+   }
+
+   // This function is identical to the one above, except that it's tailored for static meshes (i.e. meshes that are not animated)
+   void StoreValuesOfAttributeInStaticMesh(cgltf_attribute& attribute, AnimatedMesh& outMesh)
+   {
+      // Get the accessor of the attribute and its component count
+      cgltf_accessor& accessor = *attribute.data;
+      unsigned int componentCount = 0;
+      if (accessor.type == cgltf_type_vec2)
+      {
+         componentCount = 2;
+      }
+      else if (accessor.type == cgltf_type_vec3)
+      {
+         componentCount = 3;
+      }
+      else if (accessor.type == cgltf_type_vec4)
+      {
+         componentCount = 4;
+      }
+
+      // Read the floats from the accessor
+      std::vector<float> attributeFloats;
+      GetFloatsFromAccessor(accessor, componentCount, attributeFloats);
+
+      // Get the vectors that will store the attributes of the mesh that we are loading
+      // In each call to this function we only fill one of these, since a cgltf_attribute only describes one attribute
+      std::vector<glm::vec3>&  positions  = outMesh.GetPositions();
+      std::vector<glm::vec3>&  normals    = outMesh.GetNormals();
+      std::vector<glm::vec2>&  texCoords  = outMesh.GetTexCoords();
+
+      // Loop over all the values of the accessor
+      // Note that accessor.count is not equal to the number of floats in the accessor
+      // It's equal to the number of attribute values (e.g, vec2s, vec3s, vec4s, etc.) in the accessor
+      cgltf_attribute_type attributeType = attribute.type;
+      unsigned int numAttributeValues = static_cast<unsigned int>(accessor.count);
+      for (unsigned int attributeValueIndex = 0; attributeValueIndex < numAttributeValues; ++attributeValueIndex)
+      {
+         // Store the current attribute value in the correct vector of the mesh
+         // TODO: This looks inefficient. I think it would be better to have separate for loops inside if-statements
+         //       Since this function only loads one attribute type when it's called, it doesn't make sense to check
+         //       the attribute type in each iteration of this loop
+         int indexOfFirstFloatOfCurrAttribValue = attributeValueIndex * componentCount;
+         switch (attributeType)
+         {
+         case cgltf_attribute_type_position:
+            // Store a position vec3
+            positions.push_back(glm::vec3(attributeFloats[indexOfFirstFloatOfCurrAttribValue + 0],
+                                          attributeFloats[indexOfFirstFloatOfCurrAttribValue + 1],
+                                          attributeFloats[indexOfFirstFloatOfCurrAttribValue + 2]));
+            break;
+         case cgltf_attribute_type_texcoord:
+            // Store a texture coordinates vec2
+            texCoords.push_back(glm::vec2(attributeFloats[indexOfFirstFloatOfCurrAttribValue + 0],
+                                          attributeFloats[indexOfFirstFloatOfCurrAttribValue + 1]));
+            break;
+         case cgltf_attribute_type_normal:
+         {
+            // Store a normal vec3
+            glm::vec3 normal = glm::vec3(attributeFloats[indexOfFirstFloatOfCurrAttribValue + 0],
+                                         attributeFloats[indexOfFirstFloatOfCurrAttribValue + 1],
+                                         attributeFloats[indexOfFirstFloatOfCurrAttribValue + 2]);
+
+            // TODO: Use a constant here and add an error message
+            if (glm::length2(normal) < 0.000001f)
+            {
+               normal = glm::vec3(0, 1, 0);
+            }
+
+            normals.push_back(glm::normalize(normal));
          }
          break;
          }
@@ -590,7 +664,7 @@ std::vector<AnimatedMesh> LoadAnimatedMeshes(cgltf_data* data)
    {
       // This function only loads animated meshes, so the node must contain a mesh and a skin for us to process it
       cgltf_node* currNode = &data->nodes[nodeIndex];
-      if (currNode->mesh == 0 || currNode->skin == 0)
+      if (currNode->mesh == nullptr || currNode->skin == nullptr)
       {
          continue;
       }
@@ -613,11 +687,11 @@ std::vector<AnimatedMesh> LoadAnimatedMeshes(cgltf_data* data)
             // Get the current attribute
             cgltf_attribute* attribute = &currPrimitive->attributes[attributeIndex];
             // Read the values of the current attribute and store them in the current mesh
-            GLTFHelpers::StoreValuesOfAttributeInMesh(*attribute, currNode->skin, data->nodes, numNodes, currMesh);
+            GLTFHelpers::StoreValuesOfAttributeInAnimatedMesh(*attribute, currNode->skin, data->nodes, numNodes, currMesh);
          }
 
          // If the current mesh primitive has a set of indices, store them too
-         if (currPrimitive->indices != 0)
+         if (currPrimitive->indices != nullptr)
          {
             unsigned int indexCount = static_cast<unsigned int>(currPrimitive->indices->count);
 
@@ -639,4 +713,67 @@ std::vector<AnimatedMesh> LoadAnimatedMeshes(cgltf_data* data)
    }
 
    return animatedMeshes;
+}
+
+// This function is identical to the one above, except that it loads the meshes of nodes that don't refer to skins
+// In other words, it loads static meshes
+std::vector<AnimatedMesh> LoadStaticMeshes(cgltf_data* data)
+{
+   std::vector<AnimatedMesh> staticMeshes;
+
+   // Loop over the array of nodes of the glTF file
+   unsigned int numNodes = static_cast<unsigned int>(data->nodes_count);
+   for (unsigned int nodeIndex = 0; nodeIndex < numNodes; ++nodeIndex)
+   {
+      // This function only loads static meshes, so the node must contain a mesh for us to process it
+      cgltf_node* currNode = &data->nodes[nodeIndex];
+      if (currNode->mesh == nullptr)
+      {
+         continue;
+      }
+
+      // Loop over the array of mesh primitives of the current node
+      unsigned int numPrimitives = static_cast<unsigned int>(currNode->mesh->primitives_count);
+      for (unsigned int primitiveIndex = 0; primitiveIndex < numPrimitives; ++primitiveIndex)
+      {
+         // Get the current mesh primitive
+         cgltf_primitive* currPrimitive = &currNode->mesh->primitives[primitiveIndex];
+
+         // Create an AnimatedMesh for the current mesh primitive
+         staticMeshes.push_back(AnimatedMesh());
+         AnimatedMesh& currMesh = staticMeshes[staticMeshes.size() - 1];
+
+         // Loop over the attributes of the current mesh primitive
+         unsigned int numAttributes = static_cast<unsigned int>(currPrimitive->attributes_count);
+         for (unsigned int attributeIndex = 0; attributeIndex < numAttributes; ++attributeIndex)
+         {
+            // Get the current attribute
+            cgltf_attribute* attribute = &currPrimitive->attributes[attributeIndex];
+            // Read the values of the current attribute and store them in the current mesh
+            GLTFHelpers::StoreValuesOfAttributeInStaticMesh(*attribute, currMesh);
+         }
+
+         // If the current mesh primitive has a set of indices, store them too
+         if (currPrimitive->indices != nullptr)
+         {
+            unsigned int indexCount = static_cast<unsigned int>(currPrimitive->indices->count);
+
+            // Get the vector that will store the indices of the current mesh
+            std::vector<unsigned int>& indices = currMesh.GetIndices();
+            indices.resize(indexCount);
+
+            // Loop over the indices of the current mesh primitive
+            for (unsigned int i = 0; i < indexCount; ++i)
+            {
+               indices[i] = static_cast<unsigned int>(cgltf_accessor_read_index(currPrimitive->indices, i));
+            }
+         }
+
+         // TODO: Perhaps we shouldn't do this here. The user should choose when this is done
+         // Once we are done loading the current mesh, we load its VBOs with the data that we read
+         currMesh.LoadBuffers();
+      }
+   }
+
+   return staticMeshes;
 }
