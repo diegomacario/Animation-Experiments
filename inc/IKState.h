@@ -1,5 +1,5 @@
-#ifndef PLAY_STATE_H
-#define PLAY_STATE_H
+#ifndef IK_STATE_H
+#define IK_STATE_H
 
 #include <array>
 
@@ -9,23 +9,23 @@
 #include "SkeletonViewer.h"
 #include "Clip.h"
 
-class PlayState : public State
+class IKState : public State
 {
 public:
 
-   PlayState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
-             const std::shared_ptr<Window>&             window,
-             const std::shared_ptr<Camera>&             camera,
-             const std::shared_ptr<Shader>&             gameObject3DShader,
-             const std::shared_ptr<GameObject3D>&       table,
-             const std::shared_ptr<GameObject3D>&       teapot);
-   ~PlayState() = default;
+   IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
+           const std::shared_ptr<Window>&             window,
+           const std::shared_ptr<Camera>&             camera,
+           const std::shared_ptr<Shader>&             gameObject3DShader,
+           const std::shared_ptr<GameObject3D>&       table,
+           const std::shared_ptr<GameObject3D>&       teapot);
+   ~IKState() = default;
 
-   PlayState(const PlayState&) = delete;
-   PlayState& operator=(const PlayState&) = delete;
+   IKState(const IKState&) = delete;
+   IKState& operator=(const IKState&) = delete;
 
-   PlayState(PlayState&&) = delete;
-   PlayState& operator=(PlayState&&) = delete;
+   IKState(IKState&&) = delete;
+   IKState& operator=(IKState&&) = delete;
 
    void enter() override;
    void processInput(float deltaTime) override;
@@ -103,6 +103,11 @@ private:
    bool                      mPerformDepthTesting;
 
    AnimationData             mAnimationData;
+
+   // --- --- ---
+
+   std::vector<AnimatedMesh> mStaticMeshes;
+   std::shared_ptr<Texture>  mGroundTexture;
 };
 
 #endif

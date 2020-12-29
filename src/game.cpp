@@ -4,6 +4,7 @@
 #include "texture_loader.h"
 #include "model_loader.h"
 #include "play_state.h"
+#include "IKState.h"
 #include "game.h"
 
 Game::Game()
@@ -92,8 +93,15 @@ bool Game::initialize(const std::string& title)
                                                  mTable,
                                                  mTeapot);
 
+   mStates["ik"] = std::make_shared<IKState>(mFSM,
+                                             mWindow,
+                                             mCamera,
+                                             gameObj3DShader,
+                                             mTable,
+                                             mTeapot);
+
    // Initialize the FSM
-   mFSM->initialize(std::move(mStates), "play");
+   mFSM->initialize(std::move(mStates), "ik");
 
    return true;
 }

@@ -42,6 +42,8 @@
     <ClInclude Include="..\inc\game.h" />
     <ClInclude Include="..\inc\game_object_3D.h" />
     <ClInclude Include="..\inc\GLTFLoader.h" />
+    <ClInclude Include="..\inc\IKLeg.h" />
+    <ClInclude Include="..\inc\IKState.h" />
     <ClInclude Include="..\inc\Interpolation.h" />
     <ClInclude Include="..\inc\Intersection.h" />
     <ClInclude Include="..\inc\line.h" />
@@ -88,6 +90,8 @@
     <ClCompile Include="..\src\game.cpp" />
     <ClCompile Include="..\src\game_object_3D.cpp" />
     <ClCompile Include="..\src\GLTFLoader.cpp" />
+    <ClCompile Include="..\src\IKLeg.cpp" />
+    <ClCompile Include="..\src\IKState.cpp" />
     <ClCompile Include="..\src\Intersection.cpp" />
     <ClCompile Include="..\src\line.cpp" />
     <ClCompile Include="..\src\main.cpp" />

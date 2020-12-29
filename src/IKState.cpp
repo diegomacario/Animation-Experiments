@@ -9,14 +9,14 @@
 #include "texture_loader.h"
 #include "GLTFLoader.h"
 #include "RearrangeBones.h"
-#include "play_state.h"
+#include "IKState.h"
 
-PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
-                     const std::shared_ptr<Window>&             window,
-                     const std::shared_ptr<Camera>&             camera,
-                     const std::shared_ptr<Shader>&             gameObject3DShader,
-                     const std::shared_ptr<GameObject3D>&       table,
-                     const std::shared_ptr<GameObject3D>&       teapot)
+IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
+                 const std::shared_ptr<Window>&             window,
+                 const std::shared_ptr<Camera>&             camera,
+                 const std::shared_ptr<Shader>&             gameObject3DShader,
+                 const std::shared_ptr<GameObject3D>&       table,
+                 const std::shared_ptr<GameObject3D>&       teapot)
    : mFSM(finiteStateMachine)
    , mWindow(window)
    , mCamera(camera)
@@ -117,15 +117,39 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachi
 
    // Initialize the bones of the skeleton viewer
    mSkeletonViewer.InitializeBones(mAnimationData.animatedPose);
+
+   // --- --- ---
+
+   // Load the ground
+   data = LoadGLTFFile("resources/models/ground/IKCourse.gltf");
+   mStaticMeshes = LoadStaticMeshes(data);
+   FreeGLTFFile(data);
+
+   mGroundTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/uv.png");
+
+   int positionsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("position");
+   int normalsAttribLocOfStaticShader   = mStaticMeshShader->getAttributeLocation("normal");
+   int texCoordsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("texCoord");
+   for (unsigned int i = 0,
+        size = static_cast<unsigned int>(mStaticMeshes.size());
+        i < size;
+        ++i)
+   {
+      mStaticMeshes[i].ConfigureVAO(positionsAttribLocOfStaticShader,
+                                    normalsAttribLocOfStaticShader,
+                                    texCoordsAttribLocOfStaticShader,
+                                    -1,
+                                    -1);
+   }
 }
 
-void PlayState::enter()
+void IKState::enter()
 {
    resetCamera();
    resetScene();
 }
 
-void PlayState::processInput(float deltaTime)
+void IKState::processInput(float deltaTime)
 {
    // Close the game
    if (mWindow->keyIsPressed(GLFW_KEY_ESCAPE)) { mWindow->setShouldClose(true); }
@@ -242,7 +266,7 @@ void PlayState::processInput(float deltaTime)
    }
 }
 
-void PlayState::update(float deltaTime)
+void IKState::update(float deltaTime)
 {
    if (mAnimationData.currentClipIndex != mSelectedClip)
    {
@@ -297,7 +321,7 @@ void PlayState::update(float deltaTime)
    mSkeletonViewer.UpdateBones(mAnimationData.animatedPose, mAnimationData.animatedPosePalette);
 }
 
-void PlayState::render()
+void IKState::render()
 {
    ImGui_ImplOpenGL3_NewFrame();
    ImGui_ImplGlfw_NewFrame();
@@ -314,7 +338,7 @@ void PlayState::render()
    mGameObject3DShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
    mGameObject3DShader->setUniformVec3("cameraPos", mCamera->getPosition());
 
-   mTable->render(*mGameObject3DShader);
+   //mTable->render(*mGameObject3DShader);
 
    // Disable face culling so that we render the inside of the teapot
    //glDisable(GL_CULL_FACE);
@@ -404,6 +428,28 @@ void PlayState::render()
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    glEnable(GL_DEPTH_TEST);
 
+   // --- --- ---
+
+   mStaticMeshShader->use(true);
+   mStaticMeshShader->setUniformMat4("model", transformToMat4(mAnimationData.modelTransform));
+   mStaticMeshShader->setUniformMat4("view", mCamera->getViewMatrix());
+   mStaticMeshShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
+   mGroundTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
+
+   // Loop over the meshes and render each one
+   for (unsigned int i = 0,
+      size = static_cast<unsigned int>(mStaticMeshes.size());
+      i < size;
+      ++i)
+   {
+      mStaticMeshes[i].Render();
+   }
+
+   mGroundTexture->unbind(0);
+   mStaticMeshShader->use(false);
+
+   // --- --- ---
+
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -413,29 +459,30 @@ void PlayState::render()
    mWindow->pollEvents();
 }
 
-void PlayState::exit()
+void IKState::exit()
 {
 
 }
 
-void PlayState::configureLights(const std::shared_ptr<Shader>& shader)
+void IKState::configureLights(const std::shared_ptr<Shader>& shader)
 {
    shader->use(true);
-   shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
+   //shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
+   shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(-5.0f, 5.0f, -5.0f));
    shader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
    shader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
-   shader->setUniformFloat("pointLights[0].linearAtt", 0.01f);
+   shader->setUniformFloat("pointLights[0].linearAtt", 0.00001f);
    shader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
-   shader->setUniformVec3("pointLights[1].worldPos", glm::vec3(0.0f, 2.0f, -10.0f));
+   shader->setUniformVec3("pointLights[1].worldPos", glm::vec3(27.0f, 5.0f, 15.5f));
    shader->setUniformVec3("pointLights[1].color", glm::vec3(1.0f, 1.0f, 1.0f));
    shader->setUniformFloat("pointLights[1].constantAtt", 1.0f);
-   shader->setUniformFloat("pointLights[1].linearAtt", 0.01f);
+   shader->setUniformFloat("pointLights[1].linearAtt", 0.00001f);
    shader->setUniformFloat("pointLights[1].quadraticAtt", 0.0f);
    shader->setUniformInt("numPointLightsInScene", 2);
    shader->use(false);
 }
 
-void PlayState::switchFromGPUToCPU()
+void IKState::switchFromGPUToCPU()
 {
    int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
    int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
@@ -470,7 +517,7 @@ void PlayState::switchFromGPUToCPU()
    }
 }
 
-void PlayState::switchFromCPUToGPU()
+void IKState::switchFromCPUToGPU()
 {
    int positionsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("position");
    int normalsAttribLocOfStaticShader   = mStaticMeshShader->getAttributeLocation("normal");
@@ -516,7 +563,7 @@ void PlayState::switchFromCPUToGPU()
    }
 }
 
-void PlayState::userInterface()
+void IKState::userInterface()
 {
    ImGui::Begin("Animation Controller"); // Create a window called "Animation Controller"
 
@@ -543,12 +590,12 @@ void PlayState::userInterface()
    ImGui::End();
 }
 
-void PlayState::resetScene()
+void IKState::resetScene()
 {
 
 }
 
-void PlayState::resetCamera()
+void IKState::resetCamera()
 {
    mCamera->reposition(glm::vec3(0.0f, 7.0f, 9.0f),
                        glm::vec3(0.0f, 1.0f, 0.0f),
