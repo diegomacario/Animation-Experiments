@@ -8,6 +8,8 @@
 #include "AnimatedMesh.h"
 #include "SkeletonViewer.h"
 #include "Clip.h"
+#include "Triangle.h"
+#include "IKLeg.h"
 
 class IKState : public State
 {
@@ -46,16 +48,16 @@ private:
 
    void resetCamera();
 
-   std::shared_ptr<FiniteStateMachine>     mFSM;
+   std::shared_ptr<FiniteStateMachine> mFSM;
 
-   std::shared_ptr<Window>                 mWindow;
+   std::shared_ptr<Window>             mWindow;
 
-   std::shared_ptr<Camera>                 mCamera;
+   std::shared_ptr<Camera>             mCamera;
 
-   std::shared_ptr<Shader>                 mGameObject3DShader;
+   std::shared_ptr<Shader>             mGameObject3DShader;
 
-   std::shared_ptr<GameObject3D>           mTable;
-   std::shared_ptr<GameObject3D>           mTeapot;
+   std::shared_ptr<GameObject3D>       mTable;
+   std::shared_ptr<GameObject3D>       mTeapot;
 
    enum SkinningMode : int
    {
@@ -80,7 +82,6 @@ private:
       Pose                   animatedPose;
       std::vector<glm::mat4> animatedPosePalette;
       std::vector<glm::mat4> skinMatrices;
-      Transform              modelTransform;
    };
 
    std::shared_ptr<Shader>   mAnimatedMeshShader;
@@ -106,8 +107,16 @@ private:
 
    // --- --- ---
 
-   std::vector<AnimatedMesh> mStaticMeshes;
+   std::vector<AnimatedMesh> mGroundMeshes;
    std::shared_ptr<Texture>  mGroundTexture;
+   std::vector<Triangle>     mGroundTriangles;
+
+   VectorTrack               mMotionTrack;
+   IKLeg                     mLeftLeg;
+   IKLeg                     mRightLeg;
+
+   Transform                 mModelTransform;
+   float                     mSinkIntoGround;
 };
 
 #endif

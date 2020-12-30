@@ -9,7 +9,8 @@ class IKLeg
 {
 public:
 
-   IKLeg(Skeleton& skeleton, const std::string& hip, const std::string& knee, const std::string& ankle, const std::string& toe);
+   IKLeg();
+   IKLeg(Skeleton& skeleton, const std::string& hipName, const std::string& kneeName, const std::string& ankleName, const std::string& toeName);
 
    void               SolveForLeg(const Transform& model, Pose& pose, const glm::vec3& ankleTargetPosition);
 

@@ -1,6 +1,17 @@
 #include "IKLeg.h"
 
-IKLeg::IKLeg(Skeleton& skeleton, const std::string& hip, const std::string& knee, const std::string& ankle, const std::string& toe)
+// TODO: This isn't very nice. It's just here to avoid creating legs on the heap.
+IKLeg::IKLeg()
+   : mHipIndex(0)
+   , mKneeIndex(0)
+   , mAnkleIndex(0)
+   , mToeIndex(0)
+   , mAnkleToGroundOffset(0)
+{
+
+}
+
+IKLeg::IKLeg(Skeleton& skeleton, const std::string& hipName, const std::string& kneeName, const std::string& ankleName, const std::string& toeName)
    : mHipIndex(0)
    , mKneeIndex(0)
    , mAnkleIndex(0)
@@ -12,21 +23,21 @@ IKLeg::IKLeg(Skeleton& skeleton, const std::string& hip, const std::string& knee
 
    for (unsigned int jointIndex = 0, numJoints = skeleton.GetRestPose().GetNumberOfJoints(); jointIndex < numJoints; ++jointIndex)
    {
-      std::string& jointName = skeleton.GetJointName(jointIndex);
+      std::string& nameOfCurrJoint = skeleton.GetJointName(jointIndex);
 
-      if (jointName == hip)
+      if (nameOfCurrJoint == hipName)
       {
          mHipIndex = jointIndex;
       }
-      else if (jointName == knee)
+      else if (nameOfCurrJoint == kneeName)
       {
          mKneeIndex = jointIndex;
       }
-      else if (jointName == ankle)
+      else if (nameOfCurrJoint == ankleName)
       {
          mAnkleIndex = jointIndex;
       }
-      else if (jointName == toe)
+      else if (nameOfCurrJoint == toeName)
       {
          mToeIndex = jointIndex;
       }

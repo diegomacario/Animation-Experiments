@@ -63,12 +63,19 @@ void AnimatedMesh::LoadBuffers()
    // Texture coordinates
    glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::texCoords]);
    glBufferData(GL_ARRAY_BUFFER, mTexCoords.size() * sizeof(glm::vec2), &mTexCoords[0], GL_STATIC_DRAW);
+   // TODO: The checks below are necessary because this class currently represents animated and static meshes. It must be split
    // Weights
-   glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::weights]);
-   glBufferData(GL_ARRAY_BUFFER, mWeights.size() * sizeof(glm::vec4), &mWeights[0], GL_STATIC_DRAW);
+   if (mWeights.size() != 0)
+   {
+      glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::weights]);
+      glBufferData(GL_ARRAY_BUFFER, mWeights.size() * sizeof(glm::vec4), &mWeights[0], GL_STATIC_DRAW);
+   }
    // Influences
-   glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::influences]);
-   glBufferData(GL_ARRAY_BUFFER, mInfluences.size() * sizeof(glm::ivec4), &mInfluences[0], GL_STATIC_DRAW);
+   if (mInfluences.size() != 0)
+   {
+      glBindBuffer(GL_ARRAY_BUFFER, mVBOs[VBOTypes::influences]);
+      glBufferData(GL_ARRAY_BUFFER, mInfluences.size() * sizeof(glm::ivec4), &mInfluences[0], GL_STATIC_DRAW);
+   }
 
    glBindBuffer(GL_ARRAY_BUFFER, 0);
 

@@ -9,6 +9,7 @@
 #include "texture_loader.h"
 #include "GLTFLoader.h"
 #include "RearrangeBones.h"
+#include "Intersection.h"
 #include "IKState.h"
 
 IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
@@ -112,9 +113,6 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
    // Set the initial pose
    mAnimationData.animatedPose = mSkeleton.GetRestPose();
 
-   // Set the model transform
-   mAnimationData.modelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
-
    // Initialize the bones of the skeleton viewer
    mSkeletonViewer.InitializeBones(mAnimationData.animatedPose);
 
@@ -122,25 +120,128 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
 
    // Load the ground
    data = LoadGLTFFile("resources/models/ground/IKCourse.gltf");
-   mStaticMeshes = LoadStaticMeshes(data);
+   mGroundMeshes = LoadStaticMeshes(data);
    FreeGLTFFile(data);
-
-   mGroundTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/uv.png");
 
    int positionsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("position");
    int normalsAttribLocOfStaticShader   = mStaticMeshShader->getAttributeLocation("normal");
    int texCoordsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("texCoord");
    for (unsigned int i = 0,
-        size = static_cast<unsigned int>(mStaticMeshes.size());
+        size = static_cast<unsigned int>(mGroundMeshes.size());
         i < size;
         ++i)
    {
-      mStaticMeshes[i].ConfigureVAO(positionsAttribLocOfStaticShader,
+      mGroundMeshes[i].ConfigureVAO(positionsAttribLocOfStaticShader,
                                     normalsAttribLocOfStaticShader,
                                     texCoordsAttribLocOfStaticShader,
                                     -1,
                                     -1);
    }
+
+   // Load the texture of the ground
+   mGroundTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/uv.png");
+
+   // Get the triangles that make up the ground
+   mGroundTriangles = GetTrianglesFromMeshes(mGroundMeshes);
+
+   // Compose the motion track, which tells the character where to walk by supplying X and Z coordinates
+   mMotionTrack.SetInterpolation(Interpolation::Linear);
+   mMotionTrack.SetNumberOfFrames(5);
+   // Frame 0
+   mMotionTrack.GetFrame(0).mTime     = 0.0f;
+   mMotionTrack.GetFrame(0).mValue[0] = 0.0f;
+   mMotionTrack.GetFrame(0).mValue[1] = 0.0f;
+   mMotionTrack.GetFrame(0).mValue[2] = 1.0f;
+   // Frame 1
+   mMotionTrack.GetFrame(1).mTime     = 1.0f;
+   mMotionTrack.GetFrame(1).mValue[0] = 0.0f;
+   mMotionTrack.GetFrame(1).mValue[1] = 0.0f;
+   mMotionTrack.GetFrame(1).mValue[2] = 10.0f;
+   // Frame 2
+   mMotionTrack.GetFrame(2).mTime     = 3.0f;
+   mMotionTrack.GetFrame(2).mValue[0] = 22.0f;
+   mMotionTrack.GetFrame(2).mValue[1] = 0.0f;
+   mMotionTrack.GetFrame(2).mValue[2] = 10.0f;
+   // Frame 3
+   mMotionTrack.GetFrame(3).mTime     = 4.0f;
+   mMotionTrack.GetFrame(3).mValue[0] = 22.0f;
+   mMotionTrack.GetFrame(3).mValue[1] = 0.0f;
+   mMotionTrack.GetFrame(3).mValue[2] = 2.0f;
+   // Frame 4
+   mMotionTrack.GetFrame(4).mTime     = 6.0f;
+   mMotionTrack.GetFrame(4).mValue[0] = 0.0f;
+   mMotionTrack.GetFrame(4).mValue[1] = 0.0f;
+   mMotionTrack.GetFrame(4).mValue[2] = 1.0f;
+
+   // Create the IK legs
+   mLeftLeg = IKLeg(mSkeleton, "LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase");
+   mLeftLeg.SetAnkleOffset(0.2f);  // The left ankle is 0.2 units above the ground
+   mRightLeg = IKLeg(mSkeleton, "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase");
+   mRightLeg.SetAnkleOffset(0.2f); // The right ankle is 0.2 units above the ground
+
+   // Compose the pin track of the left foot, which tells us when the left foot is on and off the ground
+   // Note that the times of the keyframes that make up this pin track are normalized, which means that
+   // it must be sampled with the current time of an animation divided by its duration
+   ScalarTrack leftFootPinTrack;
+   leftFootPinTrack.SetInterpolation(Interpolation::Cubic);
+   leftFootPinTrack.SetNumberOfFrames(4);
+   // Frame 0
+   leftFootPinTrack.GetFrame(0).mTime     = 0.0f;
+   leftFootPinTrack.GetFrame(0).mValue[0] = 0;
+   // Frame 1
+   leftFootPinTrack.GetFrame(1).mTime     = 0.4f;
+   leftFootPinTrack.GetFrame(1).mValue[0] = 1;
+   // Frame 2
+   leftFootPinTrack.GetFrame(2).mTime     = 0.6f;
+   leftFootPinTrack.GetFrame(2).mValue[0] = 1;
+   // Frame 3
+   leftFootPinTrack.GetFrame(3).mTime     = 1.0f;
+   leftFootPinTrack.GetFrame(3).mValue[0] = 0;
+
+   // Compose the pin track of the right foot, which tells us when the right foot is on and off the ground
+   // Note that the times of the keyframes that make up this pin track are normalized, which means that
+   // it must be sampled with the current time of an animation divided by its duration
+   ScalarTrack rightFootPinTrack;
+   rightFootPinTrack.SetInterpolation(Interpolation::Cubic);
+   rightFootPinTrack.SetNumberOfFrames(4);
+   // Frame 0
+   rightFootPinTrack.GetFrame(0).mTime     = 0.0f;
+   rightFootPinTrack.GetFrame(0).mValue[0] = 1;
+   // Frame 1
+   rightFootPinTrack.GetFrame(1).mTime     = 0.3f;
+   rightFootPinTrack.GetFrame(1).mValue[0] = 0;
+   // Frame 2
+   rightFootPinTrack.GetFrame(2).mTime     = 0.7f;
+   rightFootPinTrack.GetFrame(2).mValue[0] = 0;
+   // Frame 3
+   rightFootPinTrack.GetFrame(3).mTime     = 1.0f;
+   rightFootPinTrack.GetFrame(3).mValue[0] = 1;
+
+   // Set the pin tracks to the appropriate legs
+   mLeftLeg.SetPinTrack(leftFootPinTrack);
+   mRightLeg.SetPinTrack(rightFootPinTrack);
+
+   // Initialize the values we use to describe the position of the character
+   mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
+   mSinkIntoGround = 0.15f;
+
+   // Shoot a ray downwards to determine the initial Y position of the character,
+   // and sink it into the ground a little so that the IK solver has room to work
+   // TODO: Why is Y equal to 11 here? Use constant instead
+   Ray groundRay(glm::vec3(mModelTransform.position.x, 11, mModelTransform.position.z), glm::vec3(0.0f, -1.0f, 0.0f));
+   glm::vec3 hitPoint;
+   for (unsigned int i = 0,
+        numTriangles = static_cast<unsigned int>(mGroundTriangles.size());
+        i < numTriangles;
+        ++i)
+   {
+      if (DoesRayIntersectTriangle(groundRay, mGroundTriangles[i], hitPoint))
+      {
+         mModelTransform.position = hitPoint;
+         break;
+      }
+   }
+   mModelTransform.position.y -= mSinkIntoGround;
 }
 
 void IKState::enter()
@@ -356,7 +457,7 @@ void IKState::render()
    if (mAnimationData.currentSkinningMode == SkinningMode::CPU && mDisplayMesh)
    {
       mStaticMeshShader->use(true);
-      mStaticMeshShader->setUniformMat4("model",      transformToMat4(mAnimationData.modelTransform));
+      mStaticMeshShader->setUniformMat4("model",      transformToMat4(mModelTransform));
       mStaticMeshShader->setUniformMat4("view",       mCamera->getViewMatrix());
       mStaticMeshShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
       //mStaticMeshShader->setUniformVec3("cameraPos",  mCamera->getPosition());
@@ -377,7 +478,7 @@ void IKState::render()
    else if (mAnimationData.currentSkinningMode == SkinningMode::GPU && mDisplayMesh)
    {
       mAnimatedMeshShader->use(true);
-      mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mAnimationData.modelTransform));
+      mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mModelTransform));
       mAnimatedMeshShader->setUniformMat4("view",             mCamera->getViewMatrix());
       mAnimatedMeshShader->setUniformMat4("projection",       mCamera->getPerspectiveProjectionMatrix());
       mAnimatedMeshShader->setUniformMat4Array("animated[0]", mAnimationData.skinMatrices);
@@ -409,7 +510,7 @@ void IKState::render()
    // Render the bones
    if (mDisplayBones)
    {
-      mSkeletonViewer.RenderBones(mAnimationData.modelTransform, mCamera->getPerspectiveProjectionViewMatrix());
+      mSkeletonViewer.RenderBones(mModelTransform, mCamera->getPerspectiveProjectionViewMatrix());
    }
 
    glLineWidth(1.0f);
@@ -422,7 +523,7 @@ void IKState::render()
    // Render the joints
    if (mDisplayJoints)
    {
-      mSkeletonViewer.RenderJoints(mAnimationData.modelTransform, mCamera->getPerspectiveProjectionViewMatrix(), mAnimationData.animatedPosePalette);
+      mSkeletonViewer.RenderJoints(mModelTransform, mCamera->getPerspectiveProjectionViewMatrix(), mAnimationData.animatedPosePalette);
    }
 
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -431,18 +532,18 @@ void IKState::render()
    // --- --- ---
 
    mStaticMeshShader->use(true);
-   mStaticMeshShader->setUniformMat4("model", transformToMat4(mAnimationData.modelTransform));
+   mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
    mStaticMeshShader->setUniformMat4("view", mCamera->getViewMatrix());
    mStaticMeshShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
    mGroundTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
 
-   // Loop over the meshes and render each one
+   // Loop over the ground meshes and render each one
    for (unsigned int i = 0,
-      size = static_cast<unsigned int>(mStaticMeshes.size());
+      size = static_cast<unsigned int>(mGroundMeshes.size());
       i < size;
       ++i)
    {
-      mStaticMeshes[i].Render();
+      mGroundMeshes[i].Render();
    }
 
    mGroundTexture->unbind(0);

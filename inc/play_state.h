@@ -46,16 +46,16 @@ private:
 
    void resetCamera();
 
-   std::shared_ptr<FiniteStateMachine>     mFSM;
+   std::shared_ptr<FiniteStateMachine> mFSM;
 
-   std::shared_ptr<Window>                 mWindow;
+   std::shared_ptr<Window>             mWindow;
 
-   std::shared_ptr<Camera>                 mCamera;
+   std::shared_ptr<Camera>             mCamera;
 
-   std::shared_ptr<Shader>                 mGameObject3DShader;
+   std::shared_ptr<Shader>             mGameObject3DShader;
 
-   std::shared_ptr<GameObject3D>           mTable;
-   std::shared_ptr<GameObject3D>           mTeapot;
+   std::shared_ptr<GameObject3D>       mTable;
+   std::shared_ptr<GameObject3D>       mTeapot;
 
    enum SkinningMode : int
    {
