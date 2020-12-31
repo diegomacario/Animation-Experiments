@@ -285,8 +285,14 @@ void FABRIKSolver::IterateBackward(const glm::vec3& goalPos)
       // so the distance between the current joint and the next one is stored in the index of the next one (mDistancesBetweenJoints[i + 1])
       float distToNext = mDistancesBetweenJoints[i + 1];
 
-      // Move the current joint along the vector that we calculated above, preserving its original distance from the next joint
-      mWorldPositionsChain[i] = mWorldPositionsChain[i] + (dirToNext * distToNext);
+      // To move the current joint towards the next one while preserving the original distance between them, we would need to calculate that distance as follows:
+      //
+      // float distToMove = glm::length(mWorldPositionsChain[i + 1] - mWorldPositionsChain[i]) - distToNext;
+      //
+      // We can avoid doing that calculation by moving the next joint towards the current one, in which case distToMove is equal to distToNext
+      // That's what we do below, but note how dirToNext is negated, since we calculated it as a vector that goes from the current joint to the next one,
+      // and we want move in the opposite direction
+      mWorldPositionsChain[i] = mWorldPositionsChain[i + 1] - (dirToNext * distToNext);
    }
 }
 
@@ -310,7 +316,13 @@ void FABRIKSolver::IterateForward(const glm::vec3& oriPosOfRoot)
       // so the distance between the current joint and the previous one is stored in the index of the current one (mDistancesBetweenJoints[i])
       float distToPrev = mDistancesBetweenJoints[i];
 
-      // Move the current joint along the vector that we calculated above, preserving its original distance from the previous joint
-      mWorldPositionsChain[i] = mWorldPositionsChain[i] + (dirToPrev * distToPrev);
+      // To move the current joint towards the previous one while preserving the original distance between them, we would need to calculate that distance as follows:
+      //
+      // float distToMove = glm::length(mWorldPositionsChain[i - 1] - mWorldPositionsChain[i]) - distToPrev;
+      //
+      // We can avoid doing that calculation by moving the previous joint towards the current one, in which case distToMove is equal to distToPrev
+      // That's what we do below, but note how dirToPrev is negated, since we calculated it as a vector that goes from the current joint to the previous one,
+      // and we want move in the opposite direction
+      mWorldPositionsChain[i] = mWorldPositionsChain[i - 1] - (dirToPrev * distToPrev);
    }
 }

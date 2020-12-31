@@ -117,6 +117,10 @@ private:
 
    Transform                 mModelTransform;
    float                     mSinkIntoGround;
+   float                     mMotionTrackTime;
+   float                     mMotionTrackPlaybackSpeed;
+   float                     mMotionTrackDuration;
+   float                     mMotionTrackFutureTimeOffset;
 };
 
 #endif

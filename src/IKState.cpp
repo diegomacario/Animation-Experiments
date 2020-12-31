@@ -2,6 +2,9 @@
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 
+#include <glm/gtx/norm.hpp>
+#include <glm/gtx/compatibility.hpp>
+
 #include <array>
 #include <random>
 
@@ -10,6 +13,7 @@
 #include "GLTFLoader.h"
 #include "RearrangeBones.h"
 #include "Intersection.h"
+#include "Blending.h"
 #include "IKState.h"
 
 IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
@@ -222,8 +226,12 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
    mRightLeg.SetPinTrack(rightFootPinTrack);
 
    // Initialize the values we use to describe the position of the character
-   mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
-   mSinkIntoGround = 0.15f;
+   mModelTransform              = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
+   mSinkIntoGround              = 0.15f;
+   mMotionTrackTime             = 0.0f;
+   mMotionTrackPlaybackSpeed    = 0.3f;
+   mMotionTrackDuration         = mMotionTrack.GetEndTime() - mMotionTrack.GetStartTime();
+   mMotionTrackFutureTimeOffset = 0.1f;
 
    // Shoot a ray downwards to determine the initial Y position of the character,
    // and sink it into the ground a little so that the IK solver has room to work
@@ -238,10 +246,10 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
       if (DoesRayIntersectTriangle(groundRay, mGroundTriangles[i], hitPoint))
       {
          mModelTransform.position = hitPoint;
+         mModelTransform.position.y -= mSinkIntoGround;
          break;
       }
    }
-   mModelTransform.position.y -= mSinkIntoGround;
 }
 
 void IKState::enter()
@@ -369,6 +377,62 @@ void IKState::processInput(float deltaTime)
 
 void IKState::update(float deltaTime)
 {
+   deltaTime *= mSelectedPlaybackSpeed;
+
+   // --- --- ---
+
+   // mMotionTrackTime is the time we use to sample the motion track
+   // mMotionTrackPlaybackSpeed is used to adjust the playback of the motion track
+   // so that the speed at which the character moves matches its animation
+   mMotionTrackTime += deltaTime * mMotionTrackPlaybackSpeed;
+   // Loop mMotionTrackTime so that it doesn't become infinitely large
+   if (mMotionTrackTime > 6.0f)
+   {
+      mMotionTrackTime -= 6.0f;
+   }
+
+   // Sample the motion track to get the X and Z world space position values of the character
+   // at the current time and a little in the future
+   glm::vec3 currWorldPosOfCharacter = mMotionTrack.Sample(mMotionTrackTime, true);
+   glm::vec3 nextWorldPosOfCharacter = mMotionTrack.Sample(mMotionTrackTime + mMotionTrackFutureTimeOffset, true);
+   currWorldPosOfCharacter.y         = mModelTransform.position.y;
+   nextWorldPosOfCharacter.y         = mModelTransform.position.y;
+   mModelTransform.position          = currWorldPosOfCharacter;
+
+   // Shoot a ray downwards to determine the Y position of the character,
+   // and sink it into the ground a little so that the IK solver has room to work
+   // TODO: Why is Y equal to 11 here? Use constant instead
+   Ray groundRay(glm::vec3(mModelTransform.position.x, 11, mModelTransform.position.z), glm::vec3(0.0f, -1.0f, 0.0f));
+   glm::vec3 hitPoint;
+   for (unsigned int i = 0,
+        numTriangles = static_cast<unsigned int>(mGroundTriangles.size());
+        i < numTriangles;
+        ++i)
+   {
+      if (DoesRayIntersectTriangle(groundRay, mGroundTriangles[i], hitPoint))
+      {
+         mModelTransform.position = hitPoint;
+         mModelTransform.position.y -= mSinkIntoGround;
+         break;
+      }
+   }
+
+   // Calculate the new forward direction of the character in world space
+   glm::vec3 newFwdDirOfCharacter = glm::normalize(nextWorldPosOfCharacter - currWorldPosOfCharacter);
+   // Calculate the quaternion that rotates from the world forward direction (0.0f, 0.0f, 1.0f)
+   // to the new forward direction of the character in world space
+   Q::quat rotFromWorldFwdToNewFwdDirOfCharacter = Q::lookRotation(newFwdDirOfCharacter, glm::vec3(0, 1, 0));
+   // We want to interpolate between the current forward direction of the character and the new one by a small factor
+   // Before doing that, however, we must perform a neighborhood check
+   if (Q::dot(mModelTransform.rotation, rotFromWorldFwdToNewFwdDirOfCharacter) < 0.0f)
+   {
+      rotFromWorldFwdToNewFwdDirOfCharacter = rotFromWorldFwdToNewFwdDirOfCharacter * -1.0f;
+   }
+   // Interpolate between the rotations that represent the old forward direction and the new one
+   mModelTransform.rotation = Q::nlerp(mModelTransform.rotation, rotFromWorldFwdToNewFwdDirOfCharacter, deltaTime * 10.0f);
+
+   // --- --- ---
+
    if (mAnimationData.currentClipIndex != mSelectedClip)
    {
       mAnimationData.currentClipIndex = mSelectedClip;
@@ -392,7 +456,100 @@ void IKState::update(float deltaTime)
 
    // Sample the clip to get the animated pose
    FastClip& currClip = mClips[mAnimationData.currentClipIndex];
-   mAnimationData.playbackTime = currClip.Sample(mAnimationData.animatedPose, mAnimationData.playbackTime + (deltaTime * mSelectedPlaybackSpeed));
+   mAnimationData.playbackTime = currClip.Sample(mAnimationData.animatedPose, mAnimationData.playbackTime + deltaTime);
+
+   // --- --- ---
+
+   // The keyframes of the pin tracks are set in normalized time, so they must be sampled with the normalized time
+   float normalizedPlaybackTime = (mAnimationData.playbackTime - currClip.GetStartTime()) / currClip.GetDuration();
+   float leftLegPinTrackValue   = mLeftLeg.GetPinTrack().Sample(normalizedPlaybackTime, true);
+   float rightLegPinTrackValue  = mRightLeg.GetPinTrack().Sample(normalizedPlaybackTime, true);
+
+   // Calculate the world positions of the left and right ankles
+   // We do this by combining the model transform of the character (mModelTransform) with the global transforms of the joints
+   // Note the parent-child order here, which makes sense
+   glm::vec3 worldPosOfLeftAnkle  = combine(mModelTransform, mAnimationData.animatedPose.GetGlobalTransform(mLeftLeg.GetAnkleIndex())).position;
+   glm::vec3 worldPosOfRightAnkle = combine(mModelTransform, mAnimationData.animatedPose.GetGlobalTransform(mRightLeg.GetAnkleIndex())).position;
+
+   // Construct rays for the left and right ankles
+   // These shoot down from the height of the hip
+   Ray leftAnkleRay(worldPosOfLeftAnkle + glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+   Ray rightAnkleRay(worldPosOfRightAnkle + glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+
+   // If the rays don't hit anything, we use the positions of the ankles and the character as default values
+   glm::vec3 leftAnkleTarget  = worldPosOfLeftAnkle;
+   glm::vec3 rightAnkleTarget = worldPosOfRightAnkle;
+   glm::vec3 groundReference  = mModelTransform.position;
+
+   // Here we do the equivalent of the following:
+   // - Shoot a ray downwards from the height of the hip to the ankle
+   // - Shoot a ray downwards from the height of the hip through the ankle to infinity
+   // The first ray tells us if there's ground above the ankle
+   // If there is, that becomes the new position of the ankle
+   // The second ray tells us if there's ground below the ankle
+   // If there is, that becomes the new target of the IK chain
+   for (unsigned int i = 0,
+        numTriangles = static_cast<unsigned int>(mGroundTriangles.size());
+        i < numTriangles;
+        ++i)
+   {
+      if (DoesRayIntersectTriangle(leftAnkleRay, mGroundTriangles[i], hitPoint))
+      {
+         // Is the hit point between the ankle and the hip? 
+         // In other words, is it above the ankle?
+         if (glm::length2(hitPoint - leftAnkleRay.origin) < 2.0f * 2.0f)
+         {
+            // If it is, we update the position of the ankle to the desired position
+            worldPosOfLeftAnkle = hitPoint;
+
+            // Is the hit point below the current groundReference?
+            if (hitPoint.y < groundReference.y)
+            {
+               // If it is, we update the groundReference
+               groundReference = hitPoint;
+               groundReference.y -= mSinkIntoGround;
+            }
+         }
+
+         leftAnkleTarget = hitPoint;
+      }
+
+      if (DoesRayIntersectTriangle(rightAnkleRay, mGroundTriangles[i], hitPoint))
+      {
+         // Is the hit point between the ankle and the hip? 
+         // In other words, is it above the ankle?
+         if (glm::length2(hitPoint - rightAnkleRay.origin) < 2.0f * 2.0f) // Is the hit point above the ankle?
+         {
+            // If it is, we update the position of the ankle to the desired position
+            worldPosOfRightAnkle = hitPoint;
+
+            // Is the hit point below the current groundReference?
+            if (hitPoint.y < groundReference.y)
+            {
+               // If it is, we update the groundReference
+               groundReference = hitPoint;
+               groundReference.y -= mSinkIntoGround;
+            }
+         }
+
+         rightAnkleTarget = hitPoint;
+      }
+   }
+
+   //mModelTransform.position.y = mLastModelY;
+   mModelTransform.position   = glm::lerp(mModelTransform.position, groundReference, deltaTime * 10.0f);
+   //mLastModelY       = mModel.position.y;
+
+   worldPosOfLeftAnkle  = glm::lerp(worldPosOfLeftAnkle, leftAnkleTarget, leftLegPinTrackValue);
+   worldPosOfRightAnkle = glm::lerp(worldPosOfRightAnkle, rightAnkleTarget, rightLegPinTrackValue);
+
+   mLeftLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfLeftAnkle);
+   mRightLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfRightAnkle);
+
+   Blend(mAnimationData.animatedPose, mLeftLeg.GetAdjustedPose(), 1, mLeftLeg.GetHipIndex(), mAnimationData.animatedPose);
+   Blend(mAnimationData.animatedPose, mRightLeg.GetAdjustedPose(), 1, mRightLeg.GetHipIndex(), mAnimationData.animatedPose);
+
+   // --- --- ---
 
    // Get the palette of the animated pose
    mAnimationData.animatedPose.GetMatrixPalette(mAnimationData.animatedPosePalette);
