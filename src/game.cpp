@@ -5,6 +5,7 @@
 #include "model_loader.h"
 #include "play_state.h"
 #include "IKState.h"
+#include "MovementState.h"
 #include "game.h"
 
 Game::Game()
@@ -100,8 +101,15 @@ bool Game::initialize(const std::string& title)
                                              mTable,
                                              mTeapot);
 
+   mStates["movement"] = std::make_shared<MovementState>(mFSM,
+                                                         mWindow,
+                                                         mCamera,
+                                                         gameObj3DShader,
+                                                         mTable,
+                                                         mTeapot);
+
    // Initialize the FSM
-   mFSM->initialize(std::move(mStates), "ik");
+   mFSM->initialize(std::move(mStates), "movement");
 
    return true;
 }

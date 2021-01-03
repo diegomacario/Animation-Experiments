@@ -133,6 +133,9 @@
     <ClCompile Include="..\src\IKState.cpp">
       <Filter>Animation-Experiments\Source Files\Base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\MovementState.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -280,6 +283,9 @@
       <Filter>Animation-Experiments\Header Files\IK</Filter>
     </ClInclude>
     <ClInclude Include="..\inc\IKState.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\MovementState.h">
       <Filter>Animation-Experiments\Header Files\Base</Filter>
     </ClInclude>
   </ItemGroup>
