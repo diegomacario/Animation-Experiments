@@ -227,18 +227,20 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
 
    // Initialize the values we use to describe the position of the character
    mModelTransform               = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
+   mHeightOfOriginOfYPositionRay = 11.0f;
    mPreviousYPositionOfCharacter = 0.0f;
    mSinkIntoGround               = 0.15f;
    mMotionTrackTime              = 0.0f;
    mMotionTrackPlaybackSpeed     = 0.3f;
    mMotionTrackDuration          = mMotionTrack.GetEndTime() - mMotionTrack.GetStartTime();
    mMotionTrackFutureTimeOffset  = 0.1f;
+   mHeightOfHip                  = 2.0f;
+   mHeightOfKnees                = 1.0f;
    mDistanceFromAnkleToToe       = 0.3f;
 
    // Shoot a ray downwards to determine the initial Y position of the character,
    // and sink it into the ground a little so that the IK solver has room to work
-   // TODO: Why is Y equal to 11 here? Use constant instead
-   Ray groundRay(glm::vec3(mModelTransform.position.x, 11, mModelTransform.position.z), glm::vec3(0.0f, -1.0f, 0.0f));
+   Ray groundRay(glm::vec3(mModelTransform.position.x, mHeightOfOriginOfYPositionRay, mModelTransform.position.z), glm::vec3(0.0f, -1.0f, 0.0f));
    glm::vec3 hitPoint;
    for (unsigned int i = 0,
         numTriangles = static_cast<unsigned int>(mGroundTriangles.size());
@@ -408,8 +410,7 @@ void IKState::update(float deltaTime)
 
    // Shoot a ray downwards to determine the Y position of the character,
    // and sink it into the ground a little so that the IK solver has room to work
-   // TODO: Why is Y equal to 11 here? Use constant instead
-   Ray groundRay(glm::vec3(mModelTransform.position.x, 11, mModelTransform.position.z), glm::vec3(0.0f, -1.0f, 0.0f));
+   Ray groundRay(glm::vec3(mModelTransform.position.x, mHeightOfOriginOfYPositionRay, mModelTransform.position.z), glm::vec3(0.0f, -1.0f, 0.0f));
    glm::vec3 hitPoint;
    for (unsigned int i = 0,
         numTriangles = static_cast<unsigned int>(mGroundTriangles.size());
@@ -483,9 +484,8 @@ void IKState::update(float deltaTime)
 
    // Construct rays for the left and right ankles
    // These shoot down from the height of the hip
-   // TODO: Use constant here for the height of the hip
-   Ray leftAnkleRay(worldPosOfLeftAnkle + glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-   Ray rightAnkleRay(worldPosOfRightAnkle + glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+   Ray leftAnkleRay(worldPosOfLeftAnkle + glm::vec3(0.0f, mHeightOfHip, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+   Ray rightAnkleRay(worldPosOfRightAnkle + glm::vec3(0.0f, mHeightOfHip, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 
    // If the rays don't hit anything, we use the positions of the ankles as default values
    glm::vec3 leftAnkleGroundIKTarget  = worldPosOfLeftAnkle;
@@ -507,8 +507,8 @@ void IKState::update(float deltaTime)
       {
          // Is the hit point between the ankle and the hip?
          // In other words, is it above the ankle?
-         // TODO: Use constant
-         if (glm::length2(hitPoint - leftAnkleRay.origin) < 2.0f * 2.0f)
+         // TODO: Is there a better way to check if the hit point is above the ankle?
+         if (glm::length2(hitPoint - leftAnkleRay.origin) < mHeightOfHip * mHeightOfHip)
          {
             // If it is, we update the position of the ankle to be on the ground
             // We do this because if there's ground above the ankle, the foot should be on the ground regardless of what the pin track says
@@ -523,8 +523,8 @@ void IKState::update(float deltaTime)
       {
          // Is the hit point between the ankle and the hip?
          // In other words, is it above the ankle?
-         // TODO: Use constant
-         if (glm::length2(hitPoint - rightAnkleRay.origin) < 2.0f * 2.0f)
+         // TODO: Is there a better way to check if the hit point is above the ankle?
+         if (glm::length2(hitPoint - rightAnkleRay.origin) < mHeightOfHip * mHeightOfHip)
          {
             // If it is, we update the position of the ankle to be on the ground
             // We do this because if there's ground above the ankle, the foot should be on the ground regardless of what the pin track says
@@ -588,14 +588,13 @@ void IKState::update(float deltaTime)
    // - Move the origin up by the distance between the toe and the knee
    // - Move the origin forward by the distance between the ankle and the toe
    // By doing this we create a ray that shoots down from the knee in front of the ankle
-   // TODO: Use constant here for the height of the knees
    glm::vec3 originOfLeftToeRay = worldTransfOfLeftAnkle.position;
-   originOfLeftToeRay.y         = worldPosOfLeftToe.y + 1.0f;
+   originOfLeftToeRay.y         = worldPosOfLeftToe.y + mHeightOfKnees;
    originOfLeftToeRay          += worldFwdDirOfCharacter * mDistanceFromAnkleToToe;
    Ray leftToeRay(originOfLeftToeRay, glm::vec3(0.0f, -1.0f, 0.0f));
 
    glm::vec3 originOfRightToeRay = worldTransfOfRightAnkle.position;
-   originOfRightToeRay.y         = worldPosOfRightToe.y + 1.0f;
+   originOfRightToeRay.y         = worldPosOfRightToe.y + mHeightOfKnees;
    originOfRightToeRay          += worldFwdDirOfCharacter * mDistanceFromAnkleToToe;
    Ray rightToeRay = Ray(originOfRightToeRay, glm::vec3(0.0f, -1.0f, 0.0f));
 
@@ -622,8 +621,8 @@ void IKState::update(float deltaTime)
       {
          // Is the hit point between the toe and the knees?
          // In other words, is it above the toe?
-         // TODO: Use constant
-         if (glm::length2(hitPoint - leftToeRay.origin) < 1.0f * 1.0f)
+         // TODO: Is there a better way to check if the hit point is above the toe?
+         if (glm::length2(hitPoint - leftToeRay.origin) < mHeightOfKnees * mHeightOfKnees)
          {
             // If it is, we update the position of the toe to be on the ground
             // We do this because if there's ground above the toe, the toe should be on the ground regardless of what the pin track says
@@ -638,8 +637,8 @@ void IKState::update(float deltaTime)
       {
          // Is the hit point between the toe and the knees?
          // In other words, is it above the toe?
-         // TODO: Use constant
-         if (glm::length2(hitPoint - rightToeRay.origin) < 1.0f * 1.0f)
+         // TODO: Is there a better way to check if the hit point is above the toe?
+         if (glm::length2(hitPoint - rightToeRay.origin) < mHeightOfKnees * mHeightOfKnees)
          {
             // If it is, we update the position of the toe to be on the ground
             // We do this because if there's ground above the toe, the toe should be on the ground regardless of what the pin track says

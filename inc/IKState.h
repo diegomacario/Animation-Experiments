@@ -116,12 +116,15 @@ private:
    IKLeg                     mRightLeg;
 
    Transform                 mModelTransform;
+   float                     mHeightOfOriginOfYPositionRay;
    float                     mPreviousYPositionOfCharacter;
    float                     mSinkIntoGround;
    float                     mMotionTrackTime;
    float                     mMotionTrackPlaybackSpeed;
    float                     mMotionTrackDuration;
    float                     mMotionTrackFutureTimeOffset;
+   float                     mHeightOfHip;
+   float                     mHeightOfKnees;
    float                     mDistanceFromAnkleToToe;
 };
 
