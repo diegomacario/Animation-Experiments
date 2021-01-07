@@ -4,14 +4,15 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "Transform.h"
+
 class Camera
 {
 public:
 
    Camera(glm::vec3 position,
+          glm::vec3 target,
           glm::vec3 worldUp,
-          float     yawInDeg,
-          float     pitchInDeg,
           float     fieldOfViewYInDeg,
           float     aspectRatio,
           float     near,
@@ -33,9 +34,8 @@ public:
    glm::mat4 getPerspectiveProjectionViewMatrix();
 
    void      reposition(const glm::vec3& position,
+                        const glm::vec3& target,
                         const glm::vec3& worldUp,
-                        float            yawInDeg,
-                        float            pitchInDeg,
                         float            fieldOfViewYInDeg);
 
    enum class MovementDirection
@@ -55,16 +55,7 @@ public:
 
 private:
 
-   void      updateCoordinateFrame();
-
-   glm::vec3 mPosition;
-   glm::vec3 mFront;
-   glm::vec3 mUp;
-   glm::vec3 mRight;
-   glm::vec3 mWorldUp;
-
-   float     mYawInDeg;
-   float     mPitchInDeg;
+   Transform mModelTransform;
 
    float     mFieldOfViewYInDeg;
    float     mAspectRatio;

@@ -3,22 +3,15 @@
 #include "camera.h"
 
 Camera::Camera(glm::vec3 position,
+               glm::vec3 target,
                glm::vec3 worldUp,
-               float     yawInDeg,
-               float     pitchInDeg,
                float     fieldOfViewYInDeg,
                float     aspectRatio,
                float     near,
                float     far,
                float     movementSpeed,
                float     mouseSensitivity)
-   : mPosition(position)
-   , mFront()
-   , mUp()
-   , mRight()
-   , mWorldUp(worldUp)
-   , mYawInDeg(yawInDeg)
-   , mPitchInDeg(pitchInDeg)
+   : mModelTransform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f))
    , mFieldOfViewYInDeg(fieldOfViewYInDeg)
    , mAspectRatio(aspectRatio)
    , mNear(near)
@@ -33,18 +26,13 @@ Camera::Camera(glm::vec3 position,
    , mNeedToUpdatePerspectiveProjectionMatrix(true)
    , mNeedToUpdatePerspectiveProjectionViewMatrix(true)
 {
-   updateCoordinateFrame();
+   glm::vec3 viewDir = glm::normalize(target - position);
+   Q::quat   lookRot = Q::lookRotation(viewDir, worldUp);
+   mModelTransform   = Transform(position, lookRot, glm::vec3(1.0f));
 }
 
 Camera::Camera(Camera&& rhs) noexcept
-   : mPosition(std::exchange(rhs.mPosition, glm::vec3(0.0f)))
-   , mFront(std::exchange(rhs.mFront, glm::vec3(0.0f)))
-   , mUp(std::exchange(rhs.mUp, glm::vec3(0.0f)))
-   , mRight(std::exchange(rhs.mRight, glm::vec3(0.0f)))
-   , mWorldUp(std::exchange(rhs.mWorldUp, glm::vec3(0.0f)))
-   , mYawInDeg(std::exchange(rhs.mYawInDeg, 0.0f))
-   , mPitchInDeg(std::exchange(rhs.mPitchInDeg, 0.0f))
-   , mFieldOfViewYInDeg(std::exchange(rhs.mFieldOfViewYInDeg, 0.0f))
+   : mFieldOfViewYInDeg(std::exchange(rhs.mFieldOfViewYInDeg, 0.0f))
    , mAspectRatio(std::exchange(rhs.mAspectRatio, 0.0f))
    , mNear(std::exchange(rhs.mNear, 0.0f))
    , mFar(std::exchange(rhs.mFar, 0.0f))
@@ -63,13 +51,6 @@ Camera::Camera(Camera&& rhs) noexcept
 
 Camera& Camera::operator=(Camera&& rhs) noexcept
 {
-   mPosition                                    = std::exchange(rhs.mPosition, glm::vec3(0.0f));
-   mFront                                       = std::exchange(rhs.mFront, glm::vec3(0.0f));
-   mUp                                          = std::exchange(rhs.mUp, glm::vec3(0.0f));
-   mRight                                       = std::exchange(rhs.mRight, glm::vec3(0.0f));
-   mWorldUp                                     = std::exchange(rhs.mWorldUp, glm::vec3(0.0f));
-   mYawInDeg                                    = std::exchange(rhs.mYawInDeg, 0.0f);
-   mPitchInDeg                                  = std::exchange(rhs.mPitchInDeg, 0.0f);
    mFieldOfViewYInDeg                           = std::exchange(rhs.mFieldOfViewYInDeg, 0.0f);
    mAspectRatio                                 = std::exchange(rhs.mAspectRatio, 0.0f);
    mNear                                        = std::exchange(rhs.mNear, 0.0f);
@@ -88,14 +69,17 @@ Camera& Camera::operator=(Camera&& rhs) noexcept
 
 glm::vec3 Camera::getPosition()
 {
-   return mPosition;
+   return mModelTransform.position;
 }
 
 glm::mat4 Camera::getViewMatrix()
 {
    if (mNeedToUpdateViewMatrix)
    {
-      mViewMatrix = glm::lookAt(mPosition, mPosition + mFront, mUp);
+      glm::vec3 front = glm::normalize(mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f));
+      glm::vec3 up    = glm::normalize(mModelTransform.rotation * glm::vec3(0.0f, 1.0f, 0.0f));
+      mViewMatrix     = glm::lookAt(mModelTransform.position, mModelTransform.position + front, up);
+
       mNeedToUpdateViewMatrix = false;
    }
 
@@ -128,18 +112,15 @@ glm::mat4 Camera::getPerspectiveProjectionViewMatrix()
 }
 
 void Camera::reposition(const glm::vec3& position,
+                        const glm::vec3& target,
                         const glm::vec3& worldUp,
-                        float            yawInDeg,
-                        float            pitchInDeg,
                         float            fieldOfViewYInDeg)
 {
-   mPosition          = position;
-   mWorldUp           = worldUp;
-   mYawInDeg          = yawInDeg;
-   mPitchInDeg        = pitchInDeg;
-   mFieldOfViewYInDeg = fieldOfViewYInDeg;
+   glm::vec3 viewDir = glm::normalize(target - position);
+   Q::quat   lookRot = Q::lookRotation(viewDir, worldUp);
+   mModelTransform   = Transform(position, lookRot, glm::vec3(1.0f));
 
-   updateCoordinateFrame();
+   mFieldOfViewYInDeg = fieldOfViewYInDeg;
 
    mNeedToUpdateViewMatrix = true;
    mNeedToUpdatePerspectiveProjectionMatrix = true;
@@ -150,21 +131,28 @@ void Camera::processKeyboardInput(MovementDirection direction, float deltaTime)
 {
    float velocity = mMovementSpeed * deltaTime;
 
+   glm::vec3 newPosition(0.0f);
+
+   glm::vec3 front = glm::normalize(mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f));
+   glm::vec3 right = glm::normalize(mModelTransform.rotation * glm::vec3(1.0f, 0.0f, 0.0f));
+
    switch (direction)
    {
    case MovementDirection::Forward:
-      mPosition += mFront * velocity;
+      newPosition += front * velocity;
       break;
    case MovementDirection::Backward:
-      mPosition -= mFront * velocity;
+      newPosition -= front * velocity;
       break;
    case MovementDirection::Left:
-      mPosition -= mRight * velocity;
+      newPosition += right * velocity;
       break;
    case MovementDirection::Right:
-      mPosition += mRight * velocity;
+      newPosition -= right * velocity;
       break;
    }
+
+   mModelTransform.position += newPosition;
 
    mNeedToUpdateViewMatrix = true;
    mNeedToUpdatePerspectiveProjectionViewMatrix = true;
@@ -172,25 +160,28 @@ void Camera::processKeyboardInput(MovementDirection direction, float deltaTime)
 
 void Camera::processMouseMovement(float xOffset, float yOffset)
 {
-   // TODO: Should the offsets also be scaled by deltaTime?
-   xOffset *= mMouseSensitivity;
-   yOffset *= mMouseSensitivity;
+   float yawInDeg   = xOffset * mMouseSensitivity;
+   float pitchInDeg = yOffset * mMouseSensitivity;
 
-   mYawInDeg   += xOffset;
-   mPitchInDeg += yOffset;
+   //glm::vec3 front;
+   //front.x = sin(glm::radians(yawInDeg)) * cos(glm::radians(pitchInDeg));
+   //front.y = sin(glm::radians(pitchInDeg));
+   //front.z = -1.0f * cos(glm::radians(yawInDeg)) * cos(glm::radians(pitchInDeg));
+   //front   = glm::normalize(front);
 
-   // Make sure that when the pitch is out of bounds, the screen doesn't get flipped
-   if (mPitchInDeg > 89.0f)
-   {
-      mPitchInDeg = 89.0f;
-   }
-   else if (mPitchInDeg < -89.0f)
-   {
-      mPitchInDeg = -89.0f;
-   }
+   //glm::vec3 right = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
+   //glm::vec3 up    = glm::normalize(glm::cross(right, front));
 
-   // Update the front, right and up vectors using the updated Euler angles
-   updateCoordinateFrame();
+   //Q::quat lookRot = Q::lookRotation(front, glm::vec3(0.0f, 1.0f, 0.0f));
+   //mModelTransform.rotation = Q::normalized(Q::conjugate(lookRot) * mModelTransform.rotation);
+
+   Q::quat pitchRot = Q::angleAxis(glm::radians(-pitchInDeg), glm::vec3(1.0f, 0.0f, 0.0f));
+   Q::quat yawRot = Q::angleAxis(glm::radians(-yawInDeg), glm::vec3(0.0f, 1.0f, 0.0f));
+
+   //Q::quat newRot = Q::normalized(pitchRot * mModelTransform.rotation * yawRot);
+   //mModelTransform.rotation = Q::nlerp(mModelTransform.rotation, newRot, 0.5f);
+
+   mModelTransform.rotation = Q::normalized(pitchRot * mModelTransform.rotation * yawRot);
 
    mNeedToUpdateViewMatrix = true;
    mNeedToUpdatePerspectiveProjectionViewMatrix = true;
@@ -225,18 +216,4 @@ bool Camera::isFree() const
 void Camera::setFree(bool free)
 {
    mIsFree = free;
-}
-
-void Camera::updateCoordinateFrame()
-{
-   // Calculate the new front vector
-   glm::vec3 newFront;
-   newFront.x = sin(glm::radians(mYawInDeg)) * cos(glm::radians(mPitchInDeg));
-   newFront.y = sin(glm::radians(mPitchInDeg));
-   newFront.z = -1.0f * cos(glm::radians(mYawInDeg)) * cos(glm::radians(mPitchInDeg));
-   mFront = glm::normalize(newFront);
-
-   // Calculate the new right and up vectors
-   mRight = glm::normalize(glm::cross(mFront, mWorldUp));
-   mUp    = glm::normalize(glm::cross(mRight, mFront));
 }
