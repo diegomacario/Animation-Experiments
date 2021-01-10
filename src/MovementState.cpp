@@ -1015,8 +1015,8 @@ void MovementState::resetScene()
 
 void MovementState::resetCamera()
 {
-   mCamera->reposition(glm::vec3(20.0f, 20.0f, 20.0f),
-                       glm::vec3(0.0f, 0.0f, 0.0f),
+   mCamera->reposition(glm::vec3(27.9488f, 20.9127f, 28.8867f),
+                       glm::vec3(21.8935f, 15.903f, 22.7032f),
                        glm::vec3(0.0f, 1.0f, 0.0f),
                        45.0f);
 }

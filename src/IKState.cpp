@@ -1015,8 +1015,8 @@ void IKState::resetScene()
 
 void IKState::resetCamera()
 {
-   mCamera->reposition(glm::vec3(20.0f, 20.0f, 20.0f),
-                       glm::vec3(0.0f, 0.0f, 0.0f),
+   mCamera->reposition(glm::vec3(9.94739f, 12.5202f, 30.2262f),
+                       glm::vec3(10.0207f, 8.6164f, 21.0199f),
                        glm::vec3(0.0f, 1.0f, 0.0f),
                        45.0f);
 }

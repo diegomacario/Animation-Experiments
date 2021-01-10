@@ -550,8 +550,8 @@ void PlayState::resetScene()
 
 void PlayState::resetCamera()
 {
-   mCamera->reposition(glm::vec3(-10.0f, 10.0f, -10.0f),
-                       glm::vec3(0.0f, 0.0f, 0.0f),
+   mCamera->reposition(glm::vec3(0.00179474f, 8.32452f, 7.91094f),
+                       glm::vec3(-0.0242029f, 1.65141f, 0.46319f),
                        glm::vec3(0.0f, 1.0f, 0.0f),
                        45.0f);
 }

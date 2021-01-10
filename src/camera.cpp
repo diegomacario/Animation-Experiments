@@ -1,5 +1,4 @@
 #include <utility>
-#include <iostream>
 
 #include "camera.h"
 
@@ -13,9 +12,6 @@ Camera::Camera(glm::vec3 position,
                float     movementSpeed,
                float     mouseSensitivity)
    : mPosition(position)
-   , mWorldUp(worldUp)
-   , mYawInDeg()
-   , mPitchInDeg()
    , mFieldOfViewYInDeg(fieldOfViewYInDeg)
    , mAspectRatio(aspectRatio)
    , mNear(near)
@@ -30,18 +26,13 @@ Camera::Camera(glm::vec3 position,
    , mNeedToUpdatePerspectiveProjectionMatrix(true)
    , mNeedToUpdatePerspectiveProjectionViewMatrix(true)
 {
-   mCameraZ = glm::normalize(position - target);
-   mCameraX = glm::normalize(glm::cross(mWorldUp, mCameraZ));
-   mCameraY = glm::normalize(glm::cross(mCameraZ, mCameraX));
-
-   mOrientation = Q::lookRotation(mCameraZ, mCameraY);
+   glm::vec3 cameraZ = glm::normalize(position - target);
+   mOrientation      = Q::lookRotation(cameraZ, worldUp);
 }
 
 Camera::Camera(Camera&& rhs) noexcept
    : mPosition(std::exchange(rhs.mPosition, glm::vec3(0.0f)))
-   , mWorldUp(std::exchange(rhs.mWorldUp, glm::vec3(0.0f)))
-   , mYawInDeg(std::exchange(rhs.mYawInDeg, 0.0f))
-   , mPitchInDeg(std::exchange(rhs.mPitchInDeg, 0.0f))
+   , mOrientation(std::exchange(rhs.mOrientation, Q::quat()))
    , mFieldOfViewYInDeg(std::exchange(rhs.mFieldOfViewYInDeg, 0.0f))
    , mAspectRatio(std::exchange(rhs.mAspectRatio, 0.0f))
    , mNear(std::exchange(rhs.mNear, 0.0f))
@@ -62,9 +53,7 @@ Camera::Camera(Camera&& rhs) noexcept
 Camera& Camera::operator=(Camera&& rhs) noexcept
 {
    mPosition                                    = std::exchange(rhs.mPosition, glm::vec3(0.0f));
-   mWorldUp                                     = std::exchange(rhs.mWorldUp, glm::vec3(0.0f));
-   mYawInDeg                                    = std::exchange(rhs.mYawInDeg, 0.0f);
-   mPitchInDeg                                  = std::exchange(rhs.mPitchInDeg, 0.0f);
+   mOrientation                                 = std::exchange(rhs.mOrientation, Q::quat());
    mFieldOfViewYInDeg                           = std::exchange(rhs.mFieldOfViewYInDeg, 0.0f);
    mAspectRatio                                 = std::exchange(rhs.mAspectRatio, 0.0f);
    mNear                                        = std::exchange(rhs.mNear, 0.0f);
@@ -90,11 +79,10 @@ glm::mat4 Camera::getViewMatrix()
 {
    if (mNeedToUpdateViewMatrix)
    {
-      Q::quat   reverseOrient = Q::conjugate(mOrientation);
-      glm::mat4 rot           = Q::quatToMat4(reverseOrient);
-      glm::mat4 translation   = glm::translate(glm::mat4(1.0), -mPosition);
+      glm::mat4 inverseRotation    = Q::quatToMat4(Q::conjugate(mOrientation));
+      glm::mat4 inverseTranslation = glm::translate(glm::mat4(1.0), -mPosition);
 
-      mViewMatrix = rot * translation;
+      mViewMatrix = inverseRotation * inverseTranslation;
 
       mNeedToUpdateViewMatrix = false;
    }
@@ -132,13 +120,11 @@ void Camera::reposition(const glm::vec3& position,
                         const glm::vec3& worldUp,
                         float            fieldOfViewYInDeg)
 {
-   mPosition          = position;
-   mWorldUp           = worldUp;
+   mPosition         = position;
+   glm::vec3 cameraZ = glm::normalize(position - target);
+   mOrientation      = Q::lookRotation(cameraZ, worldUp);
+
    mFieldOfViewYInDeg = fieldOfViewYInDeg;
-
-   mCameraZ = glm::normalize(position - target);
-
-   mOrientation = Q::lookRotation(mCameraZ, mWorldUp);
 
    mNeedToUpdateViewMatrix = true;
    mNeedToUpdatePerspectiveProjectionMatrix = true;
@@ -149,22 +135,22 @@ void Camera::processKeyboardInput(MovementDirection direction, float deltaTime)
 {
    float velocity = mMovementSpeed * deltaTime;
 
-   glm::vec3 front = mOrientation * glm::vec3(0, 0, -1);
-   glm::vec3 right = glm::normalize(glm::cross(front, mWorldUp));
+   glm::vec3 viewDir = mOrientation * glm::vec3(0.0f, 0.0f, -1.0f);
+   glm::vec3 right   = mOrientation * glm::vec3(1.0f, 0.0f, 0.0f);
 
    switch (direction)
    {
    case MovementDirection::Forward:
-      mPosition += front * velocity;
+      mPosition += viewDir * velocity;
       break;
    case MovementDirection::Backward:
-      mPosition -= front * velocity;
-      break;
-   case MovementDirection::Left:
-      mPosition -= right * velocity;
+      mPosition -= viewDir * velocity;
       break;
    case MovementDirection::Right:
       mPosition += right * velocity;
+      break;
+   case MovementDirection::Left:
+      mPosition -= right * velocity;
       break;
    }
 
@@ -174,13 +160,14 @@ void Camera::processKeyboardInput(MovementDirection direction, float deltaTime)
 
 void Camera::processMouseMovement(float xOffset, float yOffset)
 {
-   xOffset *= mMouseSensitivity;
-   yOffset *= mMouseSensitivity;
+   float yawChangeInDeg   = -xOffset * mMouseSensitivity;
+   float pitchChangeInDeg = -yOffset * mMouseSensitivity;
 
-   mYawInDeg   = -xOffset;
-   mPitchInDeg = -yOffset;
+   Q::quat yawRot   = Q::angleAxis(glm::radians(yawChangeInDeg),   glm::vec3(0.0f, 1.0f, 0.0f));
+   Q::quat pitchRot = Q::angleAxis(glm::radians(-pitchChangeInDeg), glm::vec3(1.0f, 0.0f, 0.0f));
 
-   updateCoordinateFrame();
+   // Yaw globally, pitch locally
+   mOrientation = Q::normalized(pitchRot * mOrientation * yawRot);
 
    mNeedToUpdateViewMatrix = true;
    mNeedToUpdatePerspectiveProjectionViewMatrix = true;
@@ -215,16 +202,4 @@ bool Camera::isFree() const
 void Camera::setFree(bool free)
 {
    mIsFree = free;
-}
-
-void Camera::updateCoordinateFrame()
-{
-   Q::quat pitchRotation = Q::angleAxis(glm::radians(-mPitchInDeg), mCameraX);
-   Q::quat yawRotation   = Q::angleAxis(glm::radians(mYawInDeg), mCameraY);
-
-   mCameraZ = pitchRotation * yawRotation * mCameraZ;
-   mCameraX = glm::normalize(glm::cross(mWorldUp, mCameraZ));
-   mCameraY = glm::normalize(glm::cross(mCameraZ, mCameraX));
-
-   mOrientation = Q::lookRotation(mCameraZ, mCameraY);
 }
