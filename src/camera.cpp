@@ -26,6 +26,11 @@ Camera::Camera(glm::vec3 position,
    , mNeedToUpdatePerspectiveProjectionMatrix(true)
    , mNeedToUpdatePerspectiveProjectionViewMatrix(true)
 {
+   // There are two important things to note here:
+   // - In OpenGL, the camera always looks down the -Z axis, which means that the camera's Z axis is the opposite of the view direction
+   // - Q::lookRotation calculates a quaternion that rotates from the world's Z axis to a desired direction,
+   //   which makes that direction the Z axis of the rotated coordinate frame
+   // That's why the orientation of the camera is calculated using the camera's Z axis instead of the view direction
    glm::vec3 cameraZ = glm::normalize(position - target);
    mOrientation      = Q::lookRotation(cameraZ, worldUp);
 }
@@ -79,10 +84,37 @@ glm::mat4 Camera::getViewMatrix()
 {
    if (mNeedToUpdateViewMatrix)
    {
-      glm::mat4 inverseRotation    = Q::quatToMat4(Q::conjugate(mOrientation));
-      glm::mat4 inverseTranslation = glm::translate(glm::mat4(1.0), -mPosition);
+      /*
+         The camera's model matrix can be calculated as follows (first rotate, then translate):
 
-      mViewMatrix = inverseRotation * inverseTranslation;
+            cameraModelMat = cameraTranslation * cameraRotation
+
+         The view matrix is equal to the inverse of the camera's model matrix
+         Think about it this way:
+         - We know the translation and rotation necessary to place and orient the camera
+         - If we apply the opposite translation and rotation to the world, it's as if we were looking at it through the camera
+
+         So with that it mind, we can calculate the view matrix as follows:
+
+            viewMat = cameraModelMat^-1 = (cameraTranslation * cameraRotation)^-1 = cameraRotation^-1 * cameraTranslation^-1
+
+         Which looks like this in code:
+
+            glm::mat4 inverseCameraRotation    = Q::quatToMat4(Q::conjugate(mOrientation));
+            glm::mat4 inverseCameraTranslation = glm::translate(glm::mat4(1.0), -mPosition);
+
+            mViewMatrix = inverseCameraRotation * inverseCameraTranslation;
+
+         The implementation below is simply an optimized version of the above
+      */
+
+      mViewMatrix       = Q::quatToMat4(Q::conjugate(mOrientation));
+      // Dot product of X axis with negated position
+      mViewMatrix[3][0] = -(mViewMatrix[0][0] * mPosition.x + mViewMatrix[1][0] * mPosition.y + mViewMatrix[2][0] * mPosition.z);
+      // Dot product of Y axis with negated position
+      mViewMatrix[3][1] = -(mViewMatrix[0][1] * mPosition.x + mViewMatrix[1][1] * mPosition.y + mViewMatrix[2][1] * mPosition.z);
+      // Dot product of Z axis with negated position
+      mViewMatrix[3][2] = -(mViewMatrix[0][2] * mPosition.x + mViewMatrix[1][2] * mPosition.y + mViewMatrix[2][2] * mPosition.z);
 
       mNeedToUpdateViewMatrix = false;
    }
@@ -121,6 +153,12 @@ void Camera::reposition(const glm::vec3& position,
                         float            fieldOfViewYInDeg)
 {
    mPosition         = position;
+
+   // There are two important things to note here:
+   // - In OpenGL, the camera always looks down the -Z axis, which means that the camera's Z axis is the opposite of the view direction
+   // - Q::lookRotation calculates a quaternion that rotates from the world's Z axis to a desired direction,
+   //   which makes that direction the Z axis of the rotated coordinate frame
+   // That's why the orientation of the camera is calculated using the camera's Z axis instead of the view direction
    glm::vec3 cameraZ = glm::normalize(position - target);
    mOrientation      = Q::lookRotation(cameraZ, worldUp);
 
@@ -133,24 +171,29 @@ void Camera::reposition(const glm::vec3& position,
 
 void Camera::processKeyboardInput(MovementDirection direction, float deltaTime)
 {
-   float velocity = mMovementSpeed * deltaTime;
+   float distanceToMove = mMovementSpeed * deltaTime;
 
+   // When the W/S keys are pressed we want to move along the view direction
+   // The view direction is equal to the camera's -Z axis, so to calculate it we can simply rotate the world's -Z axis using the orientation of the camera
    glm::vec3 viewDir = mOrientation * glm::vec3(0.0f, 0.0f, -1.0f);
-   glm::vec3 right   = mOrientation * glm::vec3(1.0f, 0.0f, 0.0f);
+
+   // When the D/A keys are pressed we want to move along a vector that points to the right when looking down the view direction
+   // That vector happens to be the camera's X axis, so to calculate it we can simply rotate the world's X axis using the orientation of the camera
+   glm::vec3 cameraX = mOrientation * glm::vec3(1.0f, 0.0f, 0.0f);
 
    switch (direction)
    {
    case MovementDirection::Forward:
-      mPosition += viewDir * velocity;
+      mPosition += viewDir * distanceToMove;
       break;
    case MovementDirection::Backward:
-      mPosition -= viewDir * velocity;
+      mPosition -= viewDir * distanceToMove;
       break;
    case MovementDirection::Right:
-      mPosition += right * velocity;
+      mPosition += cameraX * distanceToMove;
       break;
    case MovementDirection::Left:
-      mPosition -= right * velocity;
+      mPosition -= cameraX * distanceToMove;
       break;
    }
 
@@ -160,13 +203,34 @@ void Camera::processKeyboardInput(MovementDirection direction, float deltaTime)
 
 void Camera::processMouseMovement(float xOffset, float yOffset)
 {
-   float yawChangeInDeg   = -xOffset * mMouseSensitivity;
-   float pitchChangeInDeg = -yOffset * mMouseSensitivity;
+   // The xOffset corresponds to a change in the yaw of the view direction
+   // If the xOffset is positive, the view direction is moving right
+   // If the xOffset is negative, the view direction is moving left
 
-   Q::quat yawRot   = Q::angleAxis(glm::radians(yawChangeInDeg),   glm::vec3(0.0f, 1.0f, 0.0f));
-   Q::quat pitchRot = Q::angleAxis(glm::radians(-pitchChangeInDeg), glm::vec3(1.0f, 0.0f, 0.0f));
+   // The yOffset corresponds to a change in the pitch of the view direction
+   // If the yOffset is positive, the view direction is moving up
+   // If the yOffset is negative, the view direction is moving down
 
-   // Yaw globally, pitch locally
+   // Since the camera's orientation is calculated using the camera's Z axis, which is the opposite the view direction,
+   // we need to negate the xOffset and yOffset so that they correspond to changes in the yaw/pitch of the camera's Z axis instead of the view direction
+
+   // Here are some examples to illustrate that idea:
+   // - If the xOffset is equal to 1.0f, the view direction is moving right by that amount while the camera's Z axis is moving left by the same amount
+   //   Since the camera's Z vector is moving left, its xOffset is equal to -1.0f
+   // - If the yOffset is equal to -1.0f, the view direction is moving down by that amount while the camera's Z axis is moving up by the same amount
+   //   Since the camera's Z vector is moving up, its yOffset is equal to 1.0f
+
+   float yawChangeOfCameraZInDeg   = -xOffset * mMouseSensitivity;
+   float pitchChangeOfCameraZInDeg = -yOffset * mMouseSensitivity;
+
+   // The yaw is defined as a counterclockwise rotation around the Y axis
+   Q::quat yawRot   = Q::angleAxis(glm::radians(yawChangeOfCameraZInDeg),   glm::vec3(0.0f, 1.0f, 0.0f));
+   // The pitch is defined as a clockwise rotation around the X axis
+   // Since the rotation is clockwise, the angle is negated in the call to Q::angleAxis below
+   Q::quat pitchRot = Q::angleAxis(glm::radians(-pitchChangeOfCameraZInDeg), glm::vec3(1.0f, 0.0f, 0.0f));
+
+   // To avoid introducing roll, the yaw is applied globally while the pitch is applied locally
+   // In other words, the yaw is applied with respect to the world's Y axis, while the pitch is applied with respect to the camera's X axis
    mOrientation = Q::normalized(pitchRot * mOrientation * yawRot);
 
    mNeedToUpdateViewMatrix = true;
