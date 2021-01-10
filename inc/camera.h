@@ -59,6 +59,9 @@ private:
 
    glm::vec3 mPosition;
    Q::quat   mOrientation;
+
+   glm::vec3 mCameraX;
+   glm::vec3 mCameraY;
    glm::vec3 mCameraZ;
 
    glm::vec3 mWorldUp;
