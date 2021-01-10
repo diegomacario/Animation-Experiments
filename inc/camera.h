@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Transform.h"
+#include "quat.h"
 
 class Camera
 {
@@ -55,7 +55,16 @@ public:
 
 private:
 
-   Transform mModelTransform;
+   void      updateCoordinateFrame();
+
+   glm::vec3 mPosition;
+   Q::quat   mOrientation;
+   glm::vec3 mCameraZ;
+
+   glm::vec3 mWorldUp;
+
+   float     mYawInDeg;
+   float     mPitchInDeg;
 
    float     mFieldOfViewYInDeg;
    float     mAspectRatio;

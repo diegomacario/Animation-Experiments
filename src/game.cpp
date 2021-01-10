@@ -42,7 +42,7 @@ bool Game::initialize(const std::string& title)
    float heightInPix = 720.0f;
    float aspectRatio = (widthInPix / heightInPix);
 
-   mCamera = std::make_shared<Camera>(glm::vec3(20.0f, 20.0f, 20.0f),
+   mCamera = std::make_shared<Camera>(glm::vec3(10.0f, 10.0f, 10.0f),
                                       glm::vec3(0.0f, 0.0f, 0.0f),
                                       glm::vec3(0.0f, 1.0f, 0.0f),
                                       45.0f,       // Fovy
@@ -108,7 +108,7 @@ bool Game::initialize(const std::string& title)
                                                          mTeapot);
 
    // Initialize the FSM
-   mFSM->initialize(std::move(mStates), "movement");
+   mFSM->initialize(std::move(mStates), "play");
 
    return true;
 }
