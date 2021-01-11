@@ -6,6 +6,7 @@
 #include "play_state.h"
 #include "IKState.h"
 #include "MovementState.h"
+#include "IKMovementState.h"
 #include "game.h"
 
 Game::Game()
@@ -106,6 +107,13 @@ bool Game::initialize(const std::string& title)
                                                          gameObj3DShader,
                                                          mTable,
                                                          mTeapot);
+
+   mStates["ik_movement"] = std::make_shared<IKMovementState>(mFSM,
+                                                              mWindow,
+                                                              mCamera,
+                                                              gameObj3DShader,
+                                                              mTable,
+                                                              mTeapot);
 
    // Initialize the FSM
    mFSM->initialize(std::move(mStates), "movement");

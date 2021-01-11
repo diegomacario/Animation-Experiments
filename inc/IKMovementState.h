@@ -1,5 +1,5 @@
-#ifndef MOVEMENT_STATE_H
-#define MOVEMENT_STATE_H
+#ifndef IK_MOVEMENT_STATE_H
+#define IK_MOVEMENT_STATE_H
 
 #include <array>
 
@@ -8,24 +8,26 @@
 #include "AnimatedMesh.h"
 #include "SkeletonViewer.h"
 #include "Clip.h"
+#include "Triangle.h"
+#include "IKLeg.h"
 
-class MovementState : public State
+class IKMovementState : public State
 {
 public:
 
-   MovementState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
-                 const std::shared_ptr<Window>&             window,
-                 const std::shared_ptr<Camera>&             camera,
-                 const std::shared_ptr<Shader>&             gameObject3DShader,
-                 const std::shared_ptr<GameObject3D>&       table,
-                 const std::shared_ptr<GameObject3D>&       teapot);
-   ~MovementState() = default;
+   IKMovementState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
+                   const std::shared_ptr<Window>&             window,
+                   const std::shared_ptr<Camera>&             camera,
+                   const std::shared_ptr<Shader>&             gameObject3DShader,
+                   const std::shared_ptr<GameObject3D>&       table,
+                   const std::shared_ptr<GameObject3D>&       teapot);
+   ~IKMovementState() = default;
 
-   MovementState(const MovementState&) = delete;
-   MovementState& operator=(const MovementState&) = delete;
+   IKMovementState(const IKMovementState&) = delete;
+   IKMovementState& operator=(const IKMovementState&) = delete;
 
-   MovementState(MovementState&&) = delete;
-   MovementState& operator=(MovementState&&) = delete;
+   IKMovementState(IKMovementState&&) = delete;
+   IKMovementState& operator=(IKMovementState&&) = delete;
 
    void enter() override;
    void processInput(float deltaTime) override;
@@ -80,7 +82,6 @@ private:
       Pose                   animatedPose;
       std::vector<glm::mat4> animatedPosePalette;
       std::vector<glm::mat4> skinMatrices;
-      Transform              modelTransform;
    };
 
    std::shared_ptr<Shader>   mAnimatedMeshShader;
@@ -103,6 +104,28 @@ private:
    bool                      mPerformDepthTesting;
 
    AnimationData             mAnimationData;
+
+   // --- --- ---
+
+   std::vector<AnimatedMesh> mGroundMeshes;
+   std::shared_ptr<Texture>  mGroundTexture;
+   std::vector<Triangle>     mGroundTriangles;
+
+   VectorTrack               mMotionTrack;
+   IKLeg                     mLeftLeg;
+   IKLeg                     mRightLeg;
+
+   Transform                 mModelTransform;
+   float                     mHeightOfOriginOfYPositionRay;
+   float                     mPreviousYPositionOfCharacter;
+   float                     mSinkIntoGround;
+   float                     mMotionTrackTime;
+   float                     mMotionTrackPlaybackSpeed;
+   float                     mMotionTrackDuration;
+   float                     mMotionTrackFutureTimeOffset;
+   float                     mHeightOfHip;
+   float                     mHeightOfKnees;
+   float                     mDistanceFromAnkleToToe;
 };
 
 #endif
