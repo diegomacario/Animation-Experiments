@@ -1,7 +1,11 @@
 #include "CrossFadeController.h"
 #include "Blending.h"
 
-CrossFadeController::CrossFadeController()
+template TCrossFadeController<Clip>;
+template TCrossFadeController<FastClip>;
+
+template <typename CLIP>
+TCrossFadeController<CLIP>::TCrossFadeController()
    : mCurrentClip(nullptr)
    , mPlaybackTime(0.0f)
    , mSkeleton()
@@ -12,7 +16,8 @@ CrossFadeController::CrossFadeController()
 
 }
 
-CrossFadeController::CrossFadeController(Skeleton& skeleton)
+template <typename CLIP>
+TCrossFadeController<CLIP>::TCrossFadeController(Skeleton& skeleton)
    : mCurrentClip(nullptr)
    , mPlaybackTime(0.0f)
    , mSkeleton()
@@ -23,14 +28,16 @@ CrossFadeController::CrossFadeController(Skeleton& skeleton)
    SetSkeleton(skeleton);
 }
 
-void CrossFadeController::SetSkeleton(Skeleton& skeleton)
+template <typename CLIP>
+void TCrossFadeController<CLIP>::SetSkeleton(Skeleton& skeleton)
 {
    mSkeleton       = skeleton;
    mCurrentPose    = mSkeleton.GetRestPose();
    mWasSkeletonSet = true;
 }
 
-void CrossFadeController::Play(Clip* clip)
+template <typename CLIP>
+void TCrossFadeController<CLIP>::Play(CLIP* clip)
 {
    // When asked to play a clip, we clear all the crossfade targets
    mTargets = {};
@@ -40,7 +47,8 @@ void CrossFadeController::Play(Clip* clip)
    mCurrentPose  = mSkeleton.GetRestPose();
 }
 
-void CrossFadeController::FadeTo(Clip* targetClip, float fadeDuration)
+template <typename CLIP>
+void TCrossFadeController<CLIP>::FadeTo(CLIP* targetClip, float fadeDuration)
 {
    // If no clip has been set, simply play the target clip since there is no clip to fade from
    if (mCurrentClip == nullptr)
@@ -72,7 +80,8 @@ void CrossFadeController::FadeTo(Clip* targetClip, float fadeDuration)
    mTargets.emplace(targetClip, mSkeleton.GetRestPose(), fadeDuration);
 }
 
-void CrossFadeController::Update(float dt)
+template <typename CLIP>
+void TCrossFadeController<CLIP>::Update(float dt)
 {
    // We cannot update without a current clip or a skeleton
    if (mCurrentClip == nullptr || !mWasSkeletonSet)
@@ -82,7 +91,7 @@ void CrossFadeController::Update(float dt)
 
    if (!mTargets.empty())
    {
-      CrossFadeTarget& currentTarget = mTargets.front();
+      TCrossFadeTarget<CLIP>& currentTarget = mTargets.front();
 
       // Check if the first fade in the queue has been completed
       if (currentTarget.mFadeTime >= currentTarget.mFadeDuration)
@@ -100,7 +109,7 @@ void CrossFadeController::Update(float dt)
 
    if (!mTargets.empty())
    {
-      CrossFadeTarget& currentTarget = mTargets.front();
+      TCrossFadeTarget<CLIP>& currentTarget = mTargets.front();
 
       // Sample the clip of the first target in the queue
       currentTarget.mPlaybackTime = currentTarget.mClip->Sample(currentTarget.mPose, currentTarget.mPlaybackTime + dt);
@@ -118,12 +127,14 @@ void CrossFadeController::Update(float dt)
    }
 }
 
-Clip* CrossFadeController::GetcurrentClip()
+template <typename CLIP>
+CLIP* TCrossFadeController<CLIP>::GetcurrentClip()
 {
    return mCurrentClip;
 }
 
-Pose& CrossFadeController::GetCurrentPose()
+template <typename CLIP>
+Pose& TCrossFadeController<CLIP>::GetCurrentPose()
 {
    return mCurrentPose;
 }

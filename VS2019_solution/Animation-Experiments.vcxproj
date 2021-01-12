@@ -87,6 +87,7 @@
     <ClCompile Include="..\src\CCDSolver.cpp" />
     <ClCompile Include="..\src\Clip.cpp" />
     <ClCompile Include="..\src\CrossFadeController.cpp" />
+    <ClCompile Include="..\src\CrossFadeTarget.cpp" />
     <ClCompile Include="..\src\FABRIKSolver.cpp" />
     <ClCompile Include="..\src\finite_state_machine.cpp" />
     <ClCompile Include="..\src\game.cpp" />

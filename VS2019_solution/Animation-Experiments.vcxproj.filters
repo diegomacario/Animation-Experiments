@@ -139,6 +139,9 @@
     <ClCompile Include="..\src\MovementState.cpp">
       <Filter>Animation-Experiments\Source Files\Base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\CrossFadeTarget.cpp">
+      <Filter>Animation-Experiments\Source Files\Animation\Blending</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">

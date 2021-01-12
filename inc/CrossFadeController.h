@@ -5,30 +5,34 @@
 #include "CrossFadeTarget.h"
 #include "Skeleton.h"
 
-class CrossFadeController
+template <typename CLIP>
+class TCrossFadeController
 {
 public:
 
-   CrossFadeController();
-   CrossFadeController(Skeleton& skeleton);
+   TCrossFadeController();
+   TCrossFadeController(Skeleton& skeleton);
 
    void SetSkeleton(Skeleton& skeleton);
 
-   void Play(Clip* clip);
-   void FadeTo(Clip* targetClip, float fadeDuration);
+   void Play(CLIP* clip);
+   void FadeTo(CLIP* targetClip, float fadeDuration);
    void Update(float dt);
 
-   Clip* GetcurrentClip();
+   CLIP* GetcurrentClip();
    Pose& GetCurrentPose();
 
 private:
 
-   Clip*                        mCurrentClip;
-   float                        mPlaybackTime;
-   Skeleton                     mSkeleton;
-   Pose                         mCurrentPose;
-   bool                         mWasSkeletonSet;
-   std::queue<CrossFadeTarget>  mTargets;
+   CLIP*                              mCurrentClip;
+   float                              mPlaybackTime;
+   Skeleton                           mSkeleton;
+   Pose                               mCurrentPose;
+   bool                               mWasSkeletonSet;
+   std::queue<TCrossFadeTarget<CLIP>> mTargets;
 };
+
+typedef TCrossFadeController<Clip> CrossFadeController;
+typedef TCrossFadeController<FastClip> FastCrossFadeController;
 
 #endif
