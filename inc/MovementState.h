@@ -8,6 +8,7 @@
 #include "AnimatedMesh.h"
 #include "SkeletonViewer.h"
 #include "Clip.h"
+#include "CrossFadeController.h"
 
 class MovementState : public State
 {
@@ -63,26 +64,6 @@ private:
       CPU = 1,
    };
 
-   struct AnimationData
-   {
-      AnimationData()
-         : currentClipIndex(0)
-         , currentSkinningMode(SkinningMode::GPU)
-         , playbackTime(0.0f)
-      {
-
-      }
-
-      unsigned int           currentClipIndex;
-      SkinningMode           currentSkinningMode;
-
-      float                  playbackTime;
-      Pose                   animatedPose;
-      std::vector<glm::mat4> animatedPosePalette;
-      std::vector<glm::mat4> skinMatrices;
-      Transform              modelTransform;
-   };
-
    std::shared_ptr<Shader>   mAnimatedMeshShader;
    std::shared_ptr<Shader>   mStaticMeshShader;
    std::shared_ptr<Texture>  mDiffuseTexture;
@@ -90,9 +71,7 @@ private:
    Skeleton                  mSkeleton;
    std::vector<AnimatedMesh> mAnimatedMeshes;
    SkeletonViewer            mSkeletonViewer;
-   std::vector<FastClip>     mClips;
-   std::string               mClipNames;
-   int                       mSelectedClip;
+   SkinningMode              mCurrentSkinningMode;
    int                       mSelectedSkinningMode;
    float                     mSelectedPlaybackSpeed;
    bool                      mDisplayMesh;
@@ -102,7 +81,21 @@ private:
    bool                      mWireframeModeForJoints;
    bool                      mPerformDepthTesting;
 
-   AnimationData             mAnimationData;
+   // --- --- ---
+
+   std::map<std::string, FastClip> mClips;
+
+   FastCrossFadeController         mCrossFadeController;
+   std::vector<glm::mat4>          mPosePalette;
+   std::vector<glm::mat4>          mSkinMatrices;
+
+   Transform                       mModelTransform;
+   float                           mCharacterWalkingSpeed = 4.0f;
+   float                           mCharacterRunningSpeed = 12.0f;
+   float                           mCharacterWalkingRotationSpeed = 100.0f;
+   float                           mCharacterRunningRotationSpeed = 200.0f;
+   bool                            mIsWalking = false;
+   bool                            mIsRunning = false;
 };
 
 #endif

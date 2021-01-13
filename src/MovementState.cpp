@@ -56,17 +56,22 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
       RearrangeMesh(mAnimatedMeshes[meshIndex], jointMap);
    }
 
-   // Optimize the clips, rearrange them and get their names
-   mClips.resize(clips.size());
+   // Optimize the clips, rearrange them and store them
    for (unsigned int clipIndex = 0,
         numClips = static_cast<unsigned int>(clips.size());
         clipIndex < numClips;
         ++clipIndex)
    {
-      mClips[clipIndex] = OptimizeClip(clips[clipIndex]);
-      RearrangeFastClip(mClips[clipIndex], jointMap);
-      mClipNames += (mClips[clipIndex].GetName() + '\0');
+      FastClip currClip = OptimizeClip(clips[clipIndex]);
+      RearrangeFastClip(currClip, jointMap);
+      mClips.insert(std::make_pair(currClip.GetName(), currClip));
    }
+
+   // Set the initial clip and initialize the crossfade controller
+   mCrossFadeController.SetSkeleton(mSkeleton);
+   mCrossFadeController.Play(&mClips["Idle"]);
+   mCrossFadeController.Update(0.0f);
+   mCrossFadeController.GetCurrentPose().GetMatrixPalette(mPosePalette);
 
    // Configure the VAOs of the animated meshes
    int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
@@ -86,18 +91,8 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
                                       influencesAttribLocOfAnimatedShader);
    }
 
-   // Set the initial clip
-   unsigned int numClips = static_cast<unsigned int>(mClips.size());
-   for (unsigned int clipIndex = 0; clipIndex < numClips; ++clipIndex)
-   {
-      if (mClips[clipIndex].GetName() == "Walking")
-      {
-         mSelectedClip = clipIndex;
-         mAnimationData.currentClipIndex = clipIndex;
-      }
-   }
-
    // Set the initial skinning mode
+   mCurrentSkinningMode = SkinningMode::GPU;
    mSelectedSkinningMode = SkinningMode::GPU;
    // Set the initial playback speed
    mSelectedPlaybackSpeed = 1.0f;
@@ -109,14 +104,11 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
    mWireframeModeForJoints = false;
    mPerformDepthTesting = true;
 
-   // Set the initial pose
-   mAnimationData.animatedPose = mSkeleton.GetRestPose();
-
    // Set the model transform
-   mAnimationData.modelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
+   mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
 
    // Initialize the bones of the skeleton viewer
-   mSkeletonViewer.InitializeBones(mAnimationData.animatedPose);
+   mSkeletonViewer.InitializeBones(mCrossFadeController.GetCurrentPose());
 }
 
 void MovementState::enter()
@@ -221,10 +213,10 @@ void MovementState::processInput(float deltaTime)
    if (mCamera->isFree())
    {
       // Move
-      if (mWindow->keyIsPressed(GLFW_KEY_W)) { mCamera->processKeyboardInput(Camera::MovementDirection::Forward, deltaTime); }
-      if (mWindow->keyIsPressed(GLFW_KEY_S)) { mCamera->processKeyboardInput(Camera::MovementDirection::Backward, deltaTime); }
-      if (mWindow->keyIsPressed(GLFW_KEY_A)) { mCamera->processKeyboardInput(Camera::MovementDirection::Left, deltaTime); }
-      if (mWindow->keyIsPressed(GLFW_KEY_D)) { mCamera->processKeyboardInput(Camera::MovementDirection::Right, deltaTime); }
+      //if (mWindow->keyIsPressed(GLFW_KEY_W)) { mCamera->processKeyboardInput(Camera::MovementDirection::Forward, deltaTime); }
+      //if (mWindow->keyIsPressed(GLFW_KEY_S)) { mCamera->processKeyboardInput(Camera::MovementDirection::Backward, deltaTime); }
+      //if (mWindow->keyIsPressed(GLFW_KEY_A)) { mCamera->processKeyboardInput(Camera::MovementDirection::Left, deltaTime); }
+      //if (mWindow->keyIsPressed(GLFW_KEY_D)) { mCamera->processKeyboardInput(Camera::MovementDirection::Right, deltaTime); }
 
       // Orient
       if (mWindow->mouseMoved())
@@ -240,61 +232,143 @@ void MovementState::processInput(float deltaTime)
          mWindow->resetScrollWheelMoved();
       }
    }
+
+   // --- --- ---
+
+   bool movementKeyPressed  = false;
+   bool leftShiftKeyPressed = mWindow->keyIsPressed(GLFW_KEY_LEFT_SHIFT);
+
+   float movementSpeed = mCharacterWalkingSpeed;
+   float rotationSpeed = mCharacterWalkingRotationSpeed;
+   if (leftShiftKeyPressed)
+   {
+      movementSpeed = mCharacterRunningSpeed;
+      rotationSpeed = mCharacterRunningRotationSpeed;
+   }
+
+   // Move and orient the character
+   if (mWindow->keyIsPressed(GLFW_KEY_A))
+   {
+      float degreesToRotate    = rotationSpeed * deltaTime;
+      Q::quat rotation         = Q::angleAxis(glm::radians(degreesToRotate), glm::vec3(0.0f, 1.0f, 0.0f));
+      mModelTransform.rotation = Q::normalized(mModelTransform.rotation * rotation);
+      movementKeyPressed = true;
+   }
+
+   if (mWindow->keyIsPressed(GLFW_KEY_D))
+   {
+      float degreesToRotate    = rotationSpeed * deltaTime;
+      Q::quat rotation         = Q::angleAxis(glm::radians(-degreesToRotate), glm::vec3(0.0f, 1.0f, 0.0f));
+      mModelTransform.rotation = Q::normalized(mModelTransform.rotation * rotation);
+      movementKeyPressed = true;
+   }
+
+   if (mWindow->keyIsPressed(GLFW_KEY_W))
+   {
+      float distToMove          = movementSpeed * deltaTime;
+      glm::vec3 characterFwd    = mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f);
+      mModelTransform.position += characterFwd * distToMove;
+      movementKeyPressed = true;
+   }
+
+   if (mWindow->keyIsPressed(GLFW_KEY_S))
+   {
+      float distToMove          = movementSpeed * deltaTime;
+      glm::vec3 characterFwd    = mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f);
+      mModelTransform.position -= characterFwd * distToMove;
+      movementKeyPressed = true;
+   }
+
+   if (movementKeyPressed)
+   {
+      if (!mIsWalking && !mIsRunning)
+      {
+         if (leftShiftKeyPressed)
+         {
+            mIsRunning = true;
+            mCrossFadeController.FadeTo(&mClips["Running"], 0.25f);
+         }
+         else
+         {
+            mIsWalking = true;
+            mCrossFadeController.FadeTo(&mClips["Walking"], 0.25f);
+         }
+      }
+      else if (mIsWalking)
+      {
+         if (leftShiftKeyPressed)
+         {
+            mIsWalking = false;
+            mIsRunning = true;
+            mCrossFadeController.FadeTo(&mClips["Running"], 0.25f);
+         }
+      }
+      else if (mIsRunning)
+      {
+         if (!leftShiftKeyPressed)
+         {
+            mIsRunning = false;
+            mIsWalking = true;
+            mCrossFadeController.FadeTo(&mClips["Walking"], 0.25f);
+         }
+      }
+   }
+   else
+   {
+      if (mIsWalking || mIsRunning)
+      {
+         mIsRunning = false;
+         mIsWalking = false;
+         mCrossFadeController.FadeTo(&mClips["Idle"], 0.25f);
+      }
+   }
 }
 
 void MovementState::update(float deltaTime)
 {
-   if (mAnimationData.currentClipIndex != mSelectedClip)
+   if (mCurrentSkinningMode != mSelectedSkinningMode)
    {
-      mAnimationData.currentClipIndex = mSelectedClip;
-      mAnimationData.animatedPose     = mSkeleton.GetRestPose();
-      mAnimationData.playbackTime     = 0.0f;
-   }
-
-   if (mAnimationData.currentSkinningMode != mSelectedSkinningMode)
-   {
-      if (mAnimationData.currentSkinningMode == SkinningMode::GPU)
+      if (mCurrentSkinningMode == SkinningMode::GPU)
       {
          switchFromGPUToCPU();
       }
-      else if (mAnimationData.currentSkinningMode == SkinningMode::CPU)
+      else if (mCurrentSkinningMode == SkinningMode::CPU)
       {
          switchFromCPUToGPU();
       }
 
-      mAnimationData.currentSkinningMode = static_cast<SkinningMode>(mSelectedSkinningMode);
+      mCurrentSkinningMode = static_cast<SkinningMode>(mSelectedSkinningMode);
    }
 
-   // Sample the clip to get the animated pose
-   FastClip& currClip = mClips[mAnimationData.currentClipIndex];
-   mAnimationData.playbackTime = currClip.Sample(mAnimationData.animatedPose, mAnimationData.playbackTime + (deltaTime * mSelectedPlaybackSpeed));
+   // Ask the crossfade controller to sample the current clip and fade with the next one if necessary
+   mCrossFadeController.Update(deltaTime * mSelectedPlaybackSpeed);
 
-   // Get the palette of the animated pose
-   mAnimationData.animatedPose.GetMatrixPalette(mAnimationData.animatedPosePalette);
+   // Get the palette of the pose
+   mCrossFadeController.GetCurrentPose().GetMatrixPalette(mPosePalette);
 
    std::vector<glm::mat4>& inverseBindPose = mSkeleton.GetInvBindPose();
 
    // Generate the skin matrices
-   mAnimationData.skinMatrices.resize(mAnimationData.animatedPosePalette.size());
+   mSkinMatrices.resize(mPosePalette.size());
    for (unsigned int i = 0,
-        size = static_cast<unsigned int>(mAnimationData.animatedPosePalette.size());
+        size = static_cast<unsigned int>(mPosePalette.size());
         i < size;
         ++i)
    {
-      mAnimationData.skinMatrices[i] = mAnimationData.animatedPosePalette[i] * inverseBindPose[i];
+      mSkinMatrices[i] = mPosePalette[i] * inverseBindPose[i];
    }
 
    // Skin the meshes on the CPU if that's the current skinning mode
-   if (mAnimationData.currentSkinningMode == SkinningMode::CPU)
+   if (mCurrentSkinningMode == SkinningMode::CPU)
    {
       for (unsigned int i = 0, size = (unsigned int)mAnimatedMeshes.size(); i < size; ++i)
       {
-         mAnimatedMeshes[i].SkinMeshOnTheCPU(mAnimationData.skinMatrices);
+         mAnimatedMeshes[i].SkinMeshOnTheCPU(mSkinMatrices);
       }
    }
 
    // Update the skeleton viewer
-   mSkeletonViewer.UpdateBones(mAnimationData.animatedPose, mAnimationData.animatedPosePalette);
+   mSkeletonViewer.UpdateBones(mCrossFadeController.GetCurrentPose(), mPosePalette);
 }
 
 void MovementState::render()
@@ -329,10 +403,10 @@ void MovementState::render()
    }
 
    // Render the animated meshes
-   if (mAnimationData.currentSkinningMode == SkinningMode::CPU && mDisplayMesh)
+   if (mCurrentSkinningMode == SkinningMode::CPU && mDisplayMesh)
    {
       mStaticMeshShader->use(true);
-      mStaticMeshShader->setUniformMat4("model",      transformToMat4(mAnimationData.modelTransform));
+      mStaticMeshShader->setUniformMat4("model",      transformToMat4(mModelTransform));
       mStaticMeshShader->setUniformMat4("view",       mCamera->getViewMatrix());
       mStaticMeshShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
       //mStaticMeshShader->setUniformVec3("cameraPos",  mCamera->getPosition());
@@ -350,13 +424,13 @@ void MovementState::render()
       mDiffuseTexture->unbind(0);
       mStaticMeshShader->use(false);
    }
-   else if (mAnimationData.currentSkinningMode == SkinningMode::GPU && mDisplayMesh)
+   else if (mCurrentSkinningMode == SkinningMode::GPU && mDisplayMesh)
    {
       mAnimatedMeshShader->use(true);
-      mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mAnimationData.modelTransform));
+      mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mModelTransform));
       mAnimatedMeshShader->setUniformMat4("view",             mCamera->getViewMatrix());
       mAnimatedMeshShader->setUniformMat4("projection",       mCamera->getPerspectiveProjectionMatrix());
-      mAnimatedMeshShader->setUniformMat4Array("animated[0]", mAnimationData.skinMatrices);
+      mAnimatedMeshShader->setUniformMat4Array("animated[0]", mSkinMatrices);
       //mAnimatedMeshShader->setUniformVec3("cameraPos",        mCamera->getPosition());
       mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("diffuseTex"));
 
@@ -385,7 +459,7 @@ void MovementState::render()
    // Render the bones
    if (mDisplayBones)
    {
-      mSkeletonViewer.RenderBones(mAnimationData.modelTransform, mCamera->getPerspectiveProjectionViewMatrix());
+      mSkeletonViewer.RenderBones(mModelTransform, mCamera->getPerspectiveProjectionViewMatrix());
    }
 
    glLineWidth(1.0f);
@@ -398,7 +472,7 @@ void MovementState::render()
    // Render the joints
    if (mDisplayJoints)
    {
-      mSkeletonViewer.RenderJoints(mAnimationData.modelTransform, mCamera->getPerspectiveProjectionViewMatrix(), mAnimationData.animatedPosePalette);
+      mSkeletonViewer.RenderJoints(mModelTransform, mCamera->getPerspectiveProjectionViewMatrix(), mPosePalette);
    }
 
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -524,8 +598,6 @@ void MovementState::userInterface()
 
    ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
 
-   ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
-
    ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
 
    ImGui::Checkbox("Display Mesh", &mDisplayMesh);
@@ -550,7 +622,7 @@ void MovementState::resetScene()
 
 void MovementState::resetCamera()
 {
-   mCamera->reposition(glm::vec3(0.00179474f, 8.32452f, 7.91094f),
+   mCamera->reposition(glm::vec3(0.00179474f, 8.32452f, 7.91094f) * 2.0f,
                        glm::vec3(-0.0242029f, 1.65141f, 0.46319f),
                        glm::vec3(0.0f, 1.0f, 0.0f),
                        45.0f);
