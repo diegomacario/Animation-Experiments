@@ -19,7 +19,7 @@ public:
    void FadeTo(CLIP* targetClip, float fadeDuration);
    void Update(float dt);
 
-   CLIP* GetcurrentClip();
+   CLIP* GetCurrentClip();
    Pose& GetCurrentPose();
 
 private:

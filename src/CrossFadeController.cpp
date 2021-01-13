@@ -128,7 +128,7 @@ void TCrossFadeController<CLIP>::Update(float dt)
 }
 
 template <typename CLIP>
-CLIP* TCrossFadeController<CLIP>::GetcurrentClip()
+CLIP* TCrossFadeController<CLIP>::GetCurrentClip()
 {
    return mCurrentClip;
 }
