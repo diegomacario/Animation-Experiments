@@ -24,12 +24,14 @@ public:
 
 private:
 
-   CLIP*                              mCurrentClip;
-   float                              mPlaybackTime;
-   Skeleton                           mSkeleton;
-   Pose                               mCurrentPose;
-   bool                               mWasSkeletonSet;
-   std::queue<TCrossFadeTarget<CLIP>> mTargets;
+   CLIP*                  mCurrentClip;
+   float                  mPlaybackTime;
+   Skeleton               mSkeleton;
+   Pose                   mCurrentPose;
+   bool                   mWasSkeletonSet;
+
+   bool                   mFading;
+   TCrossFadeTarget<CLIP> mTarget;
 };
 
 typedef TCrossFadeController<Clip> CrossFadeController;
