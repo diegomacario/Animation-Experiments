@@ -34,7 +34,9 @@
     <ClInclude Include="..\inc\camera.h" />
     <ClInclude Include="..\inc\CCDSolver.h" />
     <ClInclude Include="..\inc\Clip.h" />
-    <ClInclude Include="..\inc\CrossFadeController.h" />
+    <ClInclude Include="..\inc\CrossFadeControllerMultiple.h" />
+    <ClInclude Include="..\inc\CrossFadeControllerQueue.h" />
+    <ClInclude Include="..\inc\CrossFadeControllerSingle.h" />
     <ClInclude Include="..\inc\CrossFadeTarget.h" />
     <ClInclude Include="..\inc\FABRIKSolver.h" />
     <ClInclude Include="..\inc\finite_state_machine.h" />
@@ -86,7 +88,9 @@
     <ClCompile Include="..\src\camera.cpp" />
     <ClCompile Include="..\src\CCDSolver.cpp" />
     <ClCompile Include="..\src\Clip.cpp" />
-    <ClCompile Include="..\src\CrossFadeController.cpp" />
+    <ClCompile Include="..\src\CrossFadeControllerMultiple.cpp" />
+    <ClCompile Include="..\src\CrossFadeControllerQueue.cpp" />
+    <ClCompile Include="..\src\CrossFadeControllerSingle.cpp" />
     <ClCompile Include="..\src\CrossFadeTarget.cpp" />
     <ClCompile Include="..\src\FABRIKSolver.cpp" />
     <ClCompile Include="..\src\finite_state_machine.cpp" />

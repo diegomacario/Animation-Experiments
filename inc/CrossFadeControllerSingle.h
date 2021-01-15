@@ -1,17 +1,16 @@
-#ifndef CROSSFADE_CONTROLLER_H
-#define CROSSFADE_CONTROLLER_H
+#ifndef CROSSFADE_CONTROLLER_SINGLE_H
+#define CROSSFADE_CONTROLLER_SINGLE_H
 
-#include <queue>
 #include "CrossFadeTarget.h"
 #include "Skeleton.h"
 
 template <typename CLIP>
-class TCrossFadeController
+class TCrossFadeControllerSingle
 {
 public:
 
-   TCrossFadeController();
-   TCrossFadeController(Skeleton& skeleton);
+   TCrossFadeControllerSingle();
+   TCrossFadeControllerSingle(Skeleton& skeleton);
 
    void SetSkeleton(Skeleton& skeleton);
 
@@ -34,7 +33,7 @@ private:
    TCrossFadeTarget<CLIP> mTarget;
 };
 
-typedef TCrossFadeController<Clip> CrossFadeController;
-typedef TCrossFadeController<FastClip> FastCrossFadeController;
+typedef TCrossFadeControllerSingle<Clip> CrossFadeControllerSingle;
+typedef TCrossFadeControllerSingle<FastClip> FastCrossFadeControllerSingle;
 
 #endif

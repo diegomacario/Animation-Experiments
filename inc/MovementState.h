@@ -8,7 +8,7 @@
 #include "AnimatedMesh.h"
 #include "SkeletonViewer.h"
 #include "Clip.h"
-#include "CrossFadeController.h"
+#include "CrossFadeControllerMultiple.h"
 
 class MovementState : public State
 {
@@ -85,7 +85,7 @@ private:
 
    std::map<std::string, FastClip> mClips;
 
-   FastCrossFadeController         mCrossFadeController;
+   FastCrossFadeControllerMultiple mCrossFadeController;
    std::vector<glm::mat4>          mPosePalette;
    std::vector<glm::mat4>          mSkinMatrices;
 
@@ -96,6 +96,7 @@ private:
    float                           mCharacterRunningRotationSpeed = 200.0f;
    bool                            mIsWalking = false;
    bool                            mIsRunning = false;
+   bool                            mIsInAir = false;
 };
 
 #endif

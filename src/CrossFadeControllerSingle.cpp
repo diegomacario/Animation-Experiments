@@ -1,11 +1,11 @@
-#include "CrossFadeController.h"
+#include "CrossFadeControllerSingle.h"
 #include "Blending.h"
 
-template TCrossFadeController<Clip>;
-template TCrossFadeController<FastClip>;
+template TCrossFadeControllerSingle<Clip>;
+template TCrossFadeControllerSingle<FastClip>;
 
 template <typename CLIP>
-TCrossFadeController<CLIP>::TCrossFadeController()
+TCrossFadeControllerSingle<CLIP>::TCrossFadeControllerSingle()
    : mCurrentClip(nullptr)
    , mPlaybackTime(0.0f)
    , mSkeleton()
@@ -18,7 +18,7 @@ TCrossFadeController<CLIP>::TCrossFadeController()
 }
 
 template <typename CLIP>
-TCrossFadeController<CLIP>::TCrossFadeController(Skeleton& skeleton)
+TCrossFadeControllerSingle<CLIP>::TCrossFadeControllerSingle(Skeleton& skeleton)
    : mCurrentClip(nullptr)
    , mPlaybackTime(0.0f)
    , mSkeleton()
@@ -31,7 +31,7 @@ TCrossFadeController<CLIP>::TCrossFadeController(Skeleton& skeleton)
 }
 
 template <typename CLIP>
-void TCrossFadeController<CLIP>::SetSkeleton(Skeleton& skeleton)
+void TCrossFadeControllerSingle<CLIP>::SetSkeleton(Skeleton& skeleton)
 {
    mSkeleton       = skeleton;
    mCurrentPose    = mSkeleton.GetRestPose();
@@ -39,7 +39,7 @@ void TCrossFadeController<CLIP>::SetSkeleton(Skeleton& skeleton)
 }
 
 template <typename CLIP>
-void TCrossFadeController<CLIP>::Play(CLIP* clip)
+void TCrossFadeControllerSingle<CLIP>::Play(CLIP* clip)
 {
    // When asked to play a clip, clear the crossfade target
    mTarget = {};
@@ -50,7 +50,7 @@ void TCrossFadeController<CLIP>::Play(CLIP* clip)
 }
 
 template <typename CLIP>
-void TCrossFadeController<CLIP>::FadeTo(CLIP* targetClip, float fadeDuration)
+void TCrossFadeControllerSingle<CLIP>::FadeTo(CLIP* targetClip, float fadeDuration)
 {
    // If no clip has been set, simply play the target clip since there is no clip to fade from
    if (mCurrentClip == nullptr)
@@ -90,7 +90,7 @@ void TCrossFadeController<CLIP>::FadeTo(CLIP* targetClip, float fadeDuration)
 }
 
 template <typename CLIP>
-void TCrossFadeController<CLIP>::Update(float dt)
+void TCrossFadeControllerSingle<CLIP>::Update(float dt)
 {
    // We cannot update without a current clip or a skeleton
    if (mCurrentClip == nullptr || !mWasSkeletonSet)
@@ -134,13 +134,13 @@ void TCrossFadeController<CLIP>::Update(float dt)
 }
 
 template <typename CLIP>
-CLIP* TCrossFadeController<CLIP>::GetCurrentClip()
+CLIP* TCrossFadeControllerSingle<CLIP>::GetCurrentClip()
 {
    return mCurrentClip;
 }
 
 template <typename CLIP>
-Pose& TCrossFadeController<CLIP>::GetCurrentPose()
+Pose& TCrossFadeControllerSingle<CLIP>::GetCurrentPose()
 {
    return mCurrentPose;
 }

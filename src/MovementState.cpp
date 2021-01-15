@@ -67,6 +67,9 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
       mClips.insert(std::make_pair(currClip.GetName(), currClip));
    }
 
+   mClips["Jump"].SetLooping(false);
+   mClips["Jump2"].SetLooping(false);
+
    // Set the initial clip and initialize the crossfade controller
    mCrossFadeController.SetSkeleton(mSkeleton);
    mCrossFadeController.Play(&mClips["Idle"]);
@@ -279,7 +282,47 @@ void MovementState::processInput(float deltaTime)
       movementKeyPressed = true;
    }
 
-   if (movementKeyPressed)
+   if (mWindow->keyIsPressed(GLFW_KEY_SPACE) && !mIsInAir &&
+       (mCrossFadeController.GetCurrentClip()->GetName() != "Jump") &&
+       (mCrossFadeController.GetCurrentClip()->GetName() != "Jump2"))
+   {
+      mCrossFadeController.ClearTargets();
+
+      if (mIsWalking || mIsRunning)
+      {
+         mCrossFadeController.FadeTo(&mClips["Jump2"], 0.1f);
+      }
+      else
+      {
+         mCrossFadeController.FadeTo(&mClips["Jump"], 0.1f);
+      }
+
+      mIsInAir = true;
+   }
+
+   if (mIsInAir)
+   {
+      if (mCrossFadeController.GetPlaybackTimeOfCurrentClip() == mClips["Jump"].GetEndTime() ||
+          mCrossFadeController.GetPlaybackTimeOfCurrentClip() == mClips["Jump2"].GetEndTime())
+      {
+         if (mIsWalking)
+         {
+            mCrossFadeController.FadeTo(&mClips["Walking"], 0.1f);
+         }
+         else if (mIsRunning)
+         {
+            mCrossFadeController.FadeTo(&mClips["Running"], 0.1f);
+         }
+         else
+         {
+            mCrossFadeController.FadeTo(&mClips["Idle"], 0.1f);
+         }
+
+         mIsInAir = false;
+      }
+   }
+
+   if (movementKeyPressed && !mIsInAir)
    {
       if (!mIsWalking && !mIsRunning)
       {
@@ -313,7 +356,7 @@ void MovementState::processInput(float deltaTime)
          }
       }
    }
-   else
+   else if (!mIsInAir)
    {
       if (mIsWalking || mIsRunning)
       {

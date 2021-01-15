@@ -109,9 +109,6 @@
     <ClCompile Include="..\src\Blending.cpp">
       <Filter>Animation-Experiments\Source Files\Animation\Blending</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\CrossFadeController.cpp">
-      <Filter>Animation-Experiments\Source Files\Animation\Blending</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\CCDSolver.cpp">
       <Filter>Animation-Experiments\Source Files\IK</Filter>
     </ClCompile>
@@ -140,6 +137,15 @@
       <Filter>Animation-Experiments\Source Files\Base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CrossFadeTarget.cpp">
+      <Filter>Animation-Experiments\Source Files\Animation\Blending</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\CrossFadeControllerSingle.cpp">
+      <Filter>Animation-Experiments\Source Files\Animation\Blending</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\CrossFadeControllerQueue.cpp">
+      <Filter>Animation-Experiments\Source Files\Animation\Blending</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\CrossFadeControllerMultiple.cpp">
       <Filter>Animation-Experiments\Source Files\Animation\Blending</Filter>
     </ClCompile>
   </ItemGroup>
@@ -264,9 +270,6 @@
     <ClInclude Include="..\inc\Blending.h">
       <Filter>Animation-Experiments\Header Files\Animation\Blending</Filter>
     </ClInclude>
-    <ClInclude Include="..\inc\CrossFadeController.h">
-      <Filter>Animation-Experiments\Header Files\Animation\Blending</Filter>
-    </ClInclude>
     <ClInclude Include="..\inc\CrossFadeTarget.h">
       <Filter>Animation-Experiments\Header Files\Animation\Blending</Filter>
     </ClInclude>
@@ -296,6 +299,15 @@
     </ClInclude>
     <ClInclude Include="..\inc\MovementState.h">
       <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\CrossFadeControllerSingle.h">
+      <Filter>Animation-Experiments\Header Files\Animation\Blending</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\CrossFadeControllerQueue.h">
+      <Filter>Animation-Experiments\Header Files\Animation\Blending</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\CrossFadeControllerMultiple.h">
+      <Filter>Animation-Experiments\Header Files\Animation\Blending</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
