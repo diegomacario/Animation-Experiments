@@ -238,6 +238,16 @@ void Window::enableCursor(bool enable)
    glfwSetInputMode(mWindow, GLFW_CURSOR, enable ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }
 
+bool Window::isMouseButtonPressed(int button)
+{
+   if (glfwGetMouseButton(mWindow, button) == GLFW_PRESS)
+   {
+      return true;
+   }
+
+   return false;
+}
+
 bool Window::scrollWheelMoved() const
 {
    return mScrollWheelMoved;

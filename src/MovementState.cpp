@@ -19,7 +19,7 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
                              const std::shared_ptr<GameObject3D>&       teapot)
    : mFSM(finiteStateMachine)
    , mWindow(window)
-   , mCamera(camera)
+   , mCamera3(14.0f, 25.0f, 0.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 20.0f, 0.1f)
    , mGameObject3DShader(gameObject3DShader)
    , mTable(table)
    , mTeapot(teapot)
@@ -69,6 +69,7 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
 
    mClips["Jump"].SetLooping(false);
    mClips["Jump2"].SetLooping(false);
+   mClips["Punch"].SetLooping(false);
 
    // Set the initial clip and initialize the crossfade controller
    mCrossFadeController.SetSkeleton(mSkeleton);
@@ -139,7 +140,7 @@ void MovementState::processInput(float deltaTime)
       {
          // Disable the cursor when fullscreen
          //mWindow->enableCursor(false);
-         if (mCamera->isFree())
+         if (mCamera3.isFree())
          {
             // Disable the cursor when fullscreen with a free camera
             mWindow->enableCursor(false);
@@ -149,7 +150,7 @@ void MovementState::processInput(float deltaTime)
       }
       else if (!mWindow->isFullScreen())
       {
-         if (mCamera->isFree())
+         if (mCamera3.isFree())
          {
             // Disable the cursor when windowed with a free camera
             mWindow->enableCursor(false);
@@ -193,11 +194,11 @@ void MovementState::processInput(float deltaTime)
    if (mWindow->keyIsPressed(GLFW_KEY_C) && !mWindow->keyHasBeenProcessed(GLFW_KEY_C))
    {
       mWindow->setKeyAsProcessed(GLFW_KEY_C);
-      mCamera->setFree(!mCamera->isFree());
+      mCamera3.setFree(!mCamera3.isFree());
 
       //if (!mWindow->isFullScreen())
       //{
-         if (mCamera->isFree())
+         if (mCamera3.isFree())
          {
             // Disable the cursor when windowed with a free camera
             mWindow->enableCursor(false);
@@ -213,7 +214,7 @@ void MovementState::processInput(float deltaTime)
    }
 
    // Move and orient the camera
-   if (mCamera->isFree())
+   if (mCamera3.isFree())
    {
       // Move
       //if (mWindow->keyIsPressed(GLFW_KEY_W)) { mCamera->processKeyboardInput(Camera::MovementDirection::Forward, deltaTime); }
@@ -222,16 +223,16 @@ void MovementState::processInput(float deltaTime)
       //if (mWindow->keyIsPressed(GLFW_KEY_D)) { mCamera->processKeyboardInput(Camera::MovementDirection::Right, deltaTime); }
 
       // Orient
-      if (mWindow->mouseMoved())
+      if (mWindow->mouseMoved() && mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
       {
-         mCamera->processMouseMovement(mWindow->getCursorXOffset(), mWindow->getCursorYOffset());
+         mCamera3.processMouseMovement(mWindow->getCursorXOffset(), mWindow->getCursorYOffset());
          mWindow->resetMouseMoved();
       }
 
       // Zoom
       if (mWindow->scrollWheelMoved())
       {
-         mCamera->processScrollWheelMovement(mWindow->getScrollYOffset());
+         mCamera3.processScrollWheelMovement(mWindow->getScrollYOffset());
          mWindow->resetScrollWheelMoved();
       }
    }
@@ -243,43 +244,46 @@ void MovementState::processInput(float deltaTime)
 
    float movementSpeed = mCharacterWalkingSpeed;
    float rotationSpeed = mCharacterWalkingRotationSpeed;
-   if (leftShiftKeyPressed)
+   if ((leftShiftKeyPressed && !mJumpingWhileWalking) || mJumpingWhileRunning)
    {
       movementSpeed = mCharacterRunningSpeed;
       rotationSpeed = mCharacterRunningRotationSpeed;
    }
 
-   // Move and orient the character
-   if (mWindow->keyIsPressed(GLFW_KEY_A))
+   if (!mJumpingWhileIdle)
    {
-      float degreesToRotate    = rotationSpeed * deltaTime;
-      Q::quat rotation         = Q::angleAxis(glm::radians(degreesToRotate), glm::vec3(0.0f, 1.0f, 0.0f));
-      mModelTransform.rotation = Q::normalized(mModelTransform.rotation * rotation);
-      movementKeyPressed = true;
-   }
+      // Move and orient the character
+      if (mWindow->keyIsPressed(GLFW_KEY_A))
+      {
+         float degreesToRotate = rotationSpeed * deltaTime;
+         Q::quat rotation = Q::angleAxis(glm::radians(degreesToRotate), glm::vec3(0.0f, 1.0f, 0.0f));
+         mModelTransform.rotation = Q::normalized(mModelTransform.rotation * rotation);
+         movementKeyPressed = true;
+      }
 
-   if (mWindow->keyIsPressed(GLFW_KEY_D))
-   {
-      float degreesToRotate    = rotationSpeed * deltaTime;
-      Q::quat rotation         = Q::angleAxis(glm::radians(-degreesToRotate), glm::vec3(0.0f, 1.0f, 0.0f));
-      mModelTransform.rotation = Q::normalized(mModelTransform.rotation * rotation);
-      movementKeyPressed = true;
-   }
+      if (mWindow->keyIsPressed(GLFW_KEY_D))
+      {
+         float degreesToRotate = rotationSpeed * deltaTime;
+         Q::quat rotation = Q::angleAxis(glm::radians(-degreesToRotate), glm::vec3(0.0f, 1.0f, 0.0f));
+         mModelTransform.rotation = Q::normalized(mModelTransform.rotation * rotation);
+         movementKeyPressed = true;
+      }
 
-   if (mWindow->keyIsPressed(GLFW_KEY_W))
-   {
-      float distToMove          = movementSpeed * deltaTime;
-      glm::vec3 characterFwd    = mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f);
-      mModelTransform.position += characterFwd * distToMove;
-      movementKeyPressed = true;
-   }
+      if (mWindow->keyIsPressed(GLFW_KEY_W))
+      {
+         float distToMove = movementSpeed * deltaTime;
+         glm::vec3 characterFwd = mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f);
+         mModelTransform.position += characterFwd * distToMove;
+         movementKeyPressed = true;
+      }
 
-   if (mWindow->keyIsPressed(GLFW_KEY_S))
-   {
-      float distToMove          = movementSpeed * deltaTime;
-      glm::vec3 characterFwd    = mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f);
-      mModelTransform.position -= characterFwd * distToMove;
-      movementKeyPressed = true;
+      if (mWindow->keyIsPressed(GLFW_KEY_S))
+      {
+         float distToMove = movementSpeed * deltaTime;
+         glm::vec3 characterFwd = mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f);
+         mModelTransform.position -= characterFwd * distToMove;
+         movementKeyPressed = true;
+      }
    }
 
    if (mWindow->keyIsPressed(GLFW_KEY_SPACE) && !mIsInAir &&
@@ -288,13 +292,20 @@ void MovementState::processInput(float deltaTime)
    {
       mCrossFadeController.ClearTargets();
 
-      if (mIsWalking || mIsRunning)
+      if (mIsWalking)
       {
          mCrossFadeController.FadeTo(&mClips["Jump2"], 0.1f);
+         mJumpingWhileWalking = true;
+      }
+      else if (mIsRunning)
+      {
+         mCrossFadeController.FadeTo(&mClips["Jump2"], 0.1f);
+         mJumpingWhileRunning = true;
       }
       else
       {
          mCrossFadeController.FadeTo(&mClips["Jump"], 0.1f);
+         mJumpingWhileIdle = true;
       }
 
       mIsInAir = true;
@@ -308,14 +319,17 @@ void MovementState::processInput(float deltaTime)
          if (mIsWalking)
          {
             mCrossFadeController.FadeTo(&mClips["Walking"], 0.1f);
+            mJumpingWhileWalking = false;
          }
          else if (mIsRunning)
          {
             mCrossFadeController.FadeTo(&mClips["Running"], 0.1f);
+            mJumpingWhileRunning = false;
          }
          else
          {
             mCrossFadeController.FadeTo(&mClips["Idle"], 0.1f);
+            mJumpingWhileIdle = false;
          }
 
          mIsInAir = false;
@@ -428,8 +442,8 @@ void MovementState::render()
    glEnable(GL_DEPTH_TEST);
 
    mGameObject3DShader->use(true);
-   mGameObject3DShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
-   mGameObject3DShader->setUniformVec3("cameraPos", mCamera->getPosition());
+   mGameObject3DShader->setUniformMat4("projectionView", mCamera3.getPerspectiveProjectionViewMatrix(mModelTransform.position, mModelTransform.rotation));
+   mGameObject3DShader->setUniformVec3("cameraPos", mCamera3.getPosition(mModelTransform.position, mModelTransform.rotation));
 
    mTable->render(*mGameObject3DShader);
 
@@ -450,8 +464,8 @@ void MovementState::render()
    {
       mStaticMeshShader->use(true);
       mStaticMeshShader->setUniformMat4("model",      transformToMat4(mModelTransform));
-      mStaticMeshShader->setUniformMat4("view",       mCamera->getViewMatrix());
-      mStaticMeshShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
+      mStaticMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix(mModelTransform.position, mModelTransform.rotation));
+      mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
       //mStaticMeshShader->setUniformVec3("cameraPos",  mCamera->getPosition());
       mDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
 
@@ -471,8 +485,8 @@ void MovementState::render()
    {
       mAnimatedMeshShader->use(true);
       mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mModelTransform));
-      mAnimatedMeshShader->setUniformMat4("view",             mCamera->getViewMatrix());
-      mAnimatedMeshShader->setUniformMat4("projection",       mCamera->getPerspectiveProjectionMatrix());
+      mAnimatedMeshShader->setUniformMat4("view",             mCamera3.getViewMatrix(mModelTransform.position, mModelTransform.rotation));
+      mAnimatedMeshShader->setUniformMat4("projection",       mCamera3.getPerspectiveProjectionMatrix());
       mAnimatedMeshShader->setUniformMat4Array("animated[0]", mSkinMatrices);
       //mAnimatedMeshShader->setUniformVec3("cameraPos",        mCamera->getPosition());
       mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("diffuseTex"));
@@ -502,7 +516,7 @@ void MovementState::render()
    // Render the bones
    if (mDisplayBones)
    {
-      mSkeletonViewer.RenderBones(mModelTransform, mCamera->getPerspectiveProjectionViewMatrix());
+      mSkeletonViewer.RenderBones(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix(mModelTransform.position, mModelTransform.rotation));
    }
 
    glLineWidth(1.0f);
@@ -515,7 +529,7 @@ void MovementState::render()
    // Render the joints
    if (mDisplayJoints)
    {
-      mSkeletonViewer.RenderJoints(mModelTransform, mCamera->getPerspectiveProjectionViewMatrix(), mPosePalette);
+      mSkeletonViewer.RenderJoints(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix(mModelTransform.position, mModelTransform.rotation), mPosePalette);
    }
 
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -665,8 +679,8 @@ void MovementState::resetScene()
 
 void MovementState::resetCamera()
 {
-   mCamera->reposition(glm::vec3(0.00179474f, 8.32452f, 7.91094f) * 2.0f,
-                       glm::vec3(-0.0242029f, 1.65141f, 0.46319f),
-                       glm::vec3(0.0f, 1.0f, 0.0f),
-                       45.0f);
+   //mCamera->reposition(glm::vec3(0.00179474f, 8.32452f, 7.91094f) * 2.0f,
+   //                    glm::vec3(-0.0242029f, 1.65141f, 0.46319f),
+   //                    glm::vec3(0.0f, 1.0f, 0.0f),
+   //                    45.0f);
 }

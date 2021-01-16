@@ -47,6 +47,7 @@ public:
    float        getCursorXOffset() const;
    float        getCursorYOffset() const;
    void         enableCursor(bool enable);
+   bool         isMouseButtonPressed(int button);
 
    // Scroll wheel
    bool         scrollWheelMoved() const;

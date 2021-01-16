@@ -9,6 +9,7 @@
 #include "SkeletonViewer.h"
 #include "Clip.h"
 #include "CrossFadeControllerMultiple.h"
+#include "Camera3.h"
 
 class MovementState : public State
 {
@@ -51,7 +52,7 @@ private:
 
    std::shared_ptr<Window>             mWindow;
 
-   std::shared_ptr<Camera>             mCamera;
+   Camera3                             mCamera3;
 
    std::shared_ptr<Shader>             mGameObject3DShader;
 
@@ -97,6 +98,9 @@ private:
    bool                            mIsWalking = false;
    bool                            mIsRunning = false;
    bool                            mIsInAir = false;
+   bool                            mJumpingWhileIdle = false;
+   bool                            mJumpingWhileWalking = false;
+   bool                            mJumpingWhileRunning = false;
 };
 
 #endif

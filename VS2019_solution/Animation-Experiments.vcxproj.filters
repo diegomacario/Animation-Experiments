@@ -148,6 +148,9 @@
     <ClCompile Include="..\src\CrossFadeControllerMultiple.cpp">
       <Filter>Animation-Experiments\Source Files\Animation\Blending</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Camera3.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -308,6 +311,9 @@
     </ClInclude>
     <ClInclude Include="..\inc\CrossFadeControllerMultiple.h">
       <Filter>Animation-Experiments\Header Files\Animation\Blending</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\Camera3.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
