@@ -29,12 +29,13 @@ Q::quat Q::fromTo(const glm::vec3& from, const glm::vec3& to)
    glm::vec3 nFrom = normalizeWithZeroLengthCheck(from);
    glm::vec3 nTo   = normalizeWithZeroLengthCheck(to);
 
-   if (nFrom == nTo)
+   // TODO: Check all == comparisons in project and create VEC3_EPSILON
+   if (glm::length2(nFrom - nTo) < QUAT_EPSILON) // nFrom == nTo
    {
       // If from and to are the same, then we return a unit quaternion
       return Q::quat();
    }
-   else if (nFrom == nTo * -1.0f)
+   else if (glm::length2(nFrom - (nTo * -1.0f)) < QUAT_EPSILON) // nFrom == -nTo
    {
       // If from and to point in opposite directions, then there is no unique half vector between the two
       // In that case, we use the most orthogonal basis vector with respect to from to find the axis of rotation
