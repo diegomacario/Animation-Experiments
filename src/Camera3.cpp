@@ -2,18 +2,21 @@
 
 #include "Camera3.h"
 
-Camera3::Camera3(float     distanceBetweenPlayerAndCamera,
-                 float     cameraPitch,
-                 float     cameraYaw,
-                 float     fieldOfViewYInDeg,
-                 float     aspectRatio,
-                 float     near,
-                 float     far,
-                 float     movementSpeed,
-                 float     mouseSensitivity)
-   : mDistanceBetweenPlayerAndCamera(distanceBetweenPlayerAndCamera)
+Camera3::Camera3(float            distanceBetweenPlayerAndCamera,
+                 float            cameraPitch,
+                 float            fieldOfViewYInDeg,
+                 const glm::vec3& playerPosition,
+                 const Q::quat&   playerOrientation,
+                 float            aspectRatio,
+                 float            near,
+                 float            far,
+                 float            movementSpeed,
+                 float            mouseSensitivity)
+   : mPosition()
+   , mLocalOrientation()
+   , mGlobalOrientation()
+   , mDistanceBetweenPlayerAndCamera(distanceBetweenPlayerAndCamera)
    , mCameraPitch(cameraPitch)
-   , mCameraYaw(cameraYaw)
    , mFieldOfViewYInDeg(fieldOfViewYInDeg)
    , mAspectRatio(aspectRatio)
    , mNear(near)
@@ -35,12 +38,17 @@ Camera3::Camera3(float     distanceBetweenPlayerAndCamera,
    Q::quat   pitchRotation  = Q::angleAxis(glm::radians(mCameraPitch), glm::vec3(1.0f, 0.0f, 0.0f));
    glm::vec3 playerToCamera = pitchRotation * glm::vec3(0.0f, 0.0f, -1.0f);
    glm::vec3 cameraZ        = playerToCamera;
-   mOrientation             = Q::lookRotation(cameraZ, glm::vec3(0.0f, 1.0f, 0.0f));
+   mLocalOrientation        = Q::lookRotation(cameraZ, glm::vec3(0.0f, 1.0f, 0.0f));
+
+   processPlayerMovement(playerPosition, playerOrientation);
 }
 
 Camera3::Camera3(Camera3&& rhs) noexcept
    : mPosition(std::exchange(rhs.mPosition, glm::vec3(0.0f)))
-   , mOrientation(std::exchange(rhs.mOrientation, Q::quat()))
+   , mLocalOrientation(std::exchange(rhs.mLocalOrientation, Q::quat()))
+   , mGlobalOrientation(std::exchange(rhs.mGlobalOrientation, Q::quat()))
+   , mDistanceBetweenPlayerAndCamera(std::exchange(rhs.mDistanceBetweenPlayerAndCamera, 0.0f))
+   , mCameraPitch(std::exchange(rhs.mCameraPitch, 0.0f))
    , mFieldOfViewYInDeg(std::exchange(rhs.mFieldOfViewYInDeg, 0.0f))
    , mAspectRatio(std::exchange(rhs.mAspectRatio, 0.0f))
    , mNear(std::exchange(rhs.mNear, 0.0f))
@@ -59,7 +67,10 @@ Camera3::Camera3(Camera3&& rhs) noexcept
 Camera3& Camera3::operator=(Camera3&& rhs) noexcept
 {
    mPosition                                    = std::exchange(rhs.mPosition, glm::vec3(0.0f));
-   mOrientation                                 = std::exchange(rhs.mOrientation, Q::quat());
+   mLocalOrientation                            = std::exchange(rhs.mLocalOrientation, Q::quat());
+   mGlobalOrientation                           = std::exchange(rhs.mGlobalOrientation, Q::quat());
+   mDistanceBetweenPlayerAndCamera              = std::exchange(rhs.mDistanceBetweenPlayerAndCamera, 0.0f);
+   mCameraPitch                                 = std::exchange(rhs.mCameraPitch, 0.0f);
    mFieldOfViewYInDeg                           = std::exchange(rhs.mFieldOfViewYInDeg, 0.0f);
    mAspectRatio                                 = std::exchange(rhs.mAspectRatio, 0.0f);
    mNear                                        = std::exchange(rhs.mNear, 0.0f);
@@ -74,19 +85,14 @@ Camera3& Camera3::operator=(Camera3&& rhs) noexcept
    return *this;
 }
 
-glm::vec3 Camera3::getPosition(glm::vec3 playerPosition, Q::quat playerOrientation)
+glm::vec3 Camera3::getPosition()
 {
-   playerPosition += glm::vec3(0.0f, 3.0f, 0.0f);
-   Q::quat   cameraOrientation = mOrientation * playerOrientation;
-   glm::vec3 cameraZ           = cameraOrientation * glm::vec3(0.0f, 0.0f, 1.0f);
-   glm::vec3 cameraPosition    = playerPosition + cameraZ * mDistanceBetweenPlayerAndCamera;
-
-   return cameraPosition;
+   return mPosition;
 }
 
-glm::mat4 Camera3::getViewMatrix(glm::vec3 playerPosition, Q::quat playerOrientation)
+glm::mat4 Camera3::getViewMatrix()
 {
-   //if (mNeedToUpdateViewMatrix)
+   if (mNeedToUpdateViewMatrix)
    {
       /*
          The camera's model matrix can be calculated as follows (first rotate, then translate):
@@ -120,13 +126,8 @@ glm::mat4 Camera3::getViewMatrix(glm::vec3 playerPosition, Q::quat playerOrienta
       //// Dot product of Z axis with negated position
       //mViewMatrix[3][2] = -(mViewMatrix[0][2] * mPosition.x + mViewMatrix[1][2] * mPosition.y + mViewMatrix[2][2] * mPosition.z);
 
-      playerPosition += glm::vec3(0.0f, 3.0f, 0.0f);
-      Q::quat   cameraOrientation = mOrientation * playerOrientation;
-      glm::vec3 cameraZ           = cameraOrientation * glm::vec3(0.0f, 0.0f, 1.0f);
-      glm::vec3 cameraPosition    = playerPosition + cameraZ * mDistanceBetweenPlayerAndCamera;
-
-      glm::mat4 inverseCameraRotation = Q::quatToMat4(Q::conjugate(cameraOrientation));
-      glm::mat4 inverseCameraTranslation = glm::translate(glm::mat4(1.0), -cameraPosition);
+      glm::mat4 inverseCameraRotation = Q::quatToMat4(Q::conjugate(mGlobalOrientation));
+      glm::mat4 inverseCameraTranslation = glm::translate(glm::mat4(1.0), -mPosition);
 
       mViewMatrix = inverseCameraRotation * inverseCameraTranslation;
 
@@ -150,25 +151,25 @@ glm::mat4 Camera3::getPerspectiveProjectionMatrix()
    return mPerspectiveProjectionMatrix;
 }
 
-glm::mat4 Camera3::getPerspectiveProjectionViewMatrix(glm::vec3 playerPosition, Q::quat playerOrientation)
+glm::mat4 Camera3::getPerspectiveProjectionViewMatrix()
 {
-   //if (mNeedToUpdatePerspectiveProjectionViewMatrix)
+   if (mNeedToUpdatePerspectiveProjectionViewMatrix)
    {
-      mPerspectiveProjectionViewMatrix = getPerspectiveProjectionMatrix() * getViewMatrix(playerPosition, playerOrientation);
+      mPerspectiveProjectionViewMatrix = getPerspectiveProjectionMatrix() * getViewMatrix();
       mNeedToUpdatePerspectiveProjectionViewMatrix = false;
    }
 
    return mPerspectiveProjectionViewMatrix;
 }
 
-void Camera3::reposition(float     distanceBetweenPlayerAndCamera,
-                         float     cameraPitch,
-                         float     cameraYaw,
-                         float     fieldOfViewYInDeg)
+void Camera3::reposition(float            distanceBetweenPlayerAndCamera,
+                         float            cameraPitch,
+                         float            fieldOfViewYInDeg,
+                         const glm::vec3& playerPosition,
+                         const Q::quat&   playerOrientation)
 {
    mDistanceBetweenPlayerAndCamera = distanceBetweenPlayerAndCamera;
    mCameraPitch                    = cameraPitch;
-   mCameraYaw                      = cameraYaw;
    mFieldOfViewYInDeg              = fieldOfViewYInDeg;
 
    // There are two important things to note here:
@@ -178,7 +179,9 @@ void Camera3::reposition(float     distanceBetweenPlayerAndCamera,
    // That's why the orientation of the camera is calculated using the camera's Z axis instead of the view direction
    glm::vec3 playerToCamera = Q::angleAxis(glm::radians(mCameraPitch), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::vec3(0.0f, 0.0f, -1.0f);
    glm::vec3 cameraZ        = playerToCamera;
-   mOrientation             = Q::lookRotation(cameraZ, glm::vec3(0.0f, 1.0f, 0.0f));
+   mLocalOrientation        = Q::lookRotation(cameraZ, glm::vec3(0.0f, 1.0f, 0.0f));
+
+   processPlayerMovement(playerPosition, playerOrientation);
 
    mNeedToUpdateViewMatrix = true;
    mNeedToUpdatePerspectiveProjectionMatrix = true;
@@ -235,7 +238,7 @@ void Camera3::processMouseMovement(float xOffset, float yOffset)
 
    // To avoid introducing roll, the yaw is applied globally while the pitch is applied locally
    // In other words, the yaw is applied with respect to the world's Y axis, while the pitch is applied with respect to the camera's X axis
-   mOrientation = Q::normalized(pitchRot * mOrientation * yawRot);
+   mLocalOrientation = Q::normalized(pitchRot * mLocalOrientation * yawRot);
 
    mNeedToUpdateViewMatrix = true;
    mNeedToUpdatePerspectiveProjectionViewMatrix = true;
@@ -255,6 +258,19 @@ void Camera3::processScrollWheelMovement(float yOffset)
    }
 
    mNeedToUpdatePerspectiveProjectionMatrix = true;
+   mNeedToUpdatePerspectiveProjectionViewMatrix = true;
+}
+
+void Camera3::processPlayerMovement(const glm::vec3& playerPosition, const Q::quat& playerOrientation)
+{
+   glm::vec3 playerPosWithVerticalOffset = playerPosition + glm::vec3(0.0f, 3.0f, 0.0f);
+
+   mGlobalOrientation = mLocalOrientation * playerOrientation;
+
+   glm::vec3 cameraZ = mGlobalOrientation * glm::vec3(0.0f, 0.0f, 1.0f);
+   mPosition         = playerPosWithVerticalOffset + cameraZ * mDistanceBetweenPlayerAndCamera;
+
+   mNeedToUpdateViewMatrix = true;
    mNeedToUpdatePerspectiveProjectionViewMatrix = true;
 }
 

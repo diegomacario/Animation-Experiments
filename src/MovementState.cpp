@@ -19,7 +19,7 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
                              const std::shared_ptr<GameObject3D>&       teapot)
    : mFSM(finiteStateMachine)
    , mWindow(window)
-   , mCamera3(14.0f, 25.0f, 0.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 20.0f, 0.1f)
+   , mCamera3(14.0f, 25.0f, 45.0f, glm::vec3(0.0f), Q::quat(), 1280.0f / 720.0f, 0.1f, 130.0f, 20.0f, 0.1f)
    , mGameObject3DShader(gameObject3DShader)
    , mTable(table)
    , mTeapot(teapot)
@@ -284,6 +284,11 @@ void MovementState::processInput(float deltaTime)
          mModelTransform.position -= characterFwd * distToMove;
          movementKeyPressed = true;
       }
+
+      if (movementKeyPressed)
+      {
+         mCamera3.processPlayerMovement(mModelTransform.position, mModelTransform.rotation);
+      }
    }
 
    if (mWindow->keyIsPressed(GLFW_KEY_SPACE) && !mIsInAir &&
@@ -442,8 +447,8 @@ void MovementState::render()
    glEnable(GL_DEPTH_TEST);
 
    mGameObject3DShader->use(true);
-   mGameObject3DShader->setUniformMat4("projectionView", mCamera3.getPerspectiveProjectionViewMatrix(mModelTransform.position, mModelTransform.rotation));
-   mGameObject3DShader->setUniformVec3("cameraPos", mCamera3.getPosition(mModelTransform.position, mModelTransform.rotation));
+   mGameObject3DShader->setUniformMat4("projectionView", mCamera3.getPerspectiveProjectionViewMatrix());
+   mGameObject3DShader->setUniformVec3("cameraPos", mCamera3.getPosition());
 
    mTable->render(*mGameObject3DShader);
 
@@ -464,7 +469,7 @@ void MovementState::render()
    {
       mStaticMeshShader->use(true);
       mStaticMeshShader->setUniformMat4("model",      transformToMat4(mModelTransform));
-      mStaticMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix(mModelTransform.position, mModelTransform.rotation));
+      mStaticMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
       mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
       //mStaticMeshShader->setUniformVec3("cameraPos",  mCamera->getPosition());
       mDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
@@ -485,7 +490,7 @@ void MovementState::render()
    {
       mAnimatedMeshShader->use(true);
       mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mModelTransform));
-      mAnimatedMeshShader->setUniformMat4("view",             mCamera3.getViewMatrix(mModelTransform.position, mModelTransform.rotation));
+      mAnimatedMeshShader->setUniformMat4("view",             mCamera3.getViewMatrix());
       mAnimatedMeshShader->setUniformMat4("projection",       mCamera3.getPerspectiveProjectionMatrix());
       mAnimatedMeshShader->setUniformMat4Array("animated[0]", mSkinMatrices);
       //mAnimatedMeshShader->setUniformVec3("cameraPos",        mCamera->getPosition());
@@ -516,7 +521,7 @@ void MovementState::render()
    // Render the bones
    if (mDisplayBones)
    {
-      mSkeletonViewer.RenderBones(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix(mModelTransform.position, mModelTransform.rotation));
+      mSkeletonViewer.RenderBones(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix());
    }
 
    glLineWidth(1.0f);
@@ -529,7 +534,7 @@ void MovementState::render()
    // Render the joints
    if (mDisplayJoints)
    {
-      mSkeletonViewer.RenderJoints(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix(mModelTransform.position, mModelTransform.rotation), mPosePalette);
+      mSkeletonViewer.RenderJoints(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix(), mPosePalette);
    }
 
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -679,8 +684,5 @@ void MovementState::resetScene()
 
 void MovementState::resetCamera()
 {
-   //mCamera->reposition(glm::vec3(0.00179474f, 8.32452f, 7.91094f) * 2.0f,
-   //                    glm::vec3(-0.0242029f, 1.65141f, 0.46319f),
-   //                    glm::vec3(0.0f, 1.0f, 0.0f),
-   //                    45.0f);
+   mCamera3.reposition(14.0f, 25.0f, 45.0f, mModelTransform.position, mModelTransform.rotation);
 }
