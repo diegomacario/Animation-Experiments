@@ -57,9 +57,11 @@ public:
 
 private:
 
-   glm::vec3 mPosition;
-   Q::quat   mLocalOrientation;
-   Q::quat   mGlobalOrientation;
+   glm::vec3 mCameraPosition;
+   Q::quat   mCameraOrientationWRTPlayer;
+
+   glm::vec3 mPlayerPosition;
+   Q::quat   mPlayerOrientation;
 
    float     mDistanceBetweenPlayerAndCamera;
    float     mCameraPitch;
