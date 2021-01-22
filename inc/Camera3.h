@@ -12,13 +12,17 @@ public:
 
    Camera3(float            distanceBetweenPlayerAndCamera,
            float            cameraPitch,
-           float            fieldOfViewYInDeg,
            const glm::vec3& playerPosition,
            const Q::quat&   playerOrientation,
+           const glm::vec3& offsetFromPlayerPositionToCameraTarget,
+           float            distanceBetweenPlayerAndCameraLowerLimit,
+           float            distanceBetweenPlayerAndCameraUpperLimit,
+           float            cameraPitchLowerLimit,
+           float            cameraPitchUpperLimit,
+           float            fieldOfViewYInDeg,
            float            aspectRatio,
            float            near,
            float            far,
-           float            movementSpeed,
            float            mouseSensitivity);
    ~Camera3() = default;
 
@@ -36,9 +40,13 @@ public:
 
    void      reposition(float            distanceBetweenPlayerAndCamera,
                         float            cameraPitch,
-                        float            fieldOfViewYInDeg,
                         const glm::vec3& playerPosition,
-                        const Q::quat&   playerOrientation);
+                        const Q::quat&   playerOrientation,
+                        const glm::vec3& offsetFromPlayerPositionToCameraTarget,
+                        float            distanceBetweenPlayerAndCameraLowerLimit,
+                        float            distanceBetweenPlayerAndCameraUpperLimit,
+                        float            cameraPitchLowerLimit,
+                        float            cameraPitchUpperLimit);
 
    enum class MovementDirection
    {
@@ -52,19 +60,29 @@ public:
    void      processScrollWheelMovement(float yOffset);
    void      processPlayerMovement(const glm::vec3& playerPosition, const Q::quat& playerOrientation);
 
-   bool      isFree() const;
-   void      setFree(bool free);
-
 private:
+
+   void      calculateInitialCameraOrientationWRTPlayer();
+   void      updatePositionAndOrientationOfCamera();
+   void      updateViewMatrix();
+   void      updatePerspectiveProjectionMatrix();
+   void      updatePerspectiveProjectionViewMatrix();
 
    glm::vec3 mCameraPosition;
    Q::quat   mCameraOrientationWRTPlayer;
+   Q::quat   mCameraGlobalOrientation;
 
    glm::vec3 mPlayerPosition;
    Q::quat   mPlayerOrientation;
+   glm::vec3 mOffsetFromPlayerPositionToCameraTarget;
 
    float     mDistanceBetweenPlayerAndCamera;
    float     mCameraPitch;
+
+   float     mDistanceBetweenPlayerAndCameraLowerLimit;
+   float     mDistanceBetweenPlayerAndCameraUpperLimit;
+   float     mCameraPitchLowerLimit;
+   float     mCameraPitchUpperLimit;
 
    float     mFieldOfViewYInDeg;
    float     mAspectRatio;
@@ -73,12 +91,11 @@ private:
 
    float     mMouseSensitivity;
 
-   bool      mIsFree;
-
    glm::mat4 mViewMatrix;
    glm::mat4 mPerspectiveProjectionMatrix;
    glm::mat4 mPerspectiveProjectionViewMatrix;
 
+   bool      mNeedToUpdatePositionAndOrientationOfCamera;
    bool      mNeedToUpdateViewMatrix;
    bool      mNeedToUpdatePerspectiveProjectionMatrix;
    bool      mNeedToUpdatePerspectiveProjectionViewMatrix;

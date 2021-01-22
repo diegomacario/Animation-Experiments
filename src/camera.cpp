@@ -223,10 +223,10 @@ void Camera::processMouseMovement(float xOffset, float yOffset)
    float yawChangeOfCameraZInDeg   = -xOffset * mMouseSensitivity;
    float pitchChangeOfCameraZInDeg = -yOffset * mMouseSensitivity;
 
-   // The yaw is defined as a counterclockwise rotation around the Y axis
+   // The yaw is defined as a CCWISE rotation around the Y axis
    Q::quat yawRot   = Q::angleAxis(glm::radians(yawChangeOfCameraZInDeg),   glm::vec3(0.0f, 1.0f, 0.0f));
-   // The pitch is defined as a clockwise rotation around the X axis
-   // Since the rotation is clockwise, the angle is negated in the call to Q::angleAxis below
+   // The pitch is defined as a CWISE rotation around the X axis
+   // Since the rotation is CWISE, the angle is negated in the call to Q::angleAxis below
    Q::quat pitchRot = Q::angleAxis(glm::radians(-pitchChangeOfCameraZInDeg), glm::vec3(1.0f, 0.0f, 0.0f));
 
    // To avoid introducing roll, the yaw is applied globally while the pitch is applied locally

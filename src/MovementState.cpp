@@ -19,7 +19,7 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
                              const std::shared_ptr<GameObject3D>&       teapot)
    : mFSM(finiteStateMachine)
    , mWindow(window)
-   , mCamera3(14.0f, 25.0f, 45.0f, glm::vec3(0.0f), Q::quat(), 1280.0f / 720.0f, 0.1f, 130.0f, 20.0f, 0.1f)
+   , mCamera3(14.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 0.25f)
    , mGameObject3DShader(gameObject3DShader)
    , mTable(table)
    , mTeapot(teapot)
@@ -124,45 +124,16 @@ void MovementState::enter()
 void MovementState::processInput(float deltaTime)
 {
    // Close the game
-   if (mWindow->keyIsPressed(GLFW_KEY_ESCAPE)) { mWindow->setShouldClose(true); }
+   if (mWindow->keyIsPressed(GLFW_KEY_ESCAPE))
+   {
+      mWindow->setShouldClose(true);
+   }
 
    // Make the game full screen or windowed
    if (mWindow->keyIsPressed(GLFW_KEY_F) && !mWindow->keyHasBeenProcessed(GLFW_KEY_F))
    {
       mWindow->setKeyAsProcessed(GLFW_KEY_F);
       mWindow->setFullScreen(!mWindow->isFullScreen());
-
-      // In the play state, the following rules are applied to the cursor:
-      // - Fullscreen: Cursor is always disabled
-      // - Windowed with a free camera: Cursor is disabled
-      // - Windowed with a fixed camera: Cursor is enabled
-      if (mWindow->isFullScreen())
-      {
-         // Disable the cursor when fullscreen
-         //mWindow->enableCursor(false);
-         if (mCamera3.isFree())
-         {
-            // Disable the cursor when fullscreen with a free camera
-            mWindow->enableCursor(false);
-            // Going from windowed to fullscreen changes the position of the cursor, so we reset the first move flag to avoid a jump
-            mWindow->resetFirstMove();
-         }
-      }
-      else if (!mWindow->isFullScreen())
-      {
-         if (mCamera3.isFree())
-         {
-            // Disable the cursor when windowed with a free camera
-            mWindow->enableCursor(false);
-            // Going from fullscreen to windowed changes the position of the cursor, so we reset the first move flag to avoid a jump
-            mWindow->resetFirstMove();
-         }
-         else
-         {
-            // Enable the cursor when windowed with a fixed camera
-            mWindow->enableCursor(true);
-         }
-      }
    }
 
    // Change the number of samples used for anti aliasing
@@ -190,51 +161,18 @@ void MovementState::processInput(float deltaTime)
    // Reset the camera
    if (mWindow->keyIsPressed(GLFW_KEY_R)) { resetCamera(); }
 
-   // Make the camera free or fixed
-   if (mWindow->keyIsPressed(GLFW_KEY_C) && !mWindow->keyHasBeenProcessed(GLFW_KEY_C))
+   // Orient the camera
+   if (mWindow->mouseMoved() && mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
    {
-      mWindow->setKeyAsProcessed(GLFW_KEY_C);
-      mCamera3.setFree(!mCamera3.isFree());
-
-      //if (!mWindow->isFullScreen())
-      //{
-         if (mCamera3.isFree())
-         {
-            // Disable the cursor when windowed with a free camera
-            mWindow->enableCursor(false);
-         }
-         else
-         {
-            // Enable the cursor when windowed with a fixed camera
-            mWindow->enableCursor(true);
-         }
-      //}
-
+      mCamera3.processMouseMovement(mWindow->getCursorXOffset(), mWindow->getCursorYOffset());
       mWindow->resetMouseMoved();
    }
 
-   // Move and orient the camera
-   if (mCamera3.isFree())
+   // Adjust the distance between the player and the camera
+   if (mWindow->scrollWheelMoved())
    {
-      // Move
-      //if (mWindow->keyIsPressed(GLFW_KEY_W)) { mCamera->processKeyboardInput(Camera::MovementDirection::Forward, deltaTime); }
-      //if (mWindow->keyIsPressed(GLFW_KEY_S)) { mCamera->processKeyboardInput(Camera::MovementDirection::Backward, deltaTime); }
-      //if (mWindow->keyIsPressed(GLFW_KEY_A)) { mCamera->processKeyboardInput(Camera::MovementDirection::Left, deltaTime); }
-      //if (mWindow->keyIsPressed(GLFW_KEY_D)) { mCamera->processKeyboardInput(Camera::MovementDirection::Right, deltaTime); }
-
-      // Orient
-      if (mWindow->mouseMoved() && mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
-      {
-         mCamera3.processMouseMovement(mWindow->getCursorXOffset(), mWindow->getCursorYOffset());
-         mWindow->resetMouseMoved();
-      }
-
-      // Zoom
-      if (mWindow->scrollWheelMoved())
-      {
-         mCamera3.processScrollWheelMovement(mWindow->getScrollYOffset());
-         mWindow->resetScrollWheelMoved();
-      }
+      mCamera3.processScrollWheelMovement(mWindow->getScrollYOffset());
+      mWindow->resetScrollWheelMoved();
    }
 
    // --- --- ---
@@ -323,12 +261,12 @@ void MovementState::processInput(float deltaTime)
       {
          if (mIsWalking)
          {
-            mCrossFadeController.FadeTo(&mClips["Walking"], 0.1f);
+            mCrossFadeController.FadeTo(&mClips["Walking"], 0.15f);
             mJumpingWhileWalking = false;
          }
          else if (mIsRunning)
          {
-            mCrossFadeController.FadeTo(&mClips["Running"], 0.1f);
+            mCrossFadeController.FadeTo(&mClips["Running"], 0.15f);
             mJumpingWhileRunning = false;
          }
          else
@@ -684,5 +622,5 @@ void MovementState::resetScene()
 
 void MovementState::resetCamera()
 {
-   mCamera3.reposition(14.0f, 25.0f, 45.0f, mModelTransform.position, mModelTransform.rotation);
+   mCamera3.reposition(14.0f, 25.0f, mModelTransform.position, mModelTransform.rotation, glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f);
 }
