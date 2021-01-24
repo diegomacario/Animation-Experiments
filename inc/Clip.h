@@ -30,6 +30,7 @@ public:
    float        GetEndTime() const;
    float        GetDuration() const;
    void         RecalculateDuration();
+   bool         IsTimePastEnd(float time);
 
    bool         GetLooping() const;
    void         SetLooping(bool looping);

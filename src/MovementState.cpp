@@ -73,7 +73,7 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
 
    // Set the initial clip and initialize the crossfade controller
    mCrossFadeController.SetSkeleton(mSkeleton);
-   mCrossFadeController.Play(&mClips["Idle"]);
+   mCrossFadeController.Play(&mClips["Idle"], false);
    mCrossFadeController.Update(0.0f);
    mCrossFadeController.GetCurrentPose().GetMatrixPalette(mPosePalette);
 
@@ -237,17 +237,17 @@ void MovementState::processInput(float deltaTime)
 
       if (mIsWalking)
       {
-         mCrossFadeController.FadeTo(&mClips["Jump2"], 0.1f);
+         mCrossFadeController.FadeTo(&mClips["Jump2"], 0.1f, true);
          mJumpingWhileWalking = true;
       }
       else if (mIsRunning)
       {
-         mCrossFadeController.FadeTo(&mClips["Jump2"], 0.1f);
+         mCrossFadeController.FadeTo(&mClips["Jump2"], 0.1f, true);
          mJumpingWhileRunning = true;
       }
       else
       {
-         mCrossFadeController.FadeTo(&mClips["Jump"], 0.1f);
+         mCrossFadeController.FadeTo(&mClips["Jump"], 0.1f, true);
          mJumpingWhileIdle = true;
       }
 
@@ -261,17 +261,17 @@ void MovementState::processInput(float deltaTime)
       {
          if (mIsWalking)
          {
-            mCrossFadeController.FadeTo(&mClips["Walking"], 0.15f);
+            mCrossFadeController.FadeTo(&mClips["Walking"], 0.15f, false);
             mJumpingWhileWalking = false;
          }
          else if (mIsRunning)
          {
-            mCrossFadeController.FadeTo(&mClips["Running"], 0.15f);
+            mCrossFadeController.FadeTo(&mClips["Running"], 0.15f, false);
             mJumpingWhileRunning = false;
          }
          else
          {
-            mCrossFadeController.FadeTo(&mClips["Idle"], 0.1f);
+            mCrossFadeController.FadeTo(&mClips["Idle"], 0.1f, false);
             mJumpingWhileIdle = false;
          }
 
@@ -286,12 +286,12 @@ void MovementState::processInput(float deltaTime)
          if (leftShiftKeyPressed)
          {
             mIsRunning = true;
-            mCrossFadeController.FadeTo(&mClips["Running"], 0.25f);
+            mCrossFadeController.FadeTo(&mClips["Running"], 0.25f, false);
          }
          else
          {
             mIsWalking = true;
-            mCrossFadeController.FadeTo(&mClips["Walking"], 0.25f);
+            mCrossFadeController.FadeTo(&mClips["Walking"], 0.25f,  false);
          }
       }
       else if (mIsWalking)
@@ -300,7 +300,7 @@ void MovementState::processInput(float deltaTime)
          {
             mIsWalking = false;
             mIsRunning = true;
-            mCrossFadeController.FadeTo(&mClips["Running"], 0.25f);
+            mCrossFadeController.FadeTo(&mClips["Running"], 0.25f, false);
          }
       }
       else if (mIsRunning)
@@ -309,7 +309,7 @@ void MovementState::processInput(float deltaTime)
          {
             mIsRunning = false;
             mIsWalking = true;
-            mCrossFadeController.FadeTo(&mClips["Walking"], 0.25f);
+            mCrossFadeController.FadeTo(&mClips["Walking"], 0.25f, false);
          }
       }
    }
@@ -319,7 +319,7 @@ void MovementState::processInput(float deltaTime)
       {
          mIsRunning = false;
          mIsWalking = false;
-         mCrossFadeController.FadeTo(&mClips["Idle"], 0.25f);
+         mCrossFadeController.FadeTo(&mClips["Idle"], 0.25f, false);
       }
    }
 }

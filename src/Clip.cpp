@@ -141,6 +141,17 @@ void TClip<TRACK>::RecalculateDuration()
 }
 
 template <typename TRACK>
+bool TClip<TRACK>::IsTimePastEnd(float time)
+{
+   if (!mLooping && (time >= mEndTime))
+   {
+      return true;
+   }
+
+   return false;
+}
+
+template <typename TRACK>
 bool TClip<TRACK>::GetLooping() const
 {
    return mLooping;
@@ -223,6 +234,7 @@ float TClip<TRACK>::AdjustTimeToBeWithinClip(float time) const
          time = mEndTime;
       }
    }
+
    return time;
 }
 

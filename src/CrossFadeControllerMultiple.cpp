@@ -11,6 +11,7 @@ TCrossFadeControllerMultiple<CLIP>::TCrossFadeControllerMultiple()
    , mSkeleton()
    , mCurrentPose()
    , mWasSkeletonSet(false)
+   , mPlayToCompletion(false)
    , mTargets()
 {
 
@@ -23,6 +24,7 @@ TCrossFadeControllerMultiple<CLIP>::TCrossFadeControllerMultiple(Skeleton& skele
    , mSkeleton()
    , mCurrentPose()
    , mWasSkeletonSet(false)
+   , mPlayToCompletion(false)
    , mTargets()
 {
    SetSkeleton(skeleton);
@@ -37,23 +39,24 @@ void TCrossFadeControllerMultiple<CLIP>::SetSkeleton(Skeleton& skeleton)
 }
 
 template <typename CLIP>
-void TCrossFadeControllerMultiple<CLIP>::Play(CLIP* clip)
+void TCrossFadeControllerMultiple<CLIP>::Play(CLIP* clip, bool playToCompletion)
 {
    // When asked to play a clip, we clear all the crossfade targets
    mTargets.clear();
 
-   mCurrentClip  = clip;
-   mPlaybackTime = clip->GetStartTime();
-   mCurrentPose  = mSkeleton.GetRestPose();
+   mCurrentClip      = clip;
+   mPlaybackTime     = clip->GetStartTime();
+   mCurrentPose      = mSkeleton.GetRestPose();
+   mPlayToCompletion = playToCompletion;
 }
 
 template <typename CLIP>
-void TCrossFadeControllerMultiple<CLIP>::FadeTo(CLIP* targetClip, float fadeDuration)
+void TCrossFadeControllerMultiple<CLIP>::FadeTo(CLIP* targetClip, float fadeDuration, bool playToCompletion)
 {
    // If no clip has been set, simply play the target clip since there is no clip to fade from
    if (mCurrentClip == nullptr)
    {
-      Play(targetClip);
+      Play(targetClip, playToCompletion);
       return;
    }
 
@@ -77,7 +80,7 @@ void TCrossFadeControllerMultiple<CLIP>::FadeTo(CLIP* targetClip, float fadeDura
    }
 
    // Add the target clip to the queue
-   mTargets.emplace_back(targetClip, mSkeleton.GetRestPose(), fadeDuration);
+   mTargets.emplace_back(targetClip, mSkeleton.GetRestPose(), fadeDuration, playToCompletion);
 }
 
 template <typename CLIP>
@@ -89,36 +92,51 @@ void TCrossFadeControllerMultiple<CLIP>::Update(float dt)
       return;
    }
 
-   unsigned int numTargets = static_cast<unsigned int>(mTargets.size());
-   for (unsigned int targetIndex = 0; targetIndex < numTargets; ++targetIndex)
+   if (mPlayToCompletion && !mCurrentClip->IsTimePastEnd(mPlaybackTime + dt))
    {
-      if (mTargets[targetIndex].mFadeTime >= mTargets[targetIndex].mFadeDuration)
-      {
-         mCurrentClip  = mTargets[targetIndex].mClip;
-         mPlaybackTime = mTargets[targetIndex].mFadeTime;
-         mCurrentPose  = mTargets[targetIndex].mPose;
-
-         mTargets.erase(mTargets.begin() + targetIndex);
-         break;
-      }
+      mPlaybackTime = mCurrentClip->Sample(mCurrentPose, mPlaybackTime + dt);
    }
-
-   numTargets    = static_cast<unsigned int>(mTargets.size());
-   //mCurrentPose  = mSkeleton.GetRestPose();
-   mPlaybackTime = mCurrentClip->Sample(mCurrentPose, mPlaybackTime + dt);
-
-   for (unsigned int targetIndex = 0; targetIndex < numTargets; ++targetIndex)
+   else
    {
-      TCrossFadeTarget<CLIP>& target = mTargets[targetIndex];
-      target.mPlaybackTime = target.mClip->Sample(target.mPose, target.mPlaybackTime + dt);
-      target.mFadeTime += dt;
-      float t = target.mFadeTime / target.mFadeDuration;
-      if (t > 1.0f)
+      unsigned int numTargets = static_cast<unsigned int>(mTargets.size());
+      for (unsigned int targetIndex = 0; targetIndex < numTargets; ++targetIndex)
       {
-         t = 1.0f;
+         if (mTargets[targetIndex].mFadeTime >= mTargets[targetIndex].mFadeDuration)
+         {
+            mCurrentClip      = mTargets[targetIndex].mClip;
+            mPlaybackTime     = mTargets[targetIndex].mFadeTime;
+            mCurrentPose      = mTargets[targetIndex].mPose;
+            mPlayToCompletion = mTargets[targetIndex].mPlayToCompletion;
+
+            mTargets.erase(mTargets.begin() + targetIndex);
+
+            // If the new clip needs to be played to completion, we sample it and return immediately to avoid blending it with the targets
+            if (mPlayToCompletion)
+            {
+               mPlaybackTime = mCurrentClip->Sample(mCurrentPose, mPlaybackTime + dt);
+               return;
+            }
+
+            break;
+         }
       }
 
-      Blend(mCurrentPose, target.mPose, t, -1, mCurrentPose);
+      mPlaybackTime = mCurrentClip->Sample(mCurrentPose, mPlaybackTime + dt);
+
+      numTargets = static_cast<unsigned int>(mTargets.size());
+      for (unsigned int targetIndex = 0; targetIndex < numTargets; ++targetIndex)
+      {
+         TCrossFadeTarget<CLIP>& target = mTargets[targetIndex];
+         target.mPlaybackTime = target.mClip->Sample(target.mPose, target.mPlaybackTime + dt);
+         target.mFadeTime += dt;
+         float t = target.mFadeTime / target.mFadeDuration;
+         if (t > 1.0f)
+         {
+            t = 1.0f;
+         }
+
+         Blend(mCurrentPose, target.mPose, t, -1, mCurrentPose);
+      }
    }
 }
 

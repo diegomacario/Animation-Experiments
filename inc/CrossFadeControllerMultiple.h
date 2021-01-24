@@ -14,8 +14,8 @@ public:
 
    void SetSkeleton(Skeleton& skeleton);
 
-   void Play(CLIP* clip);
-   void FadeTo(CLIP* targetClip, float fadeDuration);
+   void Play(CLIP* clip, bool playToCompletion);
+   void FadeTo(CLIP* targetClip, float fadeDuration, bool playToCompletion);
    void Update(float dt);
    void ClearTargets();
 
@@ -30,6 +30,7 @@ private:
    Skeleton                            mSkeleton;
    Pose                                mCurrentPose;
    bool                                mWasSkeletonSet;
+   bool                                mPlayToCompletion;
 
    std::vector<TCrossFadeTarget<CLIP>> mTargets;
 };

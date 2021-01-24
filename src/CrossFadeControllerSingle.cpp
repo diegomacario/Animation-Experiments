@@ -72,7 +72,7 @@ void TCrossFadeControllerSingle<CLIP>::FadeTo(CLIP* targetClip, float fadeDurati
       mCurrentClip  = mTarget.mClip;
       mPlaybackTime = mTarget.mFadeTime;
       mCurrentPose  = mTarget.mPose;
-      mTarget       = TCrossFadeTarget<CLIP>(targetClip, mSkeleton.GetRestPose(), fadeDuration);
+      mTarget       = TCrossFadeTarget<CLIP>(targetClip, mSkeleton.GetRestPose(), fadeDuration, false);
    }
    else
    {
@@ -84,7 +84,7 @@ void TCrossFadeControllerSingle<CLIP>::FadeTo(CLIP* targetClip, float fadeDurati
       }
 
       // Update the target and begin fading
-      mTarget = TCrossFadeTarget<CLIP>(targetClip, mSkeleton.GetRestPose(), fadeDuration);
+      mTarget = TCrossFadeTarget<CLIP>(targetClip, mSkeleton.GetRestPose(), fadeDuration, false);
       mFading = true;
    }
 }

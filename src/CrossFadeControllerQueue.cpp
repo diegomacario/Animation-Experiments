@@ -77,7 +77,7 @@ void TCrossFadeControllerQueue<CLIP>::FadeTo(CLIP* targetClip, float fadeDuratio
    }
 
    // Add the target clip to the queue
-   mTargets.emplace(targetClip, mSkeleton.GetRestPose(), fadeDuration);
+   mTargets.emplace(targetClip, mSkeleton.GetRestPose(), fadeDuration, false);
 }
 
 template <typename CLIP>
