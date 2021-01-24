@@ -316,11 +316,6 @@ void PlayState::render()
 
    mTable->render(*mGameObject3DShader);
 
-   // Disable face culling so that we render the inside of the teapot
-   //glDisable(GL_CULL_FACE);
-   //mTeapot->render(*mGameObject3DShader);
-   //glEnable(GL_CULL_FACE);
-
    mGameObject3DShader->use(false);
 
    if (mWireframeModeForMesh)
@@ -521,6 +516,11 @@ void PlayState::userInterface()
    ImGui::Begin("Animation Controller"); // Create a window called "Animation Controller"
 
    ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+   float durationOfCurrClip = mClips[mAnimationData.currentClipIndex].GetDuration();
+   char progress[32];
+   sprintf_s(progress, 32, "%.3f/%.3f", mAnimationData.playbackTime, durationOfCurrClip);
+   ImGui::ProgressBar(mAnimationData.playbackTime / durationOfCurrClip, ImVec2(0.0f, 0.0f), progress);
 
    ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
 

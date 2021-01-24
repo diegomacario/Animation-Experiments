@@ -389,11 +389,6 @@ void MovementState::render()
 
    mTable->render(*mGameObject3DShader);
 
-   // Disable face culling so that we render the inside of the teapot
-   //glDisable(GL_CULL_FACE);
-   //mTeapot->render(*mGameObject3DShader);
-   //glEnable(GL_CULL_FACE);
-
    mGameObject3DShader->use(false);
 
    if (mWireframeModeForMesh)

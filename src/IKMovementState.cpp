@@ -752,19 +752,6 @@ void IKMovementState::render()
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
 
-   mGameObject3DShader->use(true);
-   mGameObject3DShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
-   mGameObject3DShader->setUniformVec3("cameraPos", mCamera->getPosition());
-
-   //mTable->render(*mGameObject3DShader);
-
-   // Disable face culling so that we render the inside of the teapot
-   //glDisable(GL_CULL_FACE);
-   //mTeapot->render(*mGameObject3DShader);
-   //glEnable(GL_CULL_FACE);
-
-   mGameObject3DShader->use(false);
-
    if (mWireframeModeForMesh)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
