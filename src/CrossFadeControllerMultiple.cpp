@@ -11,7 +11,7 @@ TCrossFadeControllerMultiple<CLIP>::TCrossFadeControllerMultiple()
    , mSkeleton()
    , mCurrentPose()
    , mWasSkeletonSet(false)
-   , mPlayToCompletion(false)
+   , mLock(false)
    , mTargets()
 {
 
@@ -24,7 +24,7 @@ TCrossFadeControllerMultiple<CLIP>::TCrossFadeControllerMultiple(Skeleton& skele
    , mSkeleton()
    , mCurrentPose()
    , mWasSkeletonSet(false)
-   , mPlayToCompletion(false)
+   , mLock(false)
    , mTargets()
 {
    SetSkeleton(skeleton);
@@ -39,24 +39,29 @@ void TCrossFadeControllerMultiple<CLIP>::SetSkeleton(Skeleton& skeleton)
 }
 
 template <typename CLIP>
-void TCrossFadeControllerMultiple<CLIP>::Play(CLIP* clip, bool playToCompletion)
+void TCrossFadeControllerMultiple<CLIP>::Play(CLIP* clip, bool lock)
 {
    // When asked to play a clip, we clear all the crossfade targets
    mTargets.clear();
 
-   mCurrentClip      = clip;
-   mPlaybackTime     = clip->GetStartTime();
-   mCurrentPose      = mSkeleton.GetRestPose();
-   mPlayToCompletion = playToCompletion;
+   mCurrentClip  = clip;
+   mPlaybackTime = clip->GetStartTime();
+   mCurrentPose  = mSkeleton.GetRestPose();
+   mLock         = lock;
 }
 
 template <typename CLIP>
-void TCrossFadeControllerMultiple<CLIP>::FadeTo(CLIP* targetClip, float fadeDuration, bool playToCompletion)
+void TCrossFadeControllerMultiple<CLIP>::FadeTo(CLIP* targetClip, float fadeDuration, bool lock)
 {
+   if (mLock)
+   {
+      return;
+   }
+
    // If no clip has been set, simply play the target clip since there is no clip to fade from
    if (mCurrentClip == nullptr)
    {
-      Play(targetClip, playToCompletion);
+      Play(targetClip, lock);
       return;
    }
 
@@ -71,16 +76,21 @@ void TCrossFadeControllerMultiple<CLIP>::FadeTo(CLIP* targetClip, float fadeDura
    }
    else
    {
-      // If there are no clips in the queue and the current clip is the same as the target clip, then don't add the target clip to the queue
-      // Otherwise, we would immediately fade between identical clips
+      // If there are no clips in the queue and the current clip is the same as the target clip,
+      // then don't add the target clip to the queue unless the current clip is already finished
       if (mCurrentClip == targetClip)
       {
-          return;
+         if (mCurrentClip->IsTimePastEnd(mPlaybackTime))
+         {
+            mTargets.emplace_back(targetClip, mSkeleton.GetRestPose(), fadeDuration, lock);
+         }
+
+         return;
       }
    }
 
    // Add the target clip to the queue
-   mTargets.emplace_back(targetClip, mSkeleton.GetRestPose(), fadeDuration, playToCompletion);
+   mTargets.emplace_back(targetClip, mSkeleton.GetRestPose(), fadeDuration, lock);
 }
 
 template <typename CLIP>
@@ -92,7 +102,7 @@ void TCrossFadeControllerMultiple<CLIP>::Update(float dt)
       return;
    }
 
-   if (mPlayToCompletion && !mCurrentClip->IsTimePastEnd(mPlaybackTime + dt))
+   if (mLock)
    {
       mPlaybackTime = mCurrentClip->Sample(mCurrentPose, mPlaybackTime + dt);
    }
@@ -103,15 +113,15 @@ void TCrossFadeControllerMultiple<CLIP>::Update(float dt)
       {
          if (mTargets[targetIndex].mFadeTime >= mTargets[targetIndex].mFadeDuration)
          {
-            mCurrentClip      = mTargets[targetIndex].mClip;
-            mPlaybackTime     = mTargets[targetIndex].mFadeTime;
-            mCurrentPose      = mTargets[targetIndex].mPose;
-            mPlayToCompletion = mTargets[targetIndex].mPlayToCompletion;
+            mCurrentClip  = mTargets[targetIndex].mClip;
+            mPlaybackTime = mTargets[targetIndex].mFadeTime;
+            mCurrentPose  = mTargets[targetIndex].mPose;
+            mLock         = mTargets[targetIndex].mLock;
 
             mTargets.erase(mTargets.begin() + targetIndex);
 
-            // If the new clip needs to be played to completion, we sample it and return immediately to avoid blending it with the targets
-            if (mPlayToCompletion)
+            // If the new clip locks the crossfade controller, we sample it and return immediately to avoid blending it with the targets
+            if (mLock)
             {
                mPlaybackTime = mCurrentClip->Sample(mCurrentPose, mPlaybackTime + dt);
                return;
@@ -159,7 +169,19 @@ Pose& TCrossFadeControllerMultiple<CLIP>::GetCurrentPose()
 }
 
 template <typename CLIP>
-float TCrossFadeControllerMultiple<CLIP>::GetPlaybackTimeOfCurrentClip()
+bool TCrossFadeControllerMultiple<CLIP>::IsCurrentClipFinished()
 {
-   return mPlaybackTime;
+   return mCurrentClip->IsTimePastEnd(mPlaybackTime);
+}
+
+template <typename CLIP>
+bool TCrossFadeControllerMultiple<CLIP>::IsLocked()
+{
+   return mLock;
+}
+
+template <typename CLIP>
+void TCrossFadeControllerMultiple<CLIP>::Unlock()
+{
+   mLock = false;
 }

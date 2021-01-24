@@ -229,9 +229,7 @@ void MovementState::processInput(float deltaTime)
       }
    }
 
-   if (mWindow->keyIsPressed(GLFW_KEY_SPACE) && !mIsInAir &&
-       (mCrossFadeController.GetCurrentClip()->GetName() != "Jump") &&
-       (mCrossFadeController.GetCurrentClip()->GetName() != "Jump2"))
+   if (mWindow->keyIsPressed(GLFW_KEY_SPACE) && !mIsInAir)
    {
       mCrossFadeController.ClearTargets();
 
@@ -256,9 +254,10 @@ void MovementState::processInput(float deltaTime)
 
    if (mIsInAir)
    {
-      if (mCrossFadeController.GetPlaybackTimeOfCurrentClip() == mClips["Jump"].GetEndTime() ||
-          mCrossFadeController.GetPlaybackTimeOfCurrentClip() == mClips["Jump2"].GetEndTime())
+      if (mCrossFadeController.IsLocked() && mCrossFadeController.IsCurrentClipFinished())
       {
+         mCrossFadeController.Unlock();
+
          if (mIsWalking)
          {
             mCrossFadeController.FadeTo(&mClips["Walking"], 0.15f, false);

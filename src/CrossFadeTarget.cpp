@@ -9,19 +9,19 @@ TCrossFadeTarget<CLIP>::TCrossFadeTarget()
    , mPlaybackTime(0.0f)
    , mFadeDuration(0.0f)
    , mFadeTime(0.0f)
-   , mPlayToCompletion(false)
+   , mLock(false)
 {
 
 }
 
 template <typename CLIP>
-TCrossFadeTarget<CLIP>::TCrossFadeTarget(CLIP* target, Pose& pose, float fadeDuration, bool playToCompletion)
+TCrossFadeTarget<CLIP>::TCrossFadeTarget(CLIP* target, Pose& pose, float fadeDuration, bool lock)
    : mClip(target)
    , mPlaybackTime(target->GetStartTime())
    , mPose(pose)
    , mFadeDuration(fadeDuration)
    , mFadeTime(0.0f)
-   , mPlayToCompletion(playToCompletion)
+   , mLock(lock)
 {
 
 }

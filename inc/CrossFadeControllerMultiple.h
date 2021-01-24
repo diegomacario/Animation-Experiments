@@ -14,14 +14,17 @@ public:
 
    void SetSkeleton(Skeleton& skeleton);
 
-   void Play(CLIP* clip, bool playToCompletion);
-   void FadeTo(CLIP* targetClip, float fadeDuration, bool playToCompletion);
+   void Play(CLIP* clip, bool lock);
+   void FadeTo(CLIP* targetClip, float fadeDuration, bool lock);
    void Update(float dt);
    void ClearTargets();
 
    CLIP* GetCurrentClip();
    Pose& GetCurrentPose();
-   float GetPlaybackTimeOfCurrentClip();
+
+   bool  IsCurrentClipFinished();
+   bool  IsLocked();
+   void  Unlock();
 
 private:
 
@@ -30,7 +33,7 @@ private:
    Skeleton                            mSkeleton;
    Pose                                mCurrentPose;
    bool                                mWasSkeletonSet;
-   bool                                mPlayToCompletion;
+   bool                                mLock;
 
    std::vector<TCrossFadeTarget<CLIP>> mTargets;
 };
