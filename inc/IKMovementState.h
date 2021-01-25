@@ -112,7 +112,6 @@ private:
    std::shared_ptr<Texture>  mGroundTexture;
    std::vector<Triangle>     mGroundTriangles;
 
-   VectorTrack               mMotionTrack;
    IKLeg                     mLeftLeg;
    IKLeg                     mRightLeg;
 
@@ -120,10 +119,6 @@ private:
    float                     mHeightOfOriginOfYPositionRay;
    float                     mPreviousYPositionOfCharacter;
    float                     mSinkIntoGround;
-   float                     mMotionTrackTime;
-   float                     mMotionTrackPlaybackSpeed;
-   float                     mMotionTrackDuration;
-   float                     mMotionTrackFutureTimeOffset;
    float                     mHeightOfHip;
    float                     mHeightOfKnees;
    float                     mDistanceFromAnkleToToe;
@@ -133,7 +128,7 @@ private:
    float                     mCharacterWalkingSpeed = 4.0f;
    float                     mCharacterWalkingRotationSpeed = 100.0f;
 
-   glm::vec3 determineYPosition();
+   void determineYPosition();
 };
 
 #endif

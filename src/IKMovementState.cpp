@@ -148,35 +148,6 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    // Get the triangles that make up the ground
    mGroundTriangles = GetTrianglesFromMeshes(mGroundMeshes);
 
-   // Compose the motion track, which tells the character where to walk by supplying X and Z coordinates
-   mMotionTrack.SetInterpolation(Interpolation::Linear);
-   mMotionTrack.SetNumberOfFrames(5);
-   // Frame 0
-   mMotionTrack.GetFrame(0).mTime     = 0.0f;
-   mMotionTrack.GetFrame(0).mValue[0] = 0.0f;
-   mMotionTrack.GetFrame(0).mValue[1] = 0.0f;
-   mMotionTrack.GetFrame(0).mValue[2] = 1.0f;
-   // Frame 1
-   mMotionTrack.GetFrame(1).mTime     = 1.0f;
-   mMotionTrack.GetFrame(1).mValue[0] = 0.0f;
-   mMotionTrack.GetFrame(1).mValue[1] = 0.0f;
-   mMotionTrack.GetFrame(1).mValue[2] = 10.0f;
-   // Frame 2
-   mMotionTrack.GetFrame(2).mTime     = 3.0f;
-   mMotionTrack.GetFrame(2).mValue[0] = 22.0f;
-   mMotionTrack.GetFrame(2).mValue[1] = 0.0f;
-   mMotionTrack.GetFrame(2).mValue[2] = 10.0f;
-   // Frame 3
-   mMotionTrack.GetFrame(3).mTime     = 4.0f;
-   mMotionTrack.GetFrame(3).mValue[0] = 22.0f;
-   mMotionTrack.GetFrame(3).mValue[1] = 0.0f;
-   mMotionTrack.GetFrame(3).mValue[2] = 2.0f;
-   // Frame 4
-   mMotionTrack.GetFrame(4).mTime     = 6.0f;
-   mMotionTrack.GetFrame(4).mValue[0] = 0.0f;
-   mMotionTrack.GetFrame(4).mValue[1] = 0.0f;
-   mMotionTrack.GetFrame(4).mValue[2] = 1.0f;
-
    // Create the IK legs
    mLeftLeg = IKLeg(mSkeleton, "LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase");
    mLeftLeg.SetAnkleOffset(0.2f);  // The left ankle is 0.2 units above the ground
@@ -230,10 +201,6 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    mHeightOfOriginOfYPositionRay = 11.0f;
    mPreviousYPositionOfCharacter = 0.0f;
    mSinkIntoGround               = 0.15f;
-   mMotionTrackTime              = 0.0f;
-   mMotionTrackPlaybackSpeed     = 0.3f;
-   mMotionTrackDuration          = mMotionTrack.GetEndTime() - mMotionTrack.GetStartTime();
-   mMotionTrackFutureTimeOffset  = 0.1f;
    mHeightOfHip                  = 2.0f;
    mHeightOfKnees                = 1.0f;
    mDistanceFromAnkleToToe       = 0.3f;
@@ -351,42 +318,9 @@ void IKMovementState::update(float deltaTime)
    // Position Sampling and Height Correction
    // **********************************************************************************************************************************************
 
-   // mMotionTrackTime is the time we use to sample the motion track
-   // mMotionTrackPlaybackSpeed is used to adjust the playback of the motion track
-   // so that the speed at which the character moves matches its animation
-   mMotionTrackTime += deltaTime * mMotionTrackPlaybackSpeed;
-   // Loop mMotionTrackTime so that it doesn't become infinitely large
-   if (mMotionTrackTime > 6.0f)
-   {
-      mMotionTrackTime -= 6.0f;
-   }
-
-   // Sample the motion track to get the X and Z world space position values of the character
-   // at the current time and a little in the future
-   glm::vec3 currWorldPosOfCharacter = mMotionTrack.Sample(mMotionTrackTime, true);
-   glm::vec3 nextWorldPosOfCharacter = mMotionTrack.Sample(mMotionTrackTime + mMotionTrackFutureTimeOffset, true);
-   // Since the motion track only gives us X and Z values, we reuse the Y value from the previous frame as the default one
-   currWorldPosOfCharacter.y         = mModelTransform.position.y;
-   nextWorldPosOfCharacter.y         = mModelTransform.position.y;
-   mModelTransform.position          = currWorldPosOfCharacter;
-
    // Shoot a ray downwards to determine the initial Y position of the character,
    // and sink it into the ground a little so that the IK solver has room to work
-   glm::vec3 hitPoint = determineYPosition();
-
-   // Calculate the new forward direction of the character in world space
-   glm::vec3 newFwdDirOfCharacter = glm::normalize(nextWorldPosOfCharacter - currWorldPosOfCharacter);
-   // Calculate the quaternion that rotates from the world forward direction (0.0f, 0.0f, 1.0f)
-   // to the new forward direction of the character in world space
-   Q::quat rotFromWorldFwdToNewFwdDirOfCharacter = Q::lookRotation(newFwdDirOfCharacter, glm::vec3(0, 1, 0));
-   // We want to interpolate between the current forward direction of the character and the new one by a small factor
-   // Before doing that, however, we must perform a neighborhood check
-   if (Q::dot(mModelTransform.rotation, rotFromWorldFwdToNewFwdDirOfCharacter) < 0.0f)
-   {
-      rotFromWorldFwdToNewFwdDirOfCharacter = rotFromWorldFwdToNewFwdDirOfCharacter * -1.0f;
-   }
-   // Interpolate between the rotations that represent the old forward direction and the new one
-   mModelTransform.rotation = Q::nlerp(mModelTransform.rotation, rotFromWorldFwdToNewFwdDirOfCharacter, deltaTime * 10.0f);
+   determineYPosition();
 
    // --- --- ---
 
@@ -447,6 +381,7 @@ void IKMovementState::update(float deltaTime)
    // If there is, that becomes the new position of the ankle
    // The second ray tells us if there's ground above or below the ankle
    // If there is, that becomes the new target of the IK chain
+   glm::vec3 hitPoint;
    for (unsigned int i = 0,
         numTriangles = static_cast<unsigned int>(mGroundTriangles.size());
         i < numTriangles;
@@ -956,7 +891,7 @@ void IKMovementState::resetCamera()
    mCamera3.reposition(14.0f, 25.0f, mModelTransform.position, mModelTransform.rotation, glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f);
 }
 
-glm::vec3 IKMovementState::determineYPosition()
+void IKMovementState::determineYPosition()
 {
    // Shoot a ray downwards to determine the initial Y position of the character,
    // and sink it into the ground a little so that the IK solver has room to work
@@ -974,6 +909,4 @@ glm::vec3 IKMovementState::determineYPosition()
          break;
       }
    }
-
-   return hitPoint;
 }
