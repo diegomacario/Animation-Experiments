@@ -162,7 +162,7 @@ void MovementState::processInput(float deltaTime)
    if (mWindow->keyIsPressed(GLFW_KEY_R)) { resetCamera(); }
 
    // Orient the camera
-   if (mWindow->mouseMoved() && mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
+   if (mWindow->mouseMoved() && mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
    {
       mCamera3.processMouseMovement(mWindow->getCursorXOffset(), mWindow->getCursorYOffset());
       mWindow->resetMouseMoved();

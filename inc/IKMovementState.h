@@ -10,6 +10,7 @@
 #include "Clip.h"
 #include "Triangle.h"
 #include "IKLeg.h"
+#include "Camera3.h"
 
 class IKMovementState : public State
 {
@@ -52,7 +53,7 @@ private:
 
    std::shared_ptr<Window>             mWindow;
 
-   std::shared_ptr<Camera>             mCamera;
+   Camera3                             mCamera3;
 
    std::shared_ptr<Shader>             mGameObject3DShader;
 
@@ -126,6 +127,13 @@ private:
    float                     mHeightOfHip;
    float                     mHeightOfKnees;
    float                     mDistanceFromAnkleToToe;
+
+   // --- --- ---
+
+   float                     mCharacterWalkingSpeed = 4.0f;
+   float                     mCharacterWalkingRotationSpeed = 100.0f;
+
+   glm::vec3 determineYPosition();
 };
 
 #endif

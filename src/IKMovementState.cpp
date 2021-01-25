@@ -24,7 +24,7 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
                                  const std::shared_ptr<GameObject3D>&       teapot)
    : mFSM(finiteStateMachine)
    , mWindow(window)
-   , mCamera(camera)
+   , mCamera3(14.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 0.25f)
    , mGameObject3DShader(gameObject3DShader)
    , mTable(table)
    , mTeapot(teapot)
@@ -240,21 +240,8 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
 
    // Shoot a ray downwards to determine the initial Y position of the character,
    // and sink it into the ground a little so that the IK solver has room to work
-   Ray groundRay(glm::vec3(mModelTransform.position.x, mHeightOfOriginOfYPositionRay, mModelTransform.position.z), glm::vec3(0.0f, -1.0f, 0.0f));
-   glm::vec3 hitPoint;
-   for (unsigned int i = 0,
-        numTriangles = static_cast<unsigned int>(mGroundTriangles.size());
-        i < numTriangles;
-        ++i)
-   {
-      if (DoesRayIntersectTriangle(groundRay, mGroundTriangles[i], hitPoint))
-      {
-         mModelTransform.position      = hitPoint;
-         mModelTransform.position.y   -= mSinkIntoGround;
-         mPreviousYPositionOfCharacter = mModelTransform.position.y;
-         break;
-      }
-   }
+   determineYPosition();
+   mPreviousYPositionOfCharacter = mModelTransform.position.y;
 }
 
 void IKMovementState::enter()
@@ -273,38 +260,6 @@ void IKMovementState::processInput(float deltaTime)
    {
       mWindow->setKeyAsProcessed(GLFW_KEY_F);
       mWindow->setFullScreen(!mWindow->isFullScreen());
-
-      // In the play state, the following rules are applied to the cursor:
-      // - Fullscreen: Cursor is always disabled
-      // - Windowed with a free camera: Cursor is disabled
-      // - Windowed with a fixed camera: Cursor is enabled
-      if (mWindow->isFullScreen())
-      {
-         // Disable the cursor when fullscreen
-         //mWindow->enableCursor(false);
-         if (mCamera->isFree())
-         {
-            // Disable the cursor when fullscreen with a free camera
-            mWindow->enableCursor(false);
-            // Going from windowed to fullscreen changes the position of the cursor, so we reset the first move flag to avoid a jump
-            mWindow->resetFirstMove();
-         }
-      }
-      else if (!mWindow->isFullScreen())
-      {
-         if (mCamera->isFree())
-         {
-            // Disable the cursor when windowed with a free camera
-            mWindow->enableCursor(false);
-            // Going from fullscreen to windowed changes the position of the cursor, so we reset the first move flag to avoid a jump
-            mWindow->resetFirstMove();
-         }
-         else
-         {
-            // Enable the cursor when windowed with a fixed camera
-            mWindow->enableCursor(true);
-         }
-      }
    }
 
    // Change the number of samples used for anti aliasing
@@ -332,51 +287,58 @@ void IKMovementState::processInput(float deltaTime)
    // Reset the camera
    if (mWindow->keyIsPressed(GLFW_KEY_R)) { resetCamera(); }
 
-   // Make the camera free or fixed
-   if (mWindow->keyIsPressed(GLFW_KEY_C) && !mWindow->keyHasBeenProcessed(GLFW_KEY_C))
+   // Orient the camera
+   if (mWindow->mouseMoved() && mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
    {
-      mWindow->setKeyAsProcessed(GLFW_KEY_C);
-      mCamera->setFree(!mCamera->isFree());
-
-      //if (!mWindow->isFullScreen())
-      //{
-         if (mCamera->isFree())
-         {
-            // Disable the cursor when windowed with a free camera
-            mWindow->enableCursor(false);
-         }
-         else
-         {
-            // Enable the cursor when windowed with a fixed camera
-            mWindow->enableCursor(true);
-         }
-      //}
-
+      mCamera3.processMouseMovement(mWindow->getCursorXOffset(), mWindow->getCursorYOffset());
       mWindow->resetMouseMoved();
    }
 
-   // Move and orient the camera
-   if (mCamera->isFree())
+   // Adjust the distance between the player and the camera
+   if (mWindow->scrollWheelMoved())
    {
-      // Move
-      if (mWindow->keyIsPressed(GLFW_KEY_W)) { mCamera->processKeyboardInput(Camera::MovementDirection::Forward, deltaTime); }
-      if (mWindow->keyIsPressed(GLFW_KEY_S)) { mCamera->processKeyboardInput(Camera::MovementDirection::Backward, deltaTime); }
-      if (mWindow->keyIsPressed(GLFW_KEY_A)) { mCamera->processKeyboardInput(Camera::MovementDirection::Left, deltaTime); }
-      if (mWindow->keyIsPressed(GLFW_KEY_D)) { mCamera->processKeyboardInput(Camera::MovementDirection::Right, deltaTime); }
+      mCamera3.processScrollWheelMovement(mWindow->getScrollYOffset());
+      mWindow->resetScrollWheelMoved();
+   }
 
-      // Orient
-      if (mWindow->mouseMoved())
-      {
-         mCamera->processMouseMovement(mWindow->getCursorXOffset(), mWindow->getCursorYOffset());
-         mWindow->resetMouseMoved();
-      }
+   // --- --- ---
 
-      // Zoom
-      if (mWindow->scrollWheelMoved())
-      {
-         mCamera->processScrollWheelMovement(mWindow->getScrollYOffset());
-         mWindow->resetScrollWheelMoved();
-      }
+   bool movementKeyPressed  = false;
+
+   float movementSpeed = mCharacterWalkingSpeed;
+   float rotationSpeed = mCharacterWalkingRotationSpeed;
+
+   // Move and orient the character
+   if (mWindow->keyIsPressed(GLFW_KEY_A))
+   {
+      float degreesToRotate = rotationSpeed * deltaTime;
+      Q::quat rotation = Q::angleAxis(glm::radians(degreesToRotate), glm::vec3(0.0f, 1.0f, 0.0f));
+      mModelTransform.rotation = Q::normalized(mModelTransform.rotation * rotation);
+      movementKeyPressed = true;
+   }
+
+   if (mWindow->keyIsPressed(GLFW_KEY_D))
+   {
+      float degreesToRotate = rotationSpeed * deltaTime;
+      Q::quat rotation = Q::angleAxis(glm::radians(-degreesToRotate), glm::vec3(0.0f, 1.0f, 0.0f));
+      mModelTransform.rotation = Q::normalized(mModelTransform.rotation * rotation);
+      movementKeyPressed = true;
+   }
+
+   if (mWindow->keyIsPressed(GLFW_KEY_W))
+   {
+      float distToMove = movementSpeed * deltaTime;
+      glm::vec3 characterFwd = mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f);
+      mModelTransform.position += characterFwd * distToMove;
+      movementKeyPressed = true;
+   }
+
+   if (mWindow->keyIsPressed(GLFW_KEY_S))
+   {
+      float distToMove = movementSpeed * deltaTime;
+      glm::vec3 characterFwd = mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f);
+      mModelTransform.position -= characterFwd * distToMove;
+      movementKeyPressed = true;
    }
 }
 
@@ -408,22 +370,9 @@ void IKMovementState::update(float deltaTime)
    nextWorldPosOfCharacter.y         = mModelTransform.position.y;
    mModelTransform.position          = currWorldPosOfCharacter;
 
-   // Shoot a ray downwards to determine the Y position of the character,
+   // Shoot a ray downwards to determine the initial Y position of the character,
    // and sink it into the ground a little so that the IK solver has room to work
-   Ray groundRay(glm::vec3(mModelTransform.position.x, mHeightOfOriginOfYPositionRay, mModelTransform.position.z), glm::vec3(0.0f, -1.0f, 0.0f));
-   glm::vec3 hitPoint;
-   for (unsigned int i = 0,
-        numTriangles = static_cast<unsigned int>(mGroundTriangles.size());
-        i < numTriangles;
-        ++i)
-   {
-      if (DoesRayIntersectTriangle(groundRay, mGroundTriangles[i], hitPoint))
-      {
-         mModelTransform.position = hitPoint;
-         mModelTransform.position.y -= mSinkIntoGround;
-         break;
-      }
-   }
+   glm::vec3 hitPoint = determineYPosition();
 
    // Calculate the new forward direction of the character in world space
    glm::vec3 newFwdDirOfCharacter = glm::normalize(nextWorldPosOfCharacter - currWorldPosOfCharacter);
@@ -543,6 +492,8 @@ void IKMovementState::update(float deltaTime)
    mModelTransform.position = glm::lerp(currPosOfCharacterWithPreviousHeight, mModelTransform.position, deltaTime * 10.0f);
    // Update mPreviousYPositionOfCharacter
    mPreviousYPositionOfCharacter = mModelTransform.position.y;
+
+   mCamera3.processPlayerMovement(mModelTransform.position, mModelTransform.rotation);
 
    // Interpolate between the current world position of the left ankle and its ground IK target based on the value of the pin track
    // If the pin track says that the foot should be on the ground, then the ground IK target will be favored
@@ -762,9 +713,9 @@ void IKMovementState::render()
    {
       mStaticMeshShader->use(true);
       mStaticMeshShader->setUniformMat4("model",      transformToMat4(mModelTransform));
-      mStaticMeshShader->setUniformMat4("view",       mCamera->getViewMatrix());
-      mStaticMeshShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
-      //mStaticMeshShader->setUniformVec3("cameraPos",  mCamera->getPosition());
+      mStaticMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
+      mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
+      //mStaticMeshShader->setUniformVec3("cameraPos",  mCamera3.getPosition());
       mDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
 
       // Loop over the meshes and render each one
@@ -783,10 +734,10 @@ void IKMovementState::render()
    {
       mAnimatedMeshShader->use(true);
       mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mModelTransform));
-      mAnimatedMeshShader->setUniformMat4("view",             mCamera->getViewMatrix());
-      mAnimatedMeshShader->setUniformMat4("projection",       mCamera->getPerspectiveProjectionMatrix());
+      mAnimatedMeshShader->setUniformMat4("view",             mCamera3.getViewMatrix());
+      mAnimatedMeshShader->setUniformMat4("projection",       mCamera3.getPerspectiveProjectionMatrix());
       mAnimatedMeshShader->setUniformMat4Array("animated[0]", mAnimationData.skinMatrices);
-      //mAnimatedMeshShader->setUniformVec3("cameraPos",        mCamera->getPosition());
+      //mAnimatedMeshShader->setUniformVec3("cameraPos",        mCamera3.getPosition());
       mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("diffuseTex"));
 
       // Loop over the meshes and render each one
@@ -814,7 +765,7 @@ void IKMovementState::render()
    // Render the bones
    if (mDisplayBones)
    {
-      mSkeletonViewer.RenderBones(mModelTransform, mCamera->getPerspectiveProjectionViewMatrix());
+      mSkeletonViewer.RenderBones(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix());
    }
 
    glLineWidth(1.0f);
@@ -827,7 +778,7 @@ void IKMovementState::render()
    // Render the joints
    if (mDisplayJoints)
    {
-      mSkeletonViewer.RenderJoints(mModelTransform, mCamera->getPerspectiveProjectionViewMatrix(), mAnimationData.animatedPosePalette);
+      mSkeletonViewer.RenderJoints(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix(), mAnimationData.animatedPosePalette);
    }
 
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -837,8 +788,8 @@ void IKMovementState::render()
 
    mStaticMeshShader->use(true);
    mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
-   mStaticMeshShader->setUniformMat4("view", mCamera->getViewMatrix());
-   mStaticMeshShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
+   mStaticMeshShader->setUniformMat4("view", mCamera3.getViewMatrix());
+   mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
    mGroundTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
 
    // Loop over the ground meshes and render each one
@@ -1002,8 +953,27 @@ void IKMovementState::resetScene()
 
 void IKMovementState::resetCamera()
 {
-   mCamera->reposition(glm::vec3(27.9488f, 20.9127f, 28.8867f),
-                       glm::vec3(21.8935f, 15.903f, 22.7032f),
-                       glm::vec3(0.0f, 1.0f, 0.0f),
-                       45.0f);
+   mCamera3.reposition(14.0f, 25.0f, mModelTransform.position, mModelTransform.rotation, glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f);
+}
+
+glm::vec3 IKMovementState::determineYPosition()
+{
+   // Shoot a ray downwards to determine the initial Y position of the character,
+   // and sink it into the ground a little so that the IK solver has room to work
+   Ray groundRay(glm::vec3(mModelTransform.position.x, mHeightOfOriginOfYPositionRay, mModelTransform.position.z), glm::vec3(0.0f, -1.0f, 0.0f));
+   glm::vec3 hitPoint;
+   for (unsigned int i = 0,
+        numTriangles = static_cast<unsigned int>(mGroundTriangles.size());
+        i < numTriangles;
+        ++i)
+   {
+      if (DoesRayIntersectTriangle(groundRay, mGroundTriangles[i], hitPoint))
+      {
+         mModelTransform.position      = hitPoint;
+         mModelTransform.position.y   -= mSinkIntoGround;
+         break;
+      }
+   }
+
+   return hitPoint;
 }
