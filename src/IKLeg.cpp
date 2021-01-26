@@ -85,16 +85,6 @@ void IKLeg::SetAnkleOffset(float ankleOffset)
    mAnkleToGroundOffset = ankleOffset;
 }
 
-const ScalarTrack& IKLeg::GetPinTrack()
-{
-   return mPinTrack;
-}
-
-void IKLeg::SetPinTrack(const ScalarTrack& pinTrack)
-{
-   mPinTrack = pinTrack;
-}
-
 const Pose& IKLeg::GetAdjustedPose()
 {
    return mIKPose;

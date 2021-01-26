@@ -86,7 +86,9 @@ private:
 
    // --- --- ---
 
-   std::map<std::string, FastClip> mClips;
+   std::map<std::string, FastClip>    mClips;
+   std::map<std::string, ScalarTrack> mLeftFootPinTracks;
+   std::map<std::string, ScalarTrack> mRightFootPinTracks;
 
    FastCrossFadeControllerMultiple mCrossFadeController;
    std::vector<glm::mat4>          mPosePalette;
@@ -114,6 +116,8 @@ private:
    float                     mDistanceFromAnkleToToe;
 
    // --- --- ---
+
+   void configurePinTracks();
 
    void determineYPosition();
 };

@@ -186,44 +186,38 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
    // Compose the pin track of the left foot, which tells us when the left foot is on and off the ground
    // Note that the times of the keyframes that make up this pin track are normalized, which means that
    // it must be sampled with the current time of an animation divided by its duration
-   ScalarTrack leftFootPinTrack;
-   leftFootPinTrack.SetInterpolation(Interpolation::Cubic);
-   leftFootPinTrack.SetNumberOfFrames(4);
+   mLeftFootPinTrack.SetInterpolation(Interpolation::Cubic);
+   mLeftFootPinTrack.SetNumberOfFrames(4);
    // Frame 0
-   leftFootPinTrack.GetFrame(0).mTime     = 0.0f;
-   leftFootPinTrack.GetFrame(0).mValue[0] = 0;
+   mLeftFootPinTrack.GetFrame(0).mTime     = 0.0f;
+   mLeftFootPinTrack.GetFrame(0).mValue[0] = 0;
    // Frame 1
-   leftFootPinTrack.GetFrame(1).mTime     = 0.4f;
-   leftFootPinTrack.GetFrame(1).mValue[0] = 1;
+   mLeftFootPinTrack.GetFrame(1).mTime     = 0.4f;
+   mLeftFootPinTrack.GetFrame(1).mValue[0] = 1;
    // Frame 2
-   leftFootPinTrack.GetFrame(2).mTime     = 0.6f;
-   leftFootPinTrack.GetFrame(2).mValue[0] = 1;
+   mLeftFootPinTrack.GetFrame(2).mTime     = 0.6f;
+   mLeftFootPinTrack.GetFrame(2).mValue[0] = 1;
    // Frame 3
-   leftFootPinTrack.GetFrame(3).mTime     = 1.0f;
-   leftFootPinTrack.GetFrame(3).mValue[0] = 0;
+   mLeftFootPinTrack.GetFrame(3).mTime     = 1.0f;
+   mLeftFootPinTrack.GetFrame(3).mValue[0] = 0;
 
    // Compose the pin track of the right foot, which tells us when the right foot is on and off the ground
    // Note that the times of the keyframes that make up this pin track are normalized, which means that
    // it must be sampled with the current time of an animation divided by its duration
-   ScalarTrack rightFootPinTrack;
-   rightFootPinTrack.SetInterpolation(Interpolation::Cubic);
-   rightFootPinTrack.SetNumberOfFrames(4);
+   mRightFootPinTrack.SetInterpolation(Interpolation::Cubic);
+   mRightFootPinTrack.SetNumberOfFrames(4);
    // Frame 0
-   rightFootPinTrack.GetFrame(0).mTime     = 0.0f;
-   rightFootPinTrack.GetFrame(0).mValue[0] = 1;
+   mRightFootPinTrack.GetFrame(0).mTime     = 0.0f;
+   mRightFootPinTrack.GetFrame(0).mValue[0] = 1;
    // Frame 1
-   rightFootPinTrack.GetFrame(1).mTime     = 0.3f;
-   rightFootPinTrack.GetFrame(1).mValue[0] = 0;
+   mRightFootPinTrack.GetFrame(1).mTime     = 0.3f;
+   mRightFootPinTrack.GetFrame(1).mValue[0] = 0;
    // Frame 2
-   rightFootPinTrack.GetFrame(2).mTime     = 0.7f;
-   rightFootPinTrack.GetFrame(2).mValue[0] = 0;
+   mRightFootPinTrack.GetFrame(2).mTime     = 0.7f;
+   mRightFootPinTrack.GetFrame(2).mValue[0] = 0;
    // Frame 3
-   rightFootPinTrack.GetFrame(3).mTime     = 1.0f;
-   rightFootPinTrack.GetFrame(3).mValue[0] = 1;
-
-   // Set the pin tracks to the appropriate legs
-   mLeftLeg.SetPinTrack(leftFootPinTrack);
-   mRightLeg.SetPinTrack(rightFootPinTrack);
+   mRightFootPinTrack.GetFrame(3).mTime     = 1.0f;
+   mRightFootPinTrack.GetFrame(3).mValue[0] = 1;
 
    // Initialize the values we use to describe the position of the character
    mModelTransform               = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
@@ -473,8 +467,8 @@ void IKState::update(float deltaTime)
 
    // The keyframes of the pin tracks are set in normalized time, so they must be sampled with the normalized time
    float normalizedPlaybackTime = (mAnimationData.playbackTime - currClip.GetStartTime()) / currClip.GetDuration();
-   float leftLegPinTrackValue   = mLeftLeg.GetPinTrack().Sample(normalizedPlaybackTime, true);
-   float rightLegPinTrackValue  = mRightLeg.GetPinTrack().Sample(normalizedPlaybackTime, true);
+   float leftLegPinTrackValue   = mLeftFootPinTrack.Sample(normalizedPlaybackTime, true);
+   float rightLegPinTrackValue  = mRightFootPinTrack.Sample(normalizedPlaybackTime, true);
 
    // Calculate the world positions of the left and right ankles
    // We do this by combining the model transform of the character (mModelTransform) with the global transforms of the joints

@@ -149,47 +149,8 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    mRightLeg = IKLeg(mSkeleton, "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase");
    mRightLeg.SetAnkleOffset(0.2f); // The right ankle is 0.2 units above the ground
 
-   // Compose the pin track of the left foot, which tells us when the left foot is on and off the ground
-   // Note that the times of the keyframes that make up this pin track are normalized, which means that
-   // it must be sampled with the current time of an animation divided by its duration
-   ScalarTrack leftFootPinTrack;
-   leftFootPinTrack.SetInterpolation(Interpolation::Cubic);
-   leftFootPinTrack.SetNumberOfFrames(4);
-   // Frame 0
-   leftFootPinTrack.GetFrame(0).mTime     = 0.0f;
-   leftFootPinTrack.GetFrame(0).mValue[0] = 0;
-   // Frame 1
-   leftFootPinTrack.GetFrame(1).mTime     = 0.4f;
-   leftFootPinTrack.GetFrame(1).mValue[0] = 1;
-   // Frame 2
-   leftFootPinTrack.GetFrame(2).mTime     = 0.6f;
-   leftFootPinTrack.GetFrame(2).mValue[0] = 1;
-   // Frame 3
-   leftFootPinTrack.GetFrame(3).mTime     = 1.0f;
-   leftFootPinTrack.GetFrame(3).mValue[0] = 0;
-
-   // Compose the pin track of the right foot, which tells us when the right foot is on and off the ground
-   // Note that the times of the keyframes that make up this pin track are normalized, which means that
-   // it must be sampled with the current time of an animation divided by its duration
-   ScalarTrack rightFootPinTrack;
-   rightFootPinTrack.SetInterpolation(Interpolation::Cubic);
-   rightFootPinTrack.SetNumberOfFrames(4);
-   // Frame 0
-   rightFootPinTrack.GetFrame(0).mTime     = 0.0f;
-   rightFootPinTrack.GetFrame(0).mValue[0] = 1;
-   // Frame 1
-   rightFootPinTrack.GetFrame(1).mTime     = 0.3f;
-   rightFootPinTrack.GetFrame(1).mValue[0] = 0;
-   // Frame 2
-   rightFootPinTrack.GetFrame(2).mTime     = 0.7f;
-   rightFootPinTrack.GetFrame(2).mValue[0] = 0;
-   // Frame 3
-   rightFootPinTrack.GetFrame(3).mTime     = 1.0f;
-   rightFootPinTrack.GetFrame(3).mValue[0] = 1;
-
-   // Set the pin tracks to the appropriate legs
-   mLeftLeg.SetPinTrack(leftFootPinTrack);
-   mRightLeg.SetPinTrack(rightFootPinTrack);
+   // Configure the pin tracks for all the clips
+   configurePinTracks();
 
    // Initialize the values we use to describe the position of the character
    mHeightOfOriginOfYPositionRay = 11.0f;
@@ -360,10 +321,24 @@ void IKMovementState::update(float deltaTime)
    FastClip* currClip = mCrossFadeController.GetCurrentClip();
    Pose&     currPose = mCrossFadeController.GetCurrentPose();
 
+   ScalarTrack* currLeftLegPinTrack;
+   ScalarTrack* currRightLegPinTrack;
+
+   if (mIsWalking)
+   {
+      currLeftLegPinTrack = &mLeftFootPinTracks["Walking"];
+      currRightLegPinTrack = &mRightFootPinTracks["Walking"];
+   }
+   else
+   {
+      currLeftLegPinTrack = &mLeftFootPinTracks["Idle"];
+      currRightLegPinTrack = &mRightFootPinTracks["Idle"];
+   }
+
    // The keyframes of the pin tracks are set in normalized time, so they must be sampled with the normalized time
    float normalizedPlaybackTime = (mCrossFadeController.GetPlaybackTime() - currClip->GetStartTime()) / currClip->GetDuration();
-   float leftLegPinTrackValue   = mLeftLeg.GetPinTrack().Sample(normalizedPlaybackTime, true);
-   float rightLegPinTrackValue  = mRightLeg.GetPinTrack().Sample(normalizedPlaybackTime, true);
+   float leftLegPinTrackValue   = currLeftLegPinTrack->Sample(normalizedPlaybackTime, true);
+   float rightLegPinTrackValue  = currRightLegPinTrack->Sample(normalizedPlaybackTime, true);
 
    // Calculate the world positions of the left and right ankles
    // We do this by combining the model transform of the character (mModelTransform) with the global transforms of the joints
@@ -893,6 +868,77 @@ void IKMovementState::resetScene()
 void IKMovementState::resetCamera()
 {
    mCamera3.reposition(14.0f, 25.0f, mModelTransform.position, mModelTransform.rotation, glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f);
+}
+
+void IKMovementState::configurePinTracks()
+{
+   // Walking pin tracks
+
+   // Compose the pin track of the left foot, which tells us when the left foot is on and off the ground
+   // Note that the times of the keyframes that make up this pin track are normalized, which means that
+   // it must be sampled with the current time of an animation divided by its duration
+   ScalarTrack leftFootWalkingPinTrack;
+   leftFootWalkingPinTrack.SetInterpolation(Interpolation::Cubic);
+   leftFootWalkingPinTrack.SetNumberOfFrames(4);
+   // Frame 0
+   leftFootWalkingPinTrack.GetFrame(0).mTime     = 0.0f;
+   leftFootWalkingPinTrack.GetFrame(0).mValue[0] = 0;
+   // Frame 1
+   leftFootWalkingPinTrack.GetFrame(1).mTime     = 0.4f;
+   leftFootWalkingPinTrack.GetFrame(1).mValue[0] = 1;
+   // Frame 2
+   leftFootWalkingPinTrack.GetFrame(2).mTime     = 0.6f;
+   leftFootWalkingPinTrack.GetFrame(2).mValue[0] = 1;
+   // Frame 3
+   leftFootWalkingPinTrack.GetFrame(3).mTime     = 1.0f;
+   leftFootWalkingPinTrack.GetFrame(3).mValue[0] = 0;
+
+   // Compose the pin track of the right foot, which tells us when the right foot is on and off the ground
+   // Note that the times of the keyframes that make up this pin track are normalized, which means that
+   // it must be sampled with the current time of an animation divided by its duration
+   ScalarTrack rightFootWalkingPinTrack;
+   rightFootWalkingPinTrack.SetInterpolation(Interpolation::Cubic);
+   rightFootWalkingPinTrack.SetNumberOfFrames(4);
+   // Frame 0
+   rightFootWalkingPinTrack.GetFrame(0).mTime     = 0.0f;
+   rightFootWalkingPinTrack.GetFrame(0).mValue[0] = 1;
+   // Frame 1
+   rightFootWalkingPinTrack.GetFrame(1).mTime     = 0.3f;
+   rightFootWalkingPinTrack.GetFrame(1).mValue[0] = 0;
+   // Frame 2
+   rightFootWalkingPinTrack.GetFrame(2).mTime     = 0.7f;
+   rightFootWalkingPinTrack.GetFrame(2).mValue[0] = 0;
+   // Frame 3
+   rightFootWalkingPinTrack.GetFrame(3).mTime     = 1.0f;
+   rightFootWalkingPinTrack.GetFrame(3).mValue[0] = 1;
+
+   mLeftFootPinTracks.insert(std::make_pair("Walking", leftFootWalkingPinTrack));
+   mRightFootPinTracks.insert(std::make_pair("Walking", rightFootWalkingPinTrack));
+
+   // Idle pin tracks
+
+   ScalarTrack leftFootIdlePinTrack;
+   leftFootIdlePinTrack.SetInterpolation(Interpolation::Constant);
+   leftFootIdlePinTrack.SetNumberOfFrames(2);
+   // Frame 0
+   leftFootIdlePinTrack.GetFrame(0).mTime = 0.0f;
+   leftFootIdlePinTrack.GetFrame(0).mValue[0] = 1.0f;
+   // Frame 1
+   leftFootIdlePinTrack.GetFrame(1).mTime = 1.0f;
+   leftFootIdlePinTrack.GetFrame(1).mValue[0] = 1.0f;
+
+   ScalarTrack rightFootIdlePinTrack;
+   rightFootIdlePinTrack.SetInterpolation(Interpolation::Constant);
+   rightFootIdlePinTrack.SetNumberOfFrames(2);
+   // Frame 0
+   rightFootIdlePinTrack.GetFrame(0).mTime = 0.0f;
+   rightFootIdlePinTrack.GetFrame(0).mValue[0] = 1.0f;
+   // Frame 1
+   rightFootIdlePinTrack.GetFrame(1).mTime = 1.0f;
+   rightFootIdlePinTrack.GetFrame(1).mValue[0] = 1.0f;
+
+   mLeftFootPinTracks.insert(std::make_pair("Idle", leftFootIdlePinTrack));
+   mRightFootPinTracks.insert(std::make_pair("Idle", rightFootIdlePinTrack));
 }
 
 void IKMovementState::determineYPosition()

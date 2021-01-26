@@ -21,9 +21,6 @@ public:
 
    void               SetAnkleOffset(float ankleOffset);
 
-   const ScalarTrack& GetPinTrack();
-   void               SetPinTrack(const ScalarTrack& pinTrack);
-
    const Pose&        GetAdjustedPose();
 
 private:
@@ -35,7 +32,6 @@ private:
 
    float        mAnkleToGroundOffset;
 
-   ScalarTrack  mPinTrack;
    FABRIKSolver mSolver;
    Pose         mIKPose;
 };

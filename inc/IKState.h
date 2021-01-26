@@ -114,6 +114,8 @@ private:
    VectorTrack               mMotionTrack;
    IKLeg                     mLeftLeg;
    IKLeg                     mRightLeg;
+   ScalarTrack               mLeftFootPinTrack;
+   ScalarTrack               mRightFootPinTrack;
 
    Transform                 mModelTransform;
    float                     mHeightOfOriginOfYPositionRay;
