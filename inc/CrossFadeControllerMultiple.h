@@ -26,6 +26,8 @@ public:
    bool  IsLocked();
    void  Unlock();
 
+   float GetPlaybackTime();
+
 private:
 
    CLIP*                               mCurrentClip;

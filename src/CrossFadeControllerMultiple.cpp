@@ -185,3 +185,9 @@ void TCrossFadeControllerMultiple<CLIP>::Unlock()
 {
    mLock = false;
 }
+
+template <typename CLIP>
+float TCrossFadeControllerMultiple<CLIP>::GetPlaybackTime()
+{
+   return mPlaybackTime;
+}

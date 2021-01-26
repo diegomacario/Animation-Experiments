@@ -62,16 +62,21 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    }
 
    // Optimize the clips, rearrange them and get their names
-   mClips.resize(clips.size());
    for (unsigned int clipIndex = 0,
         numClips = static_cast<unsigned int>(clips.size());
         clipIndex < numClips;
         ++clipIndex)
    {
-      mClips[clipIndex] = OptimizeClip(clips[clipIndex]);
-      RearrangeFastClip(mClips[clipIndex], jointMap);
-      mClipNames += (mClips[clipIndex].GetName() + '\0');
+      FastClip currClip = OptimizeClip(clips[clipIndex]);
+      RearrangeFastClip(currClip, jointMap);
+      mClips.insert(std::make_pair(currClip.GetName(), currClip));
    }
+
+   // Set the initial clip and initialize the crossfade controller
+   mCrossFadeController.SetSkeleton(mSkeleton);
+   mCrossFadeController.Play(&mClips["Idle"], false);
+   mCrossFadeController.Update(0.0f);
+   mCrossFadeController.GetCurrentPose().GetMatrixPalette(mPosePalette);
 
    // Configure the VAOs of the animated meshes
    int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
@@ -91,18 +96,8 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
                                       influencesAttribLocOfAnimatedShader);
    }
 
-   // Set the initial clip
-   unsigned int numClips = static_cast<unsigned int>(mClips.size());
-   for (unsigned int clipIndex = 0; clipIndex < numClips; ++clipIndex)
-   {
-      if (mClips[clipIndex].GetName() == "Walking")
-      {
-         mSelectedClip = clipIndex;
-         mAnimationData.currentClipIndex = clipIndex;
-      }
-   }
-
    // Set the initial skinning mode
+   mCurrentSkinningMode = SkinningMode::GPU;
    mSelectedSkinningMode = SkinningMode::GPU;
    // Set the initial playback speed
    mSelectedPlaybackSpeed = 1.0f;
@@ -114,11 +109,11 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    mWireframeModeForJoints = false;
    mPerformDepthTesting = true;
 
-   // Set the initial pose
-   mAnimationData.animatedPose = mSkeleton.GetRestPose();
+   // Set the model transform
+   mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
 
    // Initialize the bones of the skeleton viewer
-   mSkeletonViewer.InitializeBones(mAnimationData.animatedPose);
+   mSkeletonViewer.InitializeBones(mCrossFadeController.GetCurrentPose());
 
    // --- --- ---
 
@@ -197,7 +192,6 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    mRightLeg.SetPinTrack(rightFootPinTrack);
 
    // Initialize the values we use to describe the position of the character
-   mModelTransform               = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
    mHeightOfOriginOfYPositionRay = 11.0f;
    mPreviousYPositionOfCharacter = 0.0f;
    mSinkIntoGround               = 0.15f;
@@ -307,6 +301,23 @@ void IKMovementState::processInput(float deltaTime)
       mModelTransform.position -= characterFwd * distToMove;
       movementKeyPressed = true;
    }
+
+   if (movementKeyPressed)
+   {
+      if (!mIsWalking)
+      {
+         mIsWalking = true;
+         mCrossFadeController.FadeTo(&mClips["Walking"], 0.25f, false);
+      }
+   }
+   else
+   {
+      if (mIsWalking)
+      {
+         mIsWalking = false;
+         mCrossFadeController.FadeTo(&mClips["Idle"], 0.25f, false);
+      }
+   }
 }
 
 void IKMovementState::update(float deltaTime)
@@ -324,46 +335,41 @@ void IKMovementState::update(float deltaTime)
 
    // --- --- ---
 
-   if (mAnimationData.currentClipIndex != mSelectedClip)
+   if (mCurrentSkinningMode != mSelectedSkinningMode)
    {
-      mAnimationData.currentClipIndex = mSelectedClip;
-      mAnimationData.animatedPose     = mSkeleton.GetRestPose();
-      mAnimationData.playbackTime     = 0.0f;
-   }
-
-   if (mAnimationData.currentSkinningMode != mSelectedSkinningMode)
-   {
-      if (mAnimationData.currentSkinningMode == SkinningMode::GPU)
+      if (mCurrentSkinningMode == SkinningMode::GPU)
       {
          switchFromGPUToCPU();
       }
-      else if (mAnimationData.currentSkinningMode == SkinningMode::CPU)
+      else if (mCurrentSkinningMode == SkinningMode::CPU)
       {
          switchFromCPUToGPU();
       }
 
-      mAnimationData.currentSkinningMode = static_cast<SkinningMode>(mSelectedSkinningMode);
+      mCurrentSkinningMode = static_cast<SkinningMode>(mSelectedSkinningMode);
    }
 
-   // Sample the clip to get the animated pose
-   FastClip& currClip = mClips[mAnimationData.currentClipIndex];
-   mAnimationData.playbackTime = currClip.Sample(mAnimationData.animatedPose, mAnimationData.playbackTime + deltaTime);
+   // Ask the crossfade controller to sample the current clip and fade with the next one if necessary
+   mCrossFadeController.Update(deltaTime * mSelectedPlaybackSpeed);
 
    // --- --- ---
 
    // Ankle Correction
    // **********************************************************************************************************************************************
 
+   FastClip* currClip = mCrossFadeController.GetCurrentClip();
+   Pose&     currPose = mCrossFadeController.GetCurrentPose();
+
    // The keyframes of the pin tracks are set in normalized time, so they must be sampled with the normalized time
-   float normalizedPlaybackTime = (mAnimationData.playbackTime - currClip.GetStartTime()) / currClip.GetDuration();
+   float normalizedPlaybackTime = (mCrossFadeController.GetPlaybackTime() - currClip->GetStartTime()) / currClip->GetDuration();
    float leftLegPinTrackValue   = mLeftLeg.GetPinTrack().Sample(normalizedPlaybackTime, true);
    float rightLegPinTrackValue  = mRightLeg.GetPinTrack().Sample(normalizedPlaybackTime, true);
 
    // Calculate the world positions of the left and right ankles
    // We do this by combining the model transform of the character (mModelTransform) with the global transforms of the joints
    // Note the parent-child order here, which makes sense
-   glm::vec3 worldPosOfLeftAnkle  = combine(mModelTransform, mAnimationData.animatedPose.GetGlobalTransform(mLeftLeg.GetAnkleIndex())).position;
-   glm::vec3 worldPosOfRightAnkle = combine(mModelTransform, mAnimationData.animatedPose.GetGlobalTransform(mRightLeg.GetAnkleIndex())).position;
+   glm::vec3 worldPosOfLeftAnkle  = combine(mModelTransform, currPose.GetGlobalTransform(mLeftLeg.GetAnkleIndex())).position;
+   glm::vec3 worldPosOfRightAnkle = combine(mModelTransform, currPose.GetGlobalTransform(mRightLeg.GetAnkleIndex())).position;
 
    // Construct rays for the left and right ankles
    // These shoot down from the height of the hip
@@ -440,14 +446,14 @@ void IKMovementState::update(float deltaTime)
    worldPosOfRightAnkle = glm::lerp(worldPosOfRightAnkle, rightAnkleGroundIKTarget, rightLegPinTrackValue);
 
    // Solve the IK chains of the left and right legs so that their end effectors (ankles) are at the positions we interpolated above
-   mLeftLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfLeftAnkle);
-   mRightLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfRightAnkle);
+   mLeftLeg.Solve(mModelTransform, currPose, worldPosOfLeftAnkle);
+   mRightLeg.Solve(mModelTransform, currPose, worldPosOfRightAnkle);
 
    // Blend the resulting IK chains into the animated pose
    // Note how the blend factor is equal to 1.0f
    // We want the legs of the animated pose to be equal to the IK chains
-   Blend(mAnimationData.animatedPose, mLeftLeg.GetAdjustedPose(), 1.0f, mLeftLeg.GetHipIndex(), mAnimationData.animatedPose);
-   Blend(mAnimationData.animatedPose, mRightLeg.GetAdjustedPose(), 1.0f, mRightLeg.GetHipIndex(), mAnimationData.animatedPose);
+   Blend(currPose, mLeftLeg.GetAdjustedPose(), 1.0f, mLeftLeg.GetHipIndex(), currPose);
+   Blend(currPose, mRightLeg.GetAdjustedPose(), 1.0f, mRightLeg.GetHipIndex(), currPose);
 
    // Toe Correction
    // **********************************************************************************************************************************************
@@ -455,14 +461,14 @@ void IKMovementState::update(float deltaTime)
    // Calculate the world transforms of the final ankles
    // We do this by combining the model transform of the character (mModelTransform) with the global transforms of the joints
    // Note the parent-child order here, which makes sense
-   Transform worldTransfOfLeftAnkle  = combine(mModelTransform, mAnimationData.animatedPose.GetGlobalTransform(mLeftLeg.GetAnkleIndex()));
-   Transform worldTransfOfRightAnkle = combine(mModelTransform, mAnimationData.animatedPose.GetGlobalTransform(mRightLeg.GetAnkleIndex()));
+   Transform worldTransfOfLeftAnkle  = combine(mModelTransform, currPose.GetGlobalTransform(mLeftLeg.GetAnkleIndex()));
+   Transform worldTransfOfRightAnkle = combine(mModelTransform, currPose.GetGlobalTransform(mRightLeg.GetAnkleIndex()));
 
    // Calculate the world positions of the toes
    // We do this by combining the model transform of the character (mModelTransform) with the global transforms of the joints
    // Note the parent-child order here, which makes sense
-   glm::vec3 worldPosOfLeftToe = combine(mModelTransform, mAnimationData.animatedPose.GetGlobalTransform(mLeftLeg.GetToeIndex())).position;
-   glm::vec3 worldPosOfRightToe = combine(mModelTransform, mAnimationData.animatedPose.GetGlobalTransform(mRightLeg.GetToeIndex())).position;
+   glm::vec3 worldPosOfLeftToe = combine(mModelTransform, currPose.GetGlobalTransform(mLeftLeg.GetToeIndex())).position;
+   glm::vec3 worldPosOfRightToe = combine(mModelTransform, currPose.GetGlobalTransform(mRightLeg.GetToeIndex())).position;
 
    // World forward direction of character
    glm::vec3 worldFwdDirOfCharacter = mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f);
@@ -562,12 +568,12 @@ void IKMovementState::update(float deltaTime)
       Q::quat newLocalRotOfLeftAnkle = newWorldRotOfLeftAnkle * inverse(worldTransfOfLeftAnkle.rotation);
 
       // Get the local transform of the left ankle
-      Transform localTransfOfLeftAnkle = mAnimationData.animatedPose.GetLocalTransform(mLeftLeg.GetAnkleIndex());
+      Transform localTransfOfLeftAnkle = currPose.GetLocalTransform(mLeftLeg.GetAnkleIndex());
       // Multiply newLocalRotOfLeftAnkle by the old local rotation of the left ankle to get:
       // localTransfOfLeftAnkle * newLocalRotOfLeftAnkle = A_old * A_old^-1 * A_new = A_new
       localTransfOfLeftAnkle.rotation = newLocalRotOfLeftAnkle * localTransfOfLeftAnkle.rotation;
       // Update the local transform of the left ankle in the pose
-      mAnimationData.animatedPose.SetLocalTransform(mLeftLeg.GetAnkleIndex(), localTransfOfLeftAnkle);
+      currPose.SetLocalTransform(mLeftLeg.GetAnkleIndex(), localTransfOfLeftAnkle);
    }
 
    // Rotate the right ankle if necessary
@@ -587,42 +593,42 @@ void IKMovementState::update(float deltaTime)
       Q::quat newLocalRotOfRightAnkle = newWorldRotOfRightAnkle * inverse(worldTransfOfRightAnkle.rotation);
 
       // Get the local transform of the right ankle
-      Transform localTransfOfRightAnkle = mAnimationData.animatedPose.GetLocalTransform(mRightLeg.GetAnkleIndex());
+      Transform localTransfOfRightAnkle = currPose.GetLocalTransform(mRightLeg.GetAnkleIndex());
       // Multiply newLocalRotOfRightAnkle by the old local rotation of the right ankle to get:
       // localTransfOfRightAnkle * newLocalRotOfRightAnkle = A_old * A_old^-1 * A_new = A_new
       localTransfOfRightAnkle.rotation = newLocalRotOfRightAnkle * localTransfOfRightAnkle.rotation;
       // Update the local transform of the right ankle in the pose
-      mAnimationData.animatedPose.SetLocalTransform(mRightLeg.GetAnkleIndex(), localTransfOfRightAnkle);
+      currPose.SetLocalTransform(mRightLeg.GetAnkleIndex(), localTransfOfRightAnkle);
    }
 
    // --- --- ---
 
    // Get the palette of the animated pose
-   mAnimationData.animatedPose.GetMatrixPalette(mAnimationData.animatedPosePalette);
+   currPose.GetMatrixPalette(mPosePalette);
 
    std::vector<glm::mat4>& inverseBindPose = mSkeleton.GetInvBindPose();
 
    // Generate the skin matrices
-   mAnimationData.skinMatrices.resize(mAnimationData.animatedPosePalette.size());
+   mSkinMatrices.resize(mPosePalette.size());
    for (unsigned int i = 0,
-        size = static_cast<unsigned int>(mAnimationData.animatedPosePalette.size());
+        size = static_cast<unsigned int>(mPosePalette.size());
         i < size;
         ++i)
    {
-      mAnimationData.skinMatrices[i] = mAnimationData.animatedPosePalette[i] * inverseBindPose[i];
+      mSkinMatrices[i] = mPosePalette[i] * inverseBindPose[i];
    }
 
    // Skin the meshes on the CPU if that's the current skinning mode
-   if (mAnimationData.currentSkinningMode == SkinningMode::CPU)
+   if (mCurrentSkinningMode == SkinningMode::CPU)
    {
       for (unsigned int i = 0, size = (unsigned int)mAnimatedMeshes.size(); i < size; ++i)
       {
-         mAnimatedMeshes[i].SkinMeshOnTheCPU(mAnimationData.skinMatrices);
+         mAnimatedMeshes[i].SkinMeshOnTheCPU(mSkinMatrices);
       }
    }
 
    // Update the skeleton viewer
-   mSkeletonViewer.UpdateBones(mAnimationData.animatedPose, mAnimationData.animatedPosePalette);
+   mSkeletonViewer.UpdateBones(currPose, mPosePalette);
 }
 
 void IKMovementState::render()
@@ -644,7 +650,7 @@ void IKMovementState::render()
    }
 
    // Render the animated meshes
-   if (mAnimationData.currentSkinningMode == SkinningMode::CPU && mDisplayMesh)
+   if (mCurrentSkinningMode == SkinningMode::CPU && mDisplayMesh)
    {
       mStaticMeshShader->use(true);
       mStaticMeshShader->setUniformMat4("model",      transformToMat4(mModelTransform));
@@ -665,13 +671,13 @@ void IKMovementState::render()
       mDiffuseTexture->unbind(0);
       mStaticMeshShader->use(false);
    }
-   else if (mAnimationData.currentSkinningMode == SkinningMode::GPU && mDisplayMesh)
+   else if (mCurrentSkinningMode == SkinningMode::GPU && mDisplayMesh)
    {
       mAnimatedMeshShader->use(true);
       mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mModelTransform));
       mAnimatedMeshShader->setUniformMat4("view",             mCamera3.getViewMatrix());
       mAnimatedMeshShader->setUniformMat4("projection",       mCamera3.getPerspectiveProjectionMatrix());
-      mAnimatedMeshShader->setUniformMat4Array("animated[0]", mAnimationData.skinMatrices);
+      mAnimatedMeshShader->setUniformMat4Array("animated[0]", mSkinMatrices);
       //mAnimatedMeshShader->setUniformVec3("cameraPos",        mCamera3.getPosition());
       mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("diffuseTex"));
 
@@ -713,7 +719,7 @@ void IKMovementState::render()
    // Render the joints
    if (mDisplayJoints)
    {
-      mSkeletonViewer.RenderJoints(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix(), mAnimationData.animatedPosePalette);
+      mSkeletonViewer.RenderJoints(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix(), mPosePalette);
    }
 
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -861,8 +867,6 @@ void IKMovementState::userInterface()
    ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
    ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
-
-   ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
 
    ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
 

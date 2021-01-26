@@ -290,7 +290,7 @@ void MovementState::processInput(float deltaTime)
          else
          {
             mIsWalking = true;
-            mCrossFadeController.FadeTo(&mClips["Walking"], 0.25f,  false);
+            mCrossFadeController.FadeTo(&mClips["Walking"], 0.25f, false);
          }
       }
       else if (mIsWalking)

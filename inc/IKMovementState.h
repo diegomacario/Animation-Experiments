@@ -10,6 +10,7 @@
 #include "Clip.h"
 #include "Triangle.h"
 #include "IKLeg.h"
+#include "CrossFadeControllerMultiple.h"
 #include "Camera3.h"
 
 class IKMovementState : public State
@@ -66,25 +67,6 @@ private:
       CPU = 1,
    };
 
-   struct AnimationData
-   {
-      AnimationData()
-         : currentClipIndex(0)
-         , currentSkinningMode(SkinningMode::GPU)
-         , playbackTime(0.0f)
-      {
-
-      }
-
-      unsigned int           currentClipIndex;
-      SkinningMode           currentSkinningMode;
-
-      float                  playbackTime;
-      Pose                   animatedPose;
-      std::vector<glm::mat4> animatedPosePalette;
-      std::vector<glm::mat4> skinMatrices;
-   };
-
    std::shared_ptr<Shader>   mAnimatedMeshShader;
    std::shared_ptr<Shader>   mStaticMeshShader;
    std::shared_ptr<Texture>  mDiffuseTexture;
@@ -92,9 +74,7 @@ private:
    Skeleton                  mSkeleton;
    std::vector<AnimatedMesh> mAnimatedMeshes;
    SkeletonViewer            mSkeletonViewer;
-   std::vector<FastClip>     mClips;
-   std::string               mClipNames;
-   int                       mSelectedClip;
+   SkinningMode              mCurrentSkinningMode;
    int                       mSelectedSkinningMode;
    float                     mSelectedPlaybackSpeed;
    bool                      mDisplayMesh;
@@ -104,7 +84,18 @@ private:
    bool                      mWireframeModeForJoints;
    bool                      mPerformDepthTesting;
 
-   AnimationData             mAnimationData;
+   // --- --- ---
+
+   std::map<std::string, FastClip> mClips;
+
+   FastCrossFadeControllerMultiple mCrossFadeController;
+   std::vector<glm::mat4>          mPosePalette;
+   std::vector<glm::mat4>          mSkinMatrices;
+
+   Transform                       mModelTransform;
+   float                           mCharacterWalkingSpeed = 4.0f;
+   float                           mCharacterWalkingRotationSpeed = 100.0f;
+   bool                            mIsWalking = false;
 
    // --- --- ---
 
@@ -115,7 +106,6 @@ private:
    IKLeg                     mLeftLeg;
    IKLeg                     mRightLeg;
 
-   Transform                 mModelTransform;
    float                     mHeightOfOriginOfYPositionRay;
    float                     mPreviousYPositionOfCharacter;
    float                     mSinkIntoGround;
@@ -124,9 +114,6 @@ private:
    float                     mDistanceFromAnkleToToe;
 
    // --- --- ---
-
-   float                     mCharacterWalkingSpeed = 4.0f;
-   float                     mCharacterWalkingRotationSpeed = 100.0f;
 
    void determineYPosition();
 };
