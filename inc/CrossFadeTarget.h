@@ -8,10 +8,10 @@ template <typename CLIP>
 struct TCrossFadeTarget
 {
    TCrossFadeTarget();
-   TCrossFadeTarget(CLIP* target, Pose& pose, float fadeDuration, bool lock);
+   TCrossFadeTarget(CLIP* clip, Pose& pose, float fadeDuration, bool lock);
 
-   Pose  mPose;
    CLIP* mClip;
+   Pose  mPose;
    float mPlaybackTime;
    float mFadeDuration;
    float mFadeTime;

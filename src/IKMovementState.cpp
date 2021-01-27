@@ -72,11 +72,14 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
       mClips.insert(std::make_pair(currClip.GetName(), currClip));
    }
 
+   // Configure the pin tracks for all the clips
+   configurePinTracks();
+
    // Set the initial clip and initialize the crossfade controller
-   mCrossFadeController.SetSkeleton(mSkeleton);
-   mCrossFadeController.Play(&mClips["Idle"], false);
-   mCrossFadeController.Update(0.0f);
-   mCrossFadeController.GetCurrentPose().GetMatrixPalette(mPosePalette);
+   mIKCrossFadeController.SetSkeleton(mSkeleton);
+   mIKCrossFadeController.Play(&mClips["Idle"], &mLeftFootPinTracks["Idle"], &mRightFootPinTracks["Idle"], false);
+   mIKCrossFadeController.Update(0.0f);
+   mIKCrossFadeController.GetCurrentPose().GetMatrixPalette(mPosePalette);
 
    // Configure the VAOs of the animated meshes
    int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
@@ -113,7 +116,7 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
 
    // Initialize the bones of the skeleton viewer
-   mSkeletonViewer.InitializeBones(mCrossFadeController.GetCurrentPose());
+   mSkeletonViewer.InitializeBones(mIKCrossFadeController.GetCurrentPose());
 
    // --- --- ---
 
@@ -148,9 +151,6 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    mLeftLeg.SetAnkleOffset(0.2f);  // The left ankle is 0.2 units above the ground
    mRightLeg = IKLeg(mSkeleton, "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase");
    mRightLeg.SetAnkleOffset(0.2f); // The right ankle is 0.2 units above the ground
-
-   // Configure the pin tracks for all the clips
-   configurePinTracks();
 
    // Initialize the values we use to describe the position of the character
    mHeightOfOriginOfYPositionRay = 11.0f;
@@ -268,7 +268,7 @@ void IKMovementState::processInput(float deltaTime)
       if (!mIsWalking)
       {
          mIsWalking = true;
-         mCrossFadeController.FadeTo(&mClips["Walking"], 0.25f, false);
+         mIKCrossFadeController.FadeTo(&mClips["Walking"], &mLeftFootPinTracks["Walking"], &mRightFootPinTracks["Walking"], 0.25f, false);
       }
    }
    else
@@ -276,7 +276,7 @@ void IKMovementState::processInput(float deltaTime)
       if (mIsWalking)
       {
          mIsWalking = false;
-         mCrossFadeController.FadeTo(&mClips["Idle"], 0.25f, false);
+         mIKCrossFadeController.FadeTo(&mClips["Idle"], &mLeftFootPinTracks["Idle"], &mRightFootPinTracks["Idle"], 0.25f, false);
       }
    }
 }
@@ -311,34 +311,19 @@ void IKMovementState::update(float deltaTime)
    }
 
    // Ask the crossfade controller to sample the current clip and fade with the next one if necessary
-   mCrossFadeController.Update(deltaTime * mSelectedPlaybackSpeed);
+   mIKCrossFadeController.Update(deltaTime * mSelectedPlaybackSpeed);
 
    // --- --- ---
 
    // Ankle Correction
    // **********************************************************************************************************************************************
 
-   FastClip* currClip = mCrossFadeController.GetCurrentClip();
-   Pose&     currPose = mCrossFadeController.GetCurrentPose();
-
-   ScalarTrack* currLeftLegPinTrack;
-   ScalarTrack* currRightLegPinTrack;
-
-   if (mIsWalking)
-   {
-      currLeftLegPinTrack = &mLeftFootPinTracks["Walking"];
-      currRightLegPinTrack = &mRightFootPinTracks["Walking"];
-   }
-   else
-   {
-      currLeftLegPinTrack = &mLeftFootPinTracks["Idle"];
-      currRightLegPinTrack = &mRightFootPinTracks["Idle"];
-   }
+   FastClip* currClip = mIKCrossFadeController.GetCurrentClip();
+   Pose&     currPose = mIKCrossFadeController.GetCurrentPose();
 
    // The keyframes of the pin tracks are set in normalized time, so they must be sampled with the normalized time
-   float normalizedPlaybackTime = (mCrossFadeController.GetPlaybackTime() - currClip->GetStartTime()) / currClip->GetDuration();
-   float leftLegPinTrackValue   = currLeftLegPinTrack->Sample(normalizedPlaybackTime, true);
-   float rightLegPinTrackValue  = currRightLegPinTrack->Sample(normalizedPlaybackTime, true);
+   float leftFootPinTrackValue   = mIKCrossFadeController.GetCurrentLeftFootPinTrackValue();
+   float rightFootPinTrackValue  = mIKCrossFadeController.GetCurrentRightFootPinTrackValue();
 
    // Calculate the world positions of the left and right ankles
    // We do this by combining the model transform of the character (mModelTransform) with the global transforms of the joints
@@ -416,9 +401,9 @@ void IKMovementState::update(float deltaTime)
    // If the pin track says that the foot should not be on the ground, the the world position of the ankle, which is given by the animation clip, will be favored
    // Note that if we detected that there's ground above the ankle, worldPosOfLeftAnkle and leftAnkleGroundIKTarget will be the same, which means that the foot
    // will be on the ground regardless of what the pin track says
-   worldPosOfLeftAnkle  = glm::lerp(worldPosOfLeftAnkle, leftAnkleGroundIKTarget, leftLegPinTrackValue);
+   worldPosOfLeftAnkle  = glm::lerp(worldPosOfLeftAnkle, leftAnkleGroundIKTarget, leftFootPinTrackValue);
    // Do the same for the right ankle
-   worldPosOfRightAnkle = glm::lerp(worldPosOfRightAnkle, rightAnkleGroundIKTarget, rightLegPinTrackValue);
+   worldPosOfRightAnkle = glm::lerp(worldPosOfRightAnkle, rightAnkleGroundIKTarget, rightFootPinTrackValue);
 
    // Solve the IK chains of the left and right legs so that their end effectors (ankles) are at the positions we interpolated above
    mLeftLeg.Solve(mModelTransform, currPose, worldPosOfLeftAnkle);
@@ -522,9 +507,9 @@ void IKMovementState::update(float deltaTime)
    // If the pin track says that the toe should not be on the ground, the the world position of the toe, which is given by the animation clip, will be favored
    // Note that if we detected that there's ground above the toe, newWorldPosOfLeftToe and leftToeGroundIKTarget will be the same, which means that the toe
    // will be on the ground regardless of what the pin track says
-   newWorldPosOfLeftToe = glm::lerp(newWorldPosOfLeftToe, leftToeGroundIKTarget, leftLegPinTrackValue);
+   newWorldPosOfLeftToe = glm::lerp(newWorldPosOfLeftToe, leftToeGroundIKTarget, leftFootPinTrackValue);
    // Do the same for the right toes
-   newWorldPosOfRightToe = glm::lerp(newWorldPosOfRightToe, rightToeGroundIKTarget, rightLegPinTrackValue);
+   newWorldPosOfRightToe = glm::lerp(newWorldPosOfRightToe, rightToeGroundIKTarget, rightFootPinTrackValue);
 
    // Rotate the left ankle if necessary
    glm::vec3 leftAnkleToCurrToe = worldPosOfLeftToe - worldTransfOfLeftAnkle.position;

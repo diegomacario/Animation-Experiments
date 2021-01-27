@@ -10,7 +10,7 @@
 #include "Clip.h"
 #include "Triangle.h"
 #include "IKLeg.h"
-#include "CrossFadeControllerMultiple.h"
+#include "IKCrossFadeController.h"
 #include "Camera3.h"
 
 class IKMovementState : public State
@@ -90,14 +90,14 @@ private:
    std::map<std::string, ScalarTrack> mLeftFootPinTracks;
    std::map<std::string, ScalarTrack> mRightFootPinTracks;
 
-   FastCrossFadeControllerMultiple mCrossFadeController;
-   std::vector<glm::mat4>          mPosePalette;
-   std::vector<glm::mat4>          mSkinMatrices;
+   FastIKCrossFadeController mIKCrossFadeController;
+   std::vector<glm::mat4>    mPosePalette;
+   std::vector<glm::mat4>    mSkinMatrices;
 
-   Transform                       mModelTransform;
-   float                           mCharacterWalkingSpeed = 4.0f;
-   float                           mCharacterWalkingRotationSpeed = 100.0f;
-   bool                            mIsWalking = false;
+   Transform                 mModelTransform;
+   float                     mCharacterWalkingSpeed = 4.0f;
+   float                     mCharacterWalkingRotationSpeed = 100.0f;
+   bool                      mIsWalking = false;
 
    // --- --- ---
 

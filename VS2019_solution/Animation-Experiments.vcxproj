@@ -45,6 +45,8 @@
     <ClInclude Include="..\inc\game.h" />
     <ClInclude Include="..\inc\game_object_3D.h" />
     <ClInclude Include="..\inc\GLTFLoader.h" />
+    <ClInclude Include="..\inc\IKCrossFadeController.h" />
+    <ClInclude Include="..\inc\IKCrossFadeTarget.h" />
     <ClInclude Include="..\inc\IKLeg.h" />
     <ClInclude Include="..\inc\IKState.h" />
     <ClInclude Include="..\inc\Interpolation.h" />
@@ -99,6 +101,8 @@
     <ClCompile Include="..\src\game.cpp" />
     <ClCompile Include="..\src\game_object_3D.cpp" />
     <ClCompile Include="..\src\GLTFLoader.cpp" />
+    <ClCompile Include="..\src\IKCrossFadeController.cpp" />
+    <ClCompile Include="..\src\IKCrossFadeTarget.cpp" />
     <ClCompile Include="..\src\IKLeg.cpp" />
     <ClCompile Include="..\src\IKState.cpp" />
     <ClCompile Include="..\src\Intersection.cpp" />

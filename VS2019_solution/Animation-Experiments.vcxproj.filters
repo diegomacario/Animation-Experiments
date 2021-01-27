@@ -151,6 +151,12 @@
     <ClCompile Include="..\src\Camera3.cpp">
       <Filter>Animation-Experiments\Source Files\Base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\IKCrossFadeController.cpp">
+      <Filter>Animation-Experiments\Source Files\IK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\IKCrossFadeTarget.cpp">
+      <Filter>Animation-Experiments\Source Files\IK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -314,6 +320,12 @@
     </ClInclude>
     <ClInclude Include="..\inc\Camera3.h">
       <Filter>Animation-Experiments\Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\IKCrossFadeController.h">
+      <Filter>Animation-Experiments\Header Files\IK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\IKCrossFadeTarget.h">
+      <Filter>Animation-Experiments\Header Files\IK</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
