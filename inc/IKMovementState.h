@@ -96,8 +96,11 @@ private:
 
    Transform                 mModelTransform;
    float                     mCharacterWalkingSpeed = 4.0f;
+   float                     mCharacterRunningSpeed = 12.0f;
    float                     mCharacterWalkingRotationSpeed = 100.0f;
+   float                     mCharacterRunningRotationSpeed = 200.0f;
    bool                      mIsWalking = false;
+   bool                      mIsRunning = false;
 
    // --- --- ---
 

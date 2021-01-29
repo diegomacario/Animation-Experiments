@@ -226,9 +226,15 @@ void IKMovementState::processInput(float deltaTime)
    // --- --- ---
 
    bool movementKeyPressed  = false;
+   bool leftShiftKeyPressed = mWindow->keyIsPressed(GLFW_KEY_LEFT_SHIFT);
 
    float movementSpeed = mCharacterWalkingSpeed;
    float rotationSpeed = mCharacterWalkingRotationSpeed;
+   if (leftShiftKeyPressed)
+   {
+      movementSpeed = mCharacterRunningSpeed;
+      rotationSpeed = mCharacterRunningRotationSpeed;
+   }
 
    // Move and orient the character
    if (mWindow->keyIsPressed(GLFW_KEY_A))
@@ -265,16 +271,43 @@ void IKMovementState::processInput(float deltaTime)
 
    if (movementKeyPressed)
    {
-      if (!mIsWalking)
+      if (!mIsWalking && !mIsRunning)
       {
-         mIsWalking = true;
-         mIKCrossFadeController.FadeTo(&mClips["Walking"], &mLeftFootPinTracks["Walking"], &mRightFootPinTracks["Walking"], 0.25f, false);
+         if (leftShiftKeyPressed)
+         {
+            mIsRunning = true;
+            mIKCrossFadeController.FadeTo(&mClips["Running"], &mLeftFootPinTracks["Running"], &mRightFootPinTracks["Running"], 0.25f, false);
+         }
+         else
+         {
+            mIsWalking = true;
+            mIKCrossFadeController.FadeTo(&mClips["Walking"], &mLeftFootPinTracks["Walking"], &mRightFootPinTracks["Walking"], 0.25f, false);
+         }
+      }
+      else if (mIsWalking)
+      {
+         if (leftShiftKeyPressed)
+         {
+            mIsWalking = false;
+            mIsRunning = true;
+            mIKCrossFadeController.FadeTo(&mClips["Running"], &mLeftFootPinTracks["Running"], &mRightFootPinTracks["Running"], 0.25f, false);
+         }
+      }
+      else if (mIsRunning)
+      {
+         if (!leftShiftKeyPressed)
+         {
+            mIsRunning = false;
+            mIsWalking = true;
+            mIKCrossFadeController.FadeTo(&mClips["Walking"], &mLeftFootPinTracks["Walking"], &mRightFootPinTracks["Walking"], 0.25f, false);
+         }
       }
    }
    else
    {
-      if (mIsWalking)
+      if (mIsWalking || mIsRunning)
       {
+         mIsRunning = false;
          mIsWalking = false;
          mIKCrossFadeController.FadeTo(&mClips["Idle"], &mLeftFootPinTracks["Idle"], &mRightFootPinTracks["Idle"], 0.25f, false);
       }
@@ -878,6 +911,20 @@ void IKMovementState::configurePinTracks()
    leftFootWalkingPinTrack.GetFrame(3).mTime     = 1.0f;
    leftFootWalkingPinTrack.GetFrame(3).mValue[0] = 0;
 
+   //// Mine walking
+   //// Frame 0
+   //mLeftFootPinTrack.GetFrame(0).mTime = 0.0f;
+   //mLeftFootPinTrack.GetFrame(0).mValue[0] = 0;
+   //// Frame 1
+   //mLeftFootPinTrack.GetFrame(1).mTime = 0.367f;
+   //mLeftFootPinTrack.GetFrame(1).mValue[0] = 1;
+   //// Frame 2
+   //mLeftFootPinTrack.GetFrame(2).mTime = 0.5f;
+   //mLeftFootPinTrack.GetFrame(2).mValue[0] = 1;
+   //// Frame 3
+   //mLeftFootPinTrack.GetFrame(3).mTime = 1.0f;
+   //mLeftFootPinTrack.GetFrame(3).mValue[0] = 0;
+
    // Compose the pin track of the right foot, which tells us when the right foot is on and off the ground
    // Note that the times of the keyframes that make up this pin track are normalized, which means that
    // it must be sampled with the current time of an animation divided by its duration
@@ -896,6 +943,20 @@ void IKMovementState::configurePinTracks()
    // Frame 3
    rightFootWalkingPinTrack.GetFrame(3).mTime     = 1.0f;
    rightFootWalkingPinTrack.GetFrame(3).mValue[0] = 1;
+
+   //// Mine walking
+   //// Frame 0
+   //mRightFootPinTrack.GetFrame(0).mTime = 0.0f;
+   //mRightFootPinTrack.GetFrame(0).mValue[0] = 1;
+   //// Frame 1
+   //mRightFootPinTrack.GetFrame(1).mTime = 0.346f;
+   //mRightFootPinTrack.GetFrame(1).mValue[0] = 0;
+   //// Frame 2
+   //mRightFootPinTrack.GetFrame(2).mTime = 0.78f;
+   //mRightFootPinTrack.GetFrame(2).mValue[0] = 0;
+   //// Frame 3
+   //mRightFootPinTrack.GetFrame(3).mTime = 1.0f;
+   //mRightFootPinTrack.GetFrame(3).mValue[0] = 1;
 
    mLeftFootPinTracks.insert(std::make_pair("Walking", leftFootWalkingPinTrack));
    mRightFootPinTracks.insert(std::make_pair("Walking", rightFootWalkingPinTrack));
@@ -924,6 +985,43 @@ void IKMovementState::configurePinTracks()
 
    mLeftFootPinTracks.insert(std::make_pair("Idle", leftFootIdlePinTrack));
    mRightFootPinTracks.insert(std::make_pair("Idle", rightFootIdlePinTrack));
+
+   // Running pin tracks
+
+   ScalarTrack leftFootRunningPinTrack;
+   leftFootRunningPinTrack.SetInterpolation(Interpolation::Cubic);
+   leftFootRunningPinTrack.SetNumberOfFrames(4);
+   // Frame 0
+   leftFootRunningPinTrack.GetFrame(0).mTime = 0.0f;
+   leftFootRunningPinTrack.GetFrame(0).mValue[0] = 0;
+   // Frame 1
+   leftFootRunningPinTrack.GetFrame(1).mTime = 0.38f;
+   leftFootRunningPinTrack.GetFrame(1).mValue[0] = 1;
+   // Frame 2
+   leftFootRunningPinTrack.GetFrame(2).mTime = 0.55f;
+   leftFootRunningPinTrack.GetFrame(2).mValue[0] = 1;
+   // Frame 3
+   leftFootRunningPinTrack.GetFrame(3).mTime = 1.0f;
+   leftFootRunningPinTrack.GetFrame(3).mValue[0] = 0;
+
+   ScalarTrack rightFootRunningPinTrack;
+   rightFootRunningPinTrack.SetInterpolation(Interpolation::Cubic);
+   rightFootRunningPinTrack.SetNumberOfFrames(4);
+   // Frame 0
+   rightFootRunningPinTrack.GetFrame(0).mTime = 0.0f;
+   rightFootRunningPinTrack.GetFrame(0).mValue[0] = 1;
+   // Frame 1
+   rightFootRunningPinTrack.GetFrame(1).mTime = 0.152f;
+   rightFootRunningPinTrack.GetFrame(1).mValue[0] = 0;
+   // Frame 2
+   rightFootRunningPinTrack.GetFrame(2).mTime = 0.8f;
+   rightFootRunningPinTrack.GetFrame(2).mValue[0] = 0;
+   // Frame 3
+   rightFootRunningPinTrack.GetFrame(3).mTime = 1.0f;
+   rightFootRunningPinTrack.GetFrame(3).mValue[0] = 1;
+
+   mLeftFootPinTracks.insert(std::make_pair("Running", leftFootRunningPinTrack));
+   mRightFootPinTracks.insert(std::make_pair("Running", rightFootRunningPinTrack));
 }
 
 void IKMovementState::determineYPosition()
