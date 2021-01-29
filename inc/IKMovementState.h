@@ -101,6 +101,8 @@ private:
    float                     mCharacterRunningRotationSpeed = 200.0f;
    bool                      mIsWalking = false;
    bool                      mIsRunning = false;
+   bool                      mIsInAir = false;
+   bool                      mJumpingWhileIdle = false;
 
    // --- --- ---
 

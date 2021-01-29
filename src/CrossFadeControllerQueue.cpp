@@ -98,7 +98,7 @@ void TCrossFadeControllerQueue<CLIP>::Update(float dt)
       {
          // If yes, replace the current clip with the clip of the target that just expired and remove the expired target from the queue
          mCurrentClip  = currentTarget.mClip;
-         mPlaybackTime = currentTarget.mFadeTime;
+         mPlaybackTime = currentTarget.mPlaybackTime;
          mCurrentPose  = currentTarget.mPose;
          mTargets.pop();
       }

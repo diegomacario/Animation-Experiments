@@ -69,7 +69,6 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
 
    mClips["Jump"].SetLooping(false);
    mClips["Jump2"].SetLooping(false);
-   mClips["Punch"].SetLooping(false);
 
    // Set the initial clip and initialize the crossfade controller
    mCrossFadeController.SetSkeleton(mSkeleton);
@@ -123,6 +122,8 @@ void MovementState::enter()
 
 void MovementState::processInput(float deltaTime)
 {
+   deltaTime *= mSelectedPlaybackSpeed;
+
    // Close the game
    if (mWindow->keyIsPressed(GLFW_KEY_ESCAPE))
    {
@@ -325,6 +326,8 @@ void MovementState::processInput(float deltaTime)
 
 void MovementState::update(float deltaTime)
 {
+   deltaTime *= mSelectedPlaybackSpeed;
+
    if (mCurrentSkinningMode != mSelectedSkinningMode)
    {
       if (mCurrentSkinningMode == SkinningMode::GPU)
@@ -340,7 +343,7 @@ void MovementState::update(float deltaTime)
    }
 
    // Ask the crossfade controller to sample the current clip and fade with the next one if necessary
-   mCrossFadeController.Update(deltaTime * mSelectedPlaybackSpeed);
+   mCrossFadeController.Update(deltaTime);
 
    // Get the palette of the pose
    mCrossFadeController.GetCurrentPose().GetMatrixPalette(mPosePalette);

@@ -105,8 +105,6 @@ void TIKCrossFadeController<CLIP>::FadeTo(CLIP* targetClip, ScalarTrack* leftFoo
    mTargets.emplace_back(targetClip, leftFootPinTrack, rightFootPinTrack, mSkeleton.GetRestPose(), fadeDuration, lock);
 }
 
-#include <iostream>
-
 template <typename CLIP>
 void TIKCrossFadeController<CLIP>::Update(float dt)
 {
@@ -119,6 +117,10 @@ void TIKCrossFadeController<CLIP>::Update(float dt)
    if (mLock)
    {
       mPlaybackTime = mCurrentClip->Sample(mCurrentPose, mPlaybackTime + dt);
+
+      float normalizedPlaybackTime = (mPlaybackTime - mCurrentClip->GetStartTime()) / mCurrentClip->GetDuration();
+      mCurrentLeftFootPinTrackValue = mCurrentLeftFootPinTrack->Sample(normalizedPlaybackTime, true);
+      mCurrentRightFootPinTrackValue = mCurrentRightFootPinTrack->Sample(normalizedPlaybackTime, true);
    }
    else
    {
@@ -130,7 +132,7 @@ void TIKCrossFadeController<CLIP>::Update(float dt)
             mCurrentClip              = mTargets[targetIndex].mClip;
             mCurrentLeftFootPinTrack  = mTargets[targetIndex].mLeftFootPinTrack;
             mCurrentRightFootPinTrack = mTargets[targetIndex].mRightFootPinTrack;
-            mPlaybackTime             = mTargets[targetIndex].mFadeTime;
+            mPlaybackTime             = mTargets[targetIndex].mPlaybackTime;
             mCurrentPose              = mTargets[targetIndex].mPose;
             mLock                     = mTargets[targetIndex].mLock;
 
@@ -181,12 +183,6 @@ void TIKCrossFadeController<CLIP>::Update(float dt)
          // Blend the pin tracks
          mCurrentLeftFootPinTrackValue = glm::lerp(mCurrentLeftFootPinTrackValue, target.mLeftFootPinTrackValue, t);
          mCurrentRightFootPinTrackValue = glm::lerp(mCurrentRightFootPinTrackValue, target.mRightFootPinTrackValue, t);
-
-         if (mCurrentLeftFootPinTrackValue > 1.0f || mCurrentRightFootPinTrackValue > 1.0f)
-         {
-            std::cout << "Left Foot Pin Track Value  = " << mCurrentLeftFootPinTrackValue << '\n';
-            std::cout << "Right Foot Pin Track Value = " << mCurrentRightFootPinTrackValue << "\n\n";
-         }
       }
    }
 }

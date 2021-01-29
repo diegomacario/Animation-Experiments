@@ -72,6 +72,9 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
       mClips.insert(std::make_pair(currClip.GetName(), currClip));
    }
 
+   mClips["Jump"].SetLooping(false);
+   mClips["Jump2"].SetLooping(false);
+
    // Configure the pin tracks for all the clips
    configurePinTracks();
 
@@ -174,6 +177,8 @@ void IKMovementState::enter()
 
 void IKMovementState::processInput(float deltaTime)
 {
+   deltaTime *= mSelectedPlaybackSpeed;
+
    // Close the game
    if (mWindow->keyIsPressed(GLFW_KEY_ESCAPE)) { mWindow->setShouldClose(true); }
 
@@ -236,40 +241,92 @@ void IKMovementState::processInput(float deltaTime)
       rotationSpeed = mCharacterRunningRotationSpeed;
    }
 
-   // Move and orient the character
-   if (mWindow->keyIsPressed(GLFW_KEY_A))
+   if (!mJumpingWhileIdle)
    {
-      float degreesToRotate = rotationSpeed * deltaTime;
-      Q::quat rotation = Q::angleAxis(glm::radians(degreesToRotate), glm::vec3(0.0f, 1.0f, 0.0f));
-      mModelTransform.rotation = Q::normalized(mModelTransform.rotation * rotation);
-      movementKeyPressed = true;
+      // Move and orient the character
+      if (mWindow->keyIsPressed(GLFW_KEY_A))
+      {
+         float degreesToRotate = rotationSpeed * deltaTime;
+         Q::quat rotation = Q::angleAxis(glm::radians(degreesToRotate), glm::vec3(0.0f, 1.0f, 0.0f));
+         mModelTransform.rotation = Q::normalized(mModelTransform.rotation * rotation);
+         movementKeyPressed = true;
+      }
+
+      if (mWindow->keyIsPressed(GLFW_KEY_D))
+      {
+         float degreesToRotate = rotationSpeed * deltaTime;
+         Q::quat rotation = Q::angleAxis(glm::radians(-degreesToRotate), glm::vec3(0.0f, 1.0f, 0.0f));
+         mModelTransform.rotation = Q::normalized(mModelTransform.rotation * rotation);
+         movementKeyPressed = true;
+      }
+
+      if (mWindow->keyIsPressed(GLFW_KEY_W))
+      {
+         float distToMove = movementSpeed * deltaTime;
+         glm::vec3 characterFwd = mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f);
+         mModelTransform.position += characterFwd * distToMove;
+         movementKeyPressed = true;
+      }
+
+      if (mWindow->keyIsPressed(GLFW_KEY_S))
+      {
+         float distToMove = movementSpeed * deltaTime;
+         glm::vec3 characterFwd = mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f);
+         mModelTransform.position -= characterFwd * distToMove;
+         movementKeyPressed = true;
+      }
    }
 
-   if (mWindow->keyIsPressed(GLFW_KEY_D))
+   if (mWindow->keyIsPressed(GLFW_KEY_SPACE) && !mIsInAir)
    {
-      float degreesToRotate = rotationSpeed * deltaTime;
-      Q::quat rotation = Q::angleAxis(glm::radians(-degreesToRotate), glm::vec3(0.0f, 1.0f, 0.0f));
-      mModelTransform.rotation = Q::normalized(mModelTransform.rotation * rotation);
-      movementKeyPressed = true;
+      mIKCrossFadeController.ClearTargets();
+
+      //if (mIsWalking)
+      //{
+      //   mIKCrossFadeController.FadeTo(&mClips["Jump2"], 0.1f, true);
+      //   mJumpingWhileWalking = true;
+      //}
+      //else if (mIsRunning)
+      //{
+      //   mIKCrossFadeController.FadeTo(&mClips["Jump2"], 0.1f, true);
+      //   mJumpingWhileRunning = true;
+      //}
+      //else
+      {
+         mIKCrossFadeController.FadeTo(&mClips["Jump"], &mLeftFootPinTracks["Jump"], &mRightFootPinTracks["Jump"], 0.1f, true);
+         mJumpingWhileIdle = true;
+      }
+
+      mIsInAir = true;
    }
 
-   if (mWindow->keyIsPressed(GLFW_KEY_W))
+   if (mIsInAir)
    {
-      float distToMove = movementSpeed * deltaTime;
-      glm::vec3 characterFwd = mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f);
-      mModelTransform.position += characterFwd * distToMove;
-      movementKeyPressed = true;
+      if (mIKCrossFadeController.IsLocked() && mIKCrossFadeController.IsCurrentClipFinished())
+      {
+         mIKCrossFadeController.Unlock();
+
+         //if (mIsWalking)
+         //{
+         //   mIKCrossFadeController.FadeTo(&mClips["Walking"], &mLeftFootPinTracks["Walking"], &mRightFootPinTracks["Walking"], 0.15f, false);
+         //   //mJumpingWhileWalking = false;
+         //}
+         //else if (mIsRunning)
+         //{
+         //   mIKCrossFadeController.FadeTo(&mClips["Running"], &mLeftFootPinTracks["Running"], &mRightFootPinTracks["Running"], 0.15f, false);
+         //   //mJumpingWhileRunning = false;
+         //}
+         //else
+         {
+            mIKCrossFadeController.FadeTo(&mClips["Idle"], &mLeftFootPinTracks["Idle"], &mRightFootPinTracks["Idle"], 0.1f, false);
+            mJumpingWhileIdle = false;
+         }
+
+         mIsInAir = false;
+      }
    }
 
-   if (mWindow->keyIsPressed(GLFW_KEY_S))
-   {
-      float distToMove = movementSpeed * deltaTime;
-      glm::vec3 characterFwd = mModelTransform.rotation * glm::vec3(0.0f, 0.0f, 1.0f);
-      mModelTransform.position -= characterFwd * distToMove;
-      movementKeyPressed = true;
-   }
-
-   if (movementKeyPressed)
+   if (movementKeyPressed && !mIsInAir)
    {
       if (!mIsWalking && !mIsRunning)
       {
@@ -303,7 +360,7 @@ void IKMovementState::processInput(float deltaTime)
          }
       }
    }
-   else
+   else if (!mIsInAir)
    {
       if (mIsWalking || mIsRunning)
       {
@@ -344,7 +401,7 @@ void IKMovementState::update(float deltaTime)
    }
 
    // Ask the crossfade controller to sample the current clip and fade with the next one if necessary
-   mIKCrossFadeController.Update(deltaTime * mSelectedPlaybackSpeed);
+   mIKCrossFadeController.Update(deltaTime);
 
    // --- --- ---
 
@@ -1022,6 +1079,64 @@ void IKMovementState::configurePinTracks()
 
    mLeftFootPinTracks.insert(std::make_pair("Running", leftFootRunningPinTrack));
    mRightFootPinTracks.insert(std::make_pair("Running", rightFootRunningPinTrack));
+
+   // Jumping statically pin track
+
+   ScalarTrack leftAndRightFeetJumpingStaticallyPinTrack;
+   leftAndRightFeetJumpingStaticallyPinTrack.SetInterpolation(Interpolation::Cubic);
+   leftAndRightFeetJumpingStaticallyPinTrack.SetNumberOfFrames(4);
+   // Frame 0
+   leftAndRightFeetJumpingStaticallyPinTrack.GetFrame(0).mTime = 0.0f;
+   leftAndRightFeetJumpingStaticallyPinTrack.GetFrame(0).mValue[0] = 1;
+   // Frame 1
+   leftAndRightFeetJumpingStaticallyPinTrack.GetFrame(1).mTime = 0.297f;
+   leftAndRightFeetJumpingStaticallyPinTrack.GetFrame(1).mValue[0] = 0;
+   // Frame 2
+   leftAndRightFeetJumpingStaticallyPinTrack.GetFrame(2).mTime = 0.545f;
+   leftAndRightFeetJumpingStaticallyPinTrack.GetFrame(2).mValue[0] = 0;
+   // Frame 3
+   leftAndRightFeetJumpingStaticallyPinTrack.GetFrame(3).mTime = 1.0f;
+   leftAndRightFeetJumpingStaticallyPinTrack.GetFrame(3).mValue[0] = 1;
+
+   mLeftFootPinTracks.insert(std::make_pair("Jump", leftAndRightFeetJumpingStaticallyPinTrack));
+   mRightFootPinTracks.insert(std::make_pair("Jump", leftAndRightFeetJumpingStaticallyPinTrack));
+
+   // Jumping dynamically pin track
+
+   ScalarTrack leftFootJumpingDynamicallyPinTrack;
+   leftFootJumpingDynamicallyPinTrack.SetInterpolation(Interpolation::Cubic);
+   leftFootJumpingDynamicallyPinTrack.SetNumberOfFrames(4);
+   // Frame 0
+   leftFootJumpingDynamicallyPinTrack.GetFrame(0).mTime = 0.0f;
+   leftFootJumpingDynamicallyPinTrack.GetFrame(0).mValue[0] = 0;
+   // Frame 1
+   leftFootJumpingDynamicallyPinTrack.GetFrame(1).mTime = 0.845f;
+   leftFootJumpingDynamicallyPinTrack.GetFrame(1).mValue[0] = 1;
+   // Frame 2
+   leftFootJumpingDynamicallyPinTrack.GetFrame(2).mTime = 0.95f;
+   leftFootJumpingDynamicallyPinTrack.GetFrame(2).mValue[0] = 1;
+   // Frame 3
+   leftFootJumpingDynamicallyPinTrack.GetFrame(3).mTime = 1.0f;
+   leftFootJumpingDynamicallyPinTrack.GetFrame(3).mValue[0] = 0;
+
+   ScalarTrack rightFootJumpingDynamicallyPinTrack;
+   rightFootJumpingDynamicallyPinTrack.SetInterpolation(Interpolation::Cubic);
+   rightFootJumpingDynamicallyPinTrack.SetNumberOfFrames(4);
+   // Frame 0
+   rightFootJumpingDynamicallyPinTrack.GetFrame(0).mTime = 0.0f;
+   rightFootJumpingDynamicallyPinTrack.GetFrame(0).mValue[0] = 0;
+   // Frame 1
+   rightFootJumpingDynamicallyPinTrack.GetFrame(1).mTime = 0.672f;
+   rightFootJumpingDynamicallyPinTrack.GetFrame(1).mValue[0] = 1;
+   // Frame 2
+   rightFootJumpingDynamicallyPinTrack.GetFrame(2).mTime = 0.773f;
+   rightFootJumpingDynamicallyPinTrack.GetFrame(2).mValue[0] = 1;
+   // Frame 3
+   rightFootJumpingDynamicallyPinTrack.GetFrame(3).mTime = 1.0f;
+   rightFootJumpingDynamicallyPinTrack.GetFrame(3).mValue[0] = 0;
+
+   mLeftFootPinTracks.insert(std::make_pair("Jump2", leftFootJumpingDynamicallyPinTrack));
+   mRightFootPinTracks.insert(std::make_pair("Jump2", rightFootJumpingDynamicallyPinTrack));
 }
 
 void IKMovementState::determineYPosition()

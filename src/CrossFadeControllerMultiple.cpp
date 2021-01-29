@@ -114,7 +114,7 @@ void TCrossFadeControllerMultiple<CLIP>::Update(float dt)
          if (mTargets[targetIndex].mFadeTime >= mTargets[targetIndex].mFadeDuration)
          {
             mCurrentClip  = mTargets[targetIndex].mClip;
-            mPlaybackTime = mTargets[targetIndex].mFadeTime;
+            mPlaybackTime = mTargets[targetIndex].mPlaybackTime;
             mCurrentPose  = mTargets[targetIndex].mPose;
             mLock         = mTargets[targetIndex].mLock;
 
