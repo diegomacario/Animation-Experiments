@@ -235,7 +235,7 @@ void IKMovementState::processInput(float deltaTime)
 
    float movementSpeed = mCharacterWalkingSpeed;
    float rotationSpeed = mCharacterWalkingRotationSpeed;
-   if (leftShiftKeyPressed)
+   if ((leftShiftKeyPressed && !mJumpingWhileWalking) || mJumpingWhileRunning)
    {
       movementSpeed = mCharacterRunningSpeed;
       rotationSpeed = mCharacterRunningRotationSpeed;
@@ -281,17 +281,17 @@ void IKMovementState::processInput(float deltaTime)
    {
       mIKCrossFadeController.ClearTargets();
 
-      //if (mIsWalking)
-      //{
-      //   mIKCrossFadeController.FadeTo(&mClips["Jump2"], 0.1f, true);
-      //   mJumpingWhileWalking = true;
-      //}
-      //else if (mIsRunning)
-      //{
-      //   mIKCrossFadeController.FadeTo(&mClips["Jump2"], 0.1f, true);
-      //   mJumpingWhileRunning = true;
-      //}
-      //else
+      if (mIsWalking)
+      {
+         mIKCrossFadeController.FadeTo(&mClips["Jump2"], &mLeftFootPinTracks["Jump2"], &mRightFootPinTracks["Jump2"], 0.1f, true);
+         mJumpingWhileWalking = true;
+      }
+      else if (mIsRunning)
+      {
+         mIKCrossFadeController.FadeTo(&mClips["Jump2"], &mLeftFootPinTracks["Jump2"], &mRightFootPinTracks["Jump2"], 0.1f, true);
+         mJumpingWhileRunning = true;
+      }
+      else
       {
          mIKCrossFadeController.FadeTo(&mClips["Jump"], &mLeftFootPinTracks["Jump"], &mRightFootPinTracks["Jump"], 0.1f, true);
          mJumpingWhileIdle = true;
@@ -306,17 +306,17 @@ void IKMovementState::processInput(float deltaTime)
       {
          mIKCrossFadeController.Unlock();
 
-         //if (mIsWalking)
-         //{
-         //   mIKCrossFadeController.FadeTo(&mClips["Walking"], &mLeftFootPinTracks["Walking"], &mRightFootPinTracks["Walking"], 0.15f, false);
-         //   //mJumpingWhileWalking = false;
-         //}
-         //else if (mIsRunning)
-         //{
-         //   mIKCrossFadeController.FadeTo(&mClips["Running"], &mLeftFootPinTracks["Running"], &mRightFootPinTracks["Running"], 0.15f, false);
-         //   //mJumpingWhileRunning = false;
-         //}
-         //else
+         if (mIsWalking)
+         {
+            mIKCrossFadeController.FadeTo(&mClips["Walking"], &mLeftFootPinTracks["Walking"], &mRightFootPinTracks["Walking"], 0.15f, false);
+            mJumpingWhileWalking = false;
+         }
+         else if (mIsRunning)
+         {
+            mIKCrossFadeController.FadeTo(&mClips["Running"], &mLeftFootPinTracks["Running"], &mRightFootPinTracks["Running"], 0.15f, false);
+            mJumpingWhileRunning = false;
+         }
+         else
          {
             mIKCrossFadeController.FadeTo(&mClips["Idle"], &mLeftFootPinTracks["Idle"], &mRightFootPinTracks["Idle"], 0.1f, false);
             mJumpingWhileIdle = false;
@@ -1105,35 +1105,44 @@ void IKMovementState::configurePinTracks()
 
    ScalarTrack leftFootJumpingDynamicallyPinTrack;
    leftFootJumpingDynamicallyPinTrack.SetInterpolation(Interpolation::Cubic);
-   leftFootJumpingDynamicallyPinTrack.SetNumberOfFrames(4);
+   leftFootJumpingDynamicallyPinTrack.SetNumberOfFrames(5);
    // Frame 0
    leftFootJumpingDynamicallyPinTrack.GetFrame(0).mTime = 0.0f;
    leftFootJumpingDynamicallyPinTrack.GetFrame(0).mValue[0] = 0;
    // Frame 1
-   leftFootJumpingDynamicallyPinTrack.GetFrame(1).mTime = 0.845f;
-   leftFootJumpingDynamicallyPinTrack.GetFrame(1).mValue[0] = 1;
+   leftFootJumpingDynamicallyPinTrack.GetFrame(1).mTime = 0.8f;
+   leftFootJumpingDynamicallyPinTrack.GetFrame(1).mValue[0] = 0;
    // Frame 2
-   leftFootJumpingDynamicallyPinTrack.GetFrame(2).mTime = 0.95f;
+   leftFootJumpingDynamicallyPinTrack.GetFrame(2).mTime = 0.845f;
    leftFootJumpingDynamicallyPinTrack.GetFrame(2).mValue[0] = 1;
    // Frame 3
-   leftFootJumpingDynamicallyPinTrack.GetFrame(3).mTime = 1.0f;
-   leftFootJumpingDynamicallyPinTrack.GetFrame(3).mValue[0] = 0;
+   leftFootJumpingDynamicallyPinTrack.GetFrame(3).mTime = 0.95f;
+   leftFootJumpingDynamicallyPinTrack.GetFrame(3).mValue[0] = 1;
+   // Frame 4
+   leftFootJumpingDynamicallyPinTrack.GetFrame(4).mTime = 1.0f;
+   leftFootJumpingDynamicallyPinTrack.GetFrame(4).mValue[0] = 0;
 
    ScalarTrack rightFootJumpingDynamicallyPinTrack;
    rightFootJumpingDynamicallyPinTrack.SetInterpolation(Interpolation::Cubic);
-   rightFootJumpingDynamicallyPinTrack.SetNumberOfFrames(4);
+   rightFootJumpingDynamicallyPinTrack.SetNumberOfFrames(6);
    // Frame 0
    rightFootJumpingDynamicallyPinTrack.GetFrame(0).mTime = 0.0f;
    rightFootJumpingDynamicallyPinTrack.GetFrame(0).mValue[0] = 0;
    // Frame 1
-   rightFootJumpingDynamicallyPinTrack.GetFrame(1).mTime = 0.672f;
-   rightFootJumpingDynamicallyPinTrack.GetFrame(1).mValue[0] = 1;
+   rightFootJumpingDynamicallyPinTrack.GetFrame(1).mTime = 0.622f;
+   rightFootJumpingDynamicallyPinTrack.GetFrame(1).mValue[0] = 0;
    // Frame 2
-   rightFootJumpingDynamicallyPinTrack.GetFrame(2).mTime = 0.773f;
+   rightFootJumpingDynamicallyPinTrack.GetFrame(2).mTime = 0.672f;
    rightFootJumpingDynamicallyPinTrack.GetFrame(2).mValue[0] = 1;
    // Frame 3
-   rightFootJumpingDynamicallyPinTrack.GetFrame(3).mTime = 1.0f;
-   rightFootJumpingDynamicallyPinTrack.GetFrame(3).mValue[0] = 0;
+   rightFootJumpingDynamicallyPinTrack.GetFrame(3).mTime = 0.773f;
+   rightFootJumpingDynamicallyPinTrack.GetFrame(3).mValue[0] = 1;
+   // Frame 4
+   rightFootJumpingDynamicallyPinTrack.GetFrame(4).mTime = 0.823f;
+   rightFootJumpingDynamicallyPinTrack.GetFrame(4).mValue[0] = 0;
+   // Frame 5
+   rightFootJumpingDynamicallyPinTrack.GetFrame(5).mTime = 1.0f;
+   rightFootJumpingDynamicallyPinTrack.GetFrame(5).mValue[0] = 0;
 
    mLeftFootPinTracks.insert(std::make_pair("Jump2", leftFootJumpingDynamicallyPinTrack));
    mRightFootPinTracks.insert(std::make_pair("Jump2", rightFootJumpingDynamicallyPinTrack));

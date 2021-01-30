@@ -103,6 +103,8 @@ private:
    bool                      mIsRunning = false;
    bool                      mIsInAir = false;
    bool                      mJumpingWhileIdle = false;
+   bool                      mJumpingWhileWalking = false;
+   bool                      mJumpingWhileRunning = false;
 
    // --- --- ---
 
