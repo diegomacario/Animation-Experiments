@@ -240,10 +240,21 @@ void PlayState::processInput(float deltaTime)
          mWindow->resetScrollWheelMoved();
       }
    }
+
+   if (mWindow->keyIsPressed(GLFW_KEY_P) && !mWindow->keyHasBeenProcessed(GLFW_KEY_P))
+   {
+      mWindow->setKeyAsProcessed(GLFW_KEY_P);
+      mPause = !mPause;
+   }
 }
 
 void PlayState::update(float deltaTime)
 {
+   if (mPause)
+   {
+      return;
+   }
+
    if (mAnimationData.currentClipIndex != mSelectedClip)
    {
       mAnimationData.currentClipIndex = mSelectedClip;
@@ -519,8 +530,13 @@ void PlayState::userInterface()
 
    float durationOfCurrClip = mClips[mAnimationData.currentClipIndex].GetDuration();
    char progress[32];
-   sprintf_s(progress, 32, "%.3f/%.3f", mAnimationData.playbackTime, durationOfCurrClip);
+   sprintf_s(progress, 32, "%.3f / %.3f", mAnimationData.playbackTime, durationOfCurrClip);
    ImGui::ProgressBar(mAnimationData.playbackTime / durationOfCurrClip, ImVec2(0.0f, 0.0f), progress);
+
+   //float normalizedPlaybackTime = (mAnimationData.playbackTime - mClips[mAnimationData.currentClipIndex].GetStartTime()) / mClips[mAnimationData.currentClipIndex].GetDuration();
+   //char progress[32];
+   //sprintf_s(progress, 32, "%.3f", normalizedPlaybackTime);
+   //ImGui::ProgressBar(normalizedPlaybackTime, ImVec2(0.0f, 0.0f), progress);
 
    ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
 

@@ -103,6 +103,8 @@ private:
    bool                      mPerformDepthTesting;
 
    AnimationData             mAnimationData;
+
+   bool                      mPause = false;
 };
 
 #endif
