@@ -33,6 +33,10 @@ private:
    void         IterateBackward(const glm::vec3& oriPosOfRoot);
    void         IterateForward(const glm::vec3& goalPos);
 
+   void         ApplyHingeConstraint(int indexOfConstrainedJoint, const glm::vec3& hingeAxis);
+   void         ApplyBallSocketConstraint(int indexOfConstrainedJoint, float limitOfRotationInDeg);
+   void         ApplyBackwardsKneeCorrection(int indexOfConstrainedJoint, const glm::vec3& referenceNormal);
+
    std::vector<Transform> mIKChain;
    std::vector<glm::vec3> mWorldPositionsChain;
    std::vector<float>     mDistancesBetweenJoints;

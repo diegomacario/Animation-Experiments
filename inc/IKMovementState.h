@@ -121,6 +121,10 @@ private:
    float                     mHeightOfHip;
    float                     mHeightOfKnees;
    float                     mDistanceFromAnkleToToe;
+   float                     mAnkleVerticalOffset;
+
+   glm::vec3                 mLeftAnkleFinalTarget;
+   glm::vec3                 mRightAnkleFinalTarget;
 
    // --- --- ---
 

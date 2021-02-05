@@ -149,12 +149,6 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    // Get the triangles that make up the ground
    mGroundTriangles = GetTrianglesFromMeshes(mGroundMeshes);
 
-   // Create the IK legs
-   mLeftLeg = IKLeg(mSkeleton, "LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase");
-   mLeftLeg.SetAnkleOffset(0.2f);  // The left ankle is 0.2 units above the ground
-   mRightLeg = IKLeg(mSkeleton, "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase");
-   mRightLeg.SetAnkleOffset(0.2f); // The right ankle is 0.2 units above the ground
-
    // Initialize the values we use to describe the position of the character
    mHeightOfOriginOfYPositionRay = 11.0f;
    mPreviousYPositionOfCharacter = 0.0f;
@@ -162,6 +156,13 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    mHeightOfHip                  = 2.0f;
    mHeightOfKnees                = 1.0f;
    mDistanceFromAnkleToToe       = 0.3f;
+   mAnkleVerticalOffset          = 0.2f;
+
+   // Create the IK legs
+   mLeftLeg = IKLeg(mSkeleton, "LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase");
+   mLeftLeg.SetAnkleOffset(mAnkleVerticalOffset);  // The left ankle is 0.2 units above the ground
+   mRightLeg = IKLeg(mSkeleton, "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase");
+   mRightLeg.SetAnkleOffset(mAnkleVerticalOffset); // The right ankle is 0.2 units above the ground
 
    // Shoot a ray downwards to determine the initial Y position of the character,
    // and sink it into the ground a little so that the IK solver has room to work
@@ -491,13 +492,13 @@ void IKMovementState::update(float deltaTime)
    // If the pin track says that the foot should not be on the ground, the the world position of the ankle, which is given by the animation clip, will be favored
    // Note that if we detected that there's ground above the ankle, worldPosOfLeftAnkle and leftAnkleGroundIKTarget will be the same, which means that the foot
    // will be on the ground regardless of what the pin track says
-   worldPosOfLeftAnkle  = glm::lerp(worldPosOfLeftAnkle, leftAnkleGroundIKTarget, leftFootPinTrackValue);
+   mLeftAnkleFinalTarget = glm::lerp(worldPosOfLeftAnkle, leftAnkleGroundIKTarget, leftFootPinTrackValue);
    // Do the same for the right ankle
-   worldPosOfRightAnkle = glm::lerp(worldPosOfRightAnkle, rightAnkleGroundIKTarget, rightFootPinTrackValue);
+   mRightAnkleFinalTarget = glm::lerp(worldPosOfRightAnkle, rightAnkleGroundIKTarget, rightFootPinTrackValue);
 
    // Solve the IK chains of the left and right legs so that their end effectors (ankles) are at the positions we interpolated above
-   mLeftLeg.Solve(mModelTransform, currPose, worldPosOfLeftAnkle);
-   mRightLeg.Solve(mModelTransform, currPose, worldPosOfRightAnkle);
+   mLeftLeg.Solve(mModelTransform, currPose, mLeftAnkleFinalTarget);
+   mRightLeg.Solve(mModelTransform, currPose, mRightAnkleFinalTarget);
 
    // Blend the resulting IK chains into the animated pose
    // Note how the blend factor is equal to 1.0f
@@ -538,7 +539,7 @@ void IKMovementState::update(float deltaTime)
    glm::vec3 originOfRightToeRay = worldTransfOfRightAnkle.position;
    originOfRightToeRay.y         = worldPosOfRightToe.y + mHeightOfKnees;
    originOfRightToeRay          += worldFwdDirOfCharacter * mDistanceFromAnkleToToe;
-   Ray rightToeRay = Ray(originOfRightToeRay, glm::vec3(0.0f, -1.0f, 0.0f));
+   Ray rightToeRay(originOfRightToeRay, glm::vec3(0.0f, -1.0f, 0.0f));
 
    // If the rays don't hit anything, we use the positions of the toes as default values
    glm::vec3 leftToeGroundIKTarget  = worldPosOfLeftToe;
@@ -693,6 +694,16 @@ void IKMovementState::render()
 
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
+
+   // Draw teapots at the ankle targets for debugging
+   mGameObject3DShader->use(true);
+   mGameObject3DShader->setUniformMat4("projectionView", mCamera3.getPerspectiveProjectionViewMatrix());
+   mGameObject3DShader->setUniformVec3("cameraPos", mCamera3.getPosition());
+   mTeapot->setPosition(mLeftAnkleFinalTarget + glm::vec3(0.0f, mAnkleVerticalOffset, 0.0f));
+   mTeapot->render(*mGameObject3DShader);
+   mTeapot->setPosition(mRightAnkleFinalTarget + glm::vec3(0.0f, mAnkleVerticalOffset, 0.0f));
+   mTeapot->render(*mGameObject3DShader);
+   mGameObject3DShader->use(false);
 
    if (mWireframeModeForMesh)
    {

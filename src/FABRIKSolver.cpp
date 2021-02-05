@@ -1,4 +1,5 @@
 #include <glm/gtx/norm.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 #include "FABRIKSolver.h"
 
@@ -324,5 +325,84 @@ void FABRIKSolver::IterateForward(const glm::vec3& oriPosOfRoot)
       // That's what we do below, but note how dirToPrev is negated, since we calculated it as a vector that goes from the current joint to the previous one,
       // and we want move in the opposite direction
       mWorldPositionsChain[i] = mWorldPositionsChain[i - 1] - (dirToPrev * distToPrev);
+   }
+}
+
+void FABRIKSolver::ApplyHingeConstraint(int indexOfConstrainedJoint, const glm::vec3& hingeAxis)
+{
+   Transform constrainedJoint         = GetGlobalTransform(indexOfConstrainedJoint);
+   Transform parentOfConstrainedJoint = GetGlobalTransform(indexOfConstrainedJoint - 1);
+
+   glm::vec3 currHinge    = constrainedJoint.rotation * hingeAxis;
+   glm::vec3 desiredHinge = parentOfConstrainedJoint.rotation * hingeAxis;
+
+   // Construct a world rotation that goes from the current hinge to the desired one
+   Q::quat worldRotFromCurrHingeToDesiredHinge = Q::fromTo(currHinge, desiredHinge);
+
+   // Apply the hinge-to-hinge world rotation to the world rotation of the constrained joint
+   Q::quat newWorldRotOfConstrainedJoint = constrainedJoint.rotation * worldRotFromCurrHingeToDesiredHinge;
+
+   // Multiply the new world rotation of the constrained joint by the inverse of its old world rotation to get:
+   // constrainedJoint.rotation^-1 * newWorldRotOfConstrainedJoint = (D * C * B * A_old)^-1 * (D * C * B * A_new) = (A_old^-1 * B^-1 * C^-1 * D^-1) * (D * C * B * A_new) = A_old^-1 * A_new
+   Q::quat newLocalRotOfConstrainedJoint = newWorldRotOfConstrainedJoint * inverse(constrainedJoint.rotation);
+
+   // Get the local transform of the joint
+   Q::quat localRotOfConstrainedJoint = mIKChain[indexOfConstrainedJoint].rotation;
+
+   // Multiply newLocalRotOfConstrainedJoint by the old local rotation of the constrained joint to get:
+   // localRotOfConstrainedJoint * newLocalRotOfConstrainedJoint = A_old * A_old^-1 * A_new = A_new
+   mIKChain[indexOfConstrainedJoint].rotation = newLocalRotOfConstrainedJoint * localRotOfConstrainedJoint;
+}
+
+void FABRIKSolver::ApplyBallSocketConstraint(int indexOfConstrainedJoint, float limitOfRotationInDeg)
+{
+   Q::quat worldRotOfConstrainedJoint         = GetGlobalTransform(indexOfConstrainedJoint).rotation;
+   Q::quat worldRotOfParentOfConstrainedJoint = GetGlobalTransform(indexOfConstrainedJoint - 1).rotation;
+
+   glm::vec3 fwdDirOfConstrainedJoint         = worldRotOfConstrainedJoint * glm::vec3(0.0f, 0.0f, 1.0f);
+   glm::vec3 fwdDirOfParentOfConstrainedJoint = worldRotOfParentOfConstrainedJoint * glm::vec3(0.0f, 0.0f, 1.0f);
+
+   float angle = glm::angle(fwdDirOfParentOfConstrainedJoint, fwdDirOfConstrainedJoint);
+
+   if (angle > glm::radians(limitOfRotationInDeg))
+   {
+      glm::vec3 axisOfRot = glm::cross(fwdDirOfParentOfConstrainedJoint, fwdDirOfConstrainedJoint);
+
+      // TODO: Improve the name of this variable
+      Q::quat worldSpaceRotation = worldRotOfParentOfConstrainedJoint * Q::angleAxis(glm::radians(limitOfRotationInDeg), axisOfRot);
+
+      mIKChain[indexOfConstrainedJoint].rotation = worldSpaceRotation * inverse(worldRotOfParentOfConstrainedJoint);
+   }
+}
+
+void FABRIKSolver::ApplyBackwardsKneeCorrection(int indexOfConstrainedJoint, const glm::vec3& referenceNormal)
+{
+   Transform kneeJoint  = GetGlobalTransform(indexOfConstrainedJoint);
+   Transform hipJoint   = GetGlobalTransform(indexOfConstrainedJoint - 1);
+   Transform ankleJoint = GetGlobalTransform(indexOfConstrainedJoint + 1);
+
+   glm::vec3 kneeToAnkle = glm::normalize(glm::vec3(ankleJoint.position - kneeJoint.position));
+   glm::vec3 kneeToHip   = glm::normalize(glm::vec3(hipJoint.position - kneeJoint.position));
+
+   float angleInDeg = glm::degrees(glm::orientedAngle(kneeToAnkle, kneeToHip, referenceNormal));
+
+   if (angleInDeg < 0.0f && ((180.0f + angleInDeg) > 10.0f))
+   {
+      float angleHipNeedsToRotate = 180.0f + angleInDeg;
+      float angleKneeNeedsToRotate = (180.0f + angleInDeg) * 2.0f;
+
+      glm::vec3 axisOfRot = glm::cross(kneeToHip, kneeToAnkle);
+
+      // Adjust the hip
+      Q::quat newWorldRotOfHipJoint                  = hipJoint.rotation * Q::angleAxis(glm::radians(-angleHipNeedsToRotate), axisOfRot);
+      Q::quat newLocalRotOfHipJoint                  = newWorldRotOfHipJoint * inverse(hipJoint.rotation);
+      Q::quat localRotOfHipJoint                     = mIKChain[indexOfConstrainedJoint - 1].rotation;
+      mIKChain[indexOfConstrainedJoint - 1].rotation = newLocalRotOfHipJoint * localRotOfHipJoint;
+
+      // Adjust the knee
+      Q::quat newWorldRotOfKneeJoint             = kneeJoint.rotation * Q::angleAxis(glm::radians(angleKneeNeedsToRotate), axisOfRot);
+      Q::quat newLocalRotOfKneeJoint             = newWorldRotOfKneeJoint * inverse(kneeJoint.rotation);
+      Q::quat localRotOfKneeJoint                = mIKChain[indexOfConstrainedJoint].rotation;
+      mIKChain[indexOfConstrainedJoint].rotation = newLocalRotOfKneeJoint * localRotOfKneeJoint;
    }
 }
