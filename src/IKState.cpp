@@ -548,8 +548,8 @@ void IKState::update(float deltaTime)
    worldPosOfRightAnkle = glm::lerp(worldPosOfRightAnkle, rightAnkleGroundIKTarget, rightLegPinTrackValue);
 
    // Solve the IK chains of the left and right legs so that their end effectors (ankles) are at the positions we interpolated above
-   mLeftLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfLeftAnkle);
-   mRightLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfRightAnkle);
+   mLeftLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfLeftAnkle, false);
+   mRightLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfRightAnkle, false);
 
    // Blend the resulting IK chains into the animated pose
    // Note how the blend factor is equal to 1.0f

@@ -12,7 +12,7 @@ public:
    IKLeg();
    IKLeg(Skeleton& skeleton, const std::string& hipName, const std::string& kneeName, const std::string& ankleName, const std::string& toeName);
 
-   void               Solve(const Transform& model, Pose& pose, const glm::vec3& ankleTargetPosition);
+   void               Solve(const Transform& modelTransform, Pose& pose, const glm::vec3& ankleTargetPosition, bool constrained);
 
    unsigned int       GetHipIndex();
    unsigned int       GetKneeIndex();

@@ -140,6 +140,74 @@ bool FABRIKSolver::Solve(const Transform& target)
    }
 }
 
+bool FABRIKSolver::SolveThreeJointLegWithConstraints(const Transform& target, int indexOfKnee, const glm::vec3& characterRight)
+{
+   unsigned int numJoints = GetNumberOfJointsInIKChain();
+
+   // We cannot solve the IK chain if it's empty
+   if (numJoints == 0)
+   {
+      return false;
+   }
+
+   unsigned int indexOfEndEffector = numJoints - 1;
+   float        thresholdSq        = mConvergenceThreshold * mConvergenceThreshold;
+   glm::vec3    goalPos            = target.position;
+   glm::vec3    endEffectorPos;
+
+   // Fill mWorldPositionsChain and mDistancesBetweenJoints using the values stored in mIKChain
+   IKChainToWorld();
+
+   glm::vec3 oriPosOfRoot = mWorldPositionsChain[0];
+
+   int indexOfHip = indexOfKnee - 1;
+   glm::vec3 initialWorldXAxisOfKnee = GetGlobalTransform(indexOfKnee).rotation * glm::vec3(1.0f, 0.0f, 0.0f);
+   glm::vec3 initialWorldXAxisOfHip  = GetGlobalTransform(indexOfHip).rotation * glm::vec3(1.0f, 0.0f, 0.0f);
+
+   // Loop over the allowed number of iterations until we either converge or reach the maximum number of iterations
+   for (unsigned int i = 0; i < mNumIterations; ++i)
+   {
+      // Update the position of the end effector, since it changes with every iteration of this loop
+      endEffectorPos = mWorldPositionsChain[indexOfEndEffector];
+
+      // Check if we converged
+      if (glm::length2(goalPos - endEffectorPos) < thresholdSq)
+      {
+         // If we did, use the positions stored in mWorldPositionsChain to rotate the joints stored in mIKChain to achieve the solved pose
+         WorldToIKChain();
+         ApplyBackwardsKneeCorrection(indexOfKnee, characterRight);
+         return true;
+      }
+
+      // Perform a backward and forward iteration
+      IterateBackward(goalPos);
+      IterateForward(oriPosOfRoot);
+
+      WorldToIKChain();
+      ApplyHingeConstraint(indexOfHip, glm::vec3(1.0f, 0.0f, 0.0f), initialWorldXAxisOfHip);
+      ApplyHingeConstraint(indexOfKnee, glm::vec3(1.0f, 0.0f, 0.0f), initialWorldXAxisOfKnee);
+      IKChainToWorld();
+   }
+
+   // Check if we converged in the last iteration
+   endEffectorPos = mWorldPositionsChain[indexOfEndEffector];
+   if (glm::length2(goalPos - endEffectorPos) < thresholdSq)
+   {
+      // If we did, use the positions stored in mWorldPositionsChain to rotate the joints stored in mIKChain to achieve the solved pose
+      WorldToIKChain();
+      ApplyBackwardsKneeCorrection(indexOfKnee, characterRight);
+      return true;
+   }
+   else
+   {
+      // If we didn't, use the positions stored in mWorldPositionsChain to rotate the joints stored in mIKChain to
+      // achieve the closest thing we found to the solved pose
+      WorldToIKChain();
+      ApplyBackwardsKneeCorrection(indexOfKnee, characterRight);
+      return false;
+   }
+}
+
 // This function fills mWorldPositionsChain with the world positions of the joints that make up the unsolved IK chain
 // It does this by calculating the global transform of each joint using the local transforms stored in mIKChain
 // It also fills mDistancesBetweenJoints, which contains the distance between each joint and its parent
@@ -328,16 +396,14 @@ void FABRIKSolver::IterateForward(const glm::vec3& oriPosOfRoot)
    }
 }
 
-void FABRIKSolver::ApplyHingeConstraint(int indexOfConstrainedJoint, const glm::vec3& hingeAxis)
+void FABRIKSolver::ApplyHingeConstraint(int indexOfConstrainedJoint, const glm::vec3& localHingeAxis, const glm::vec3& worldHingeAxis)
 {
-   Transform constrainedJoint         = GetGlobalTransform(indexOfConstrainedJoint);
-   Transform parentOfConstrainedJoint = GetGlobalTransform(indexOfConstrainedJoint - 1);
+   Transform constrainedJoint = GetGlobalTransform(indexOfConstrainedJoint);
 
-   glm::vec3 currHinge    = constrainedJoint.rotation * hingeAxis;
-   glm::vec3 desiredHinge = parentOfConstrainedJoint.rotation * hingeAxis;
+   glm::vec3 currHinge = constrainedJoint.rotation * localHingeAxis;
 
    // Construct a world rotation that goes from the current hinge to the desired one
-   Q::quat worldRotFromCurrHingeToDesiredHinge = Q::fromTo(currHinge, desiredHinge);
+   Q::quat worldRotFromCurrHingeToDesiredHinge = Q::fromTo(currHinge, worldHingeAxis);
 
    // Apply the hinge-to-hinge world rotation to the world rotation of the constrained joint
    Q::quat newWorldRotOfConstrainedJoint = constrainedJoint.rotation * worldRotFromCurrHingeToDesiredHinge;
@@ -354,7 +420,7 @@ void FABRIKSolver::ApplyHingeConstraint(int indexOfConstrainedJoint, const glm::
    mIKChain[indexOfConstrainedJoint].rotation = newLocalRotOfConstrainedJoint * localRotOfConstrainedJoint;
 }
 
-void FABRIKSolver::ApplyBallSocketConstraint(int indexOfConstrainedJoint, float limitOfRotationInDeg)
+void FABRIKSolver::ApplyBallAndSocketConstraint(int indexOfConstrainedJoint, float limitOfRotationInDeg)
 {
    Q::quat worldRotOfConstrainedJoint         = GetGlobalTransform(indexOfConstrainedJoint).rotation;
    Q::quat worldRotOfParentOfConstrainedJoint = GetGlobalTransform(indexOfConstrainedJoint - 1).rotation;
@@ -375,34 +441,54 @@ void FABRIKSolver::ApplyBallSocketConstraint(int indexOfConstrainedJoint, float 
    }
 }
 
-void FABRIKSolver::ApplyBackwardsKneeCorrection(int indexOfConstrainedJoint, const glm::vec3& referenceNormal)
+void FABRIKSolver::ApplyBackwardsKneeCorrection(int indexOfKneeJoint, const glm::vec3& referenceNormal)
 {
-   Transform kneeJoint  = GetGlobalTransform(indexOfConstrainedJoint);
-   Transform hipJoint   = GetGlobalTransform(indexOfConstrainedJoint - 1);
-   Transform ankleJoint = GetGlobalTransform(indexOfConstrainedJoint + 1);
+   Transform hipJoint   = GetGlobalTransform(indexOfKneeJoint - 1);
+   Transform kneeJoint  = GetGlobalTransform(indexOfKneeJoint);
+   Transform ankleJoint = GetGlobalTransform(indexOfKneeJoint + 1);
 
    glm::vec3 kneeToAnkle = glm::normalize(glm::vec3(ankleJoint.position - kneeJoint.position));
    glm::vec3 kneeToHip   = glm::normalize(glm::vec3(hipJoint.position - kneeJoint.position));
 
-   float angleInDeg = glm::degrees(glm::orientedAngle(kneeToAnkle, kneeToHip, referenceNormal));
+   float angleInDeg                   = glm::degrees(glm::orientedAngle(kneeToAnkle, kneeToHip, referenceNormal));
+   float backwardsAngleThresholdInDeg = 10.0f;
 
-   if (angleInDeg < 0.0f && ((180.0f + angleInDeg) > 10.0f))
+   // If angleInDeg is negative, we have a backwards knee,
+   // but we don't want to apply a correction if it's only backwards by a few degrees, since that just looks like a straight leg
+   // So we only apply a correction if it's backwards by more than backwardsAngleThresholdInDeg, which is currently set to 10 degrees
+   if (angleInDeg < 0.0f && ((180.0f + angleInDeg) > backwardsAngleThresholdInDeg))
    {
-      float angleHipNeedsToRotate = 180.0f + angleInDeg;
+      /*
+         These two rotations transform the pose below, which has a backwards knee
+
+         Hip <---   *      _   ---> Ankle
+                     \    /
+                      \  /
+                       \/      ---> Knee
+
+         Into the pose below, which has a correct knee.
+
+                       /\      ---> Knee
+                      /  \
+                     /    \
+         Hip <---   *      -   ---> Ankle
+      */
+
+      float angleHipNeedsToRotate  = 180.0f + angleInDeg;
       float angleKneeNeedsToRotate = (180.0f + angleInDeg) * 2.0f;
 
       glm::vec3 axisOfRot = glm::cross(kneeToHip, kneeToAnkle);
 
       // Adjust the hip
-      Q::quat newWorldRotOfHipJoint                  = hipJoint.rotation * Q::angleAxis(glm::radians(-angleHipNeedsToRotate), axisOfRot);
-      Q::quat newLocalRotOfHipJoint                  = newWorldRotOfHipJoint * inverse(hipJoint.rotation);
-      Q::quat localRotOfHipJoint                     = mIKChain[indexOfConstrainedJoint - 1].rotation;
-      mIKChain[indexOfConstrainedJoint - 1].rotation = newLocalRotOfHipJoint * localRotOfHipJoint;
+      Q::quat newWorldRotOfHipJoint           = hipJoint.rotation * Q::angleAxis(glm::radians(-angleHipNeedsToRotate), axisOfRot);
+      Q::quat newLocalRotOfHipJoint           = newWorldRotOfHipJoint * inverse(hipJoint.rotation);
+      Q::quat localRotOfHipJoint              = mIKChain[indexOfKneeJoint - 1].rotation;
+      mIKChain[indexOfKneeJoint - 1].rotation = newLocalRotOfHipJoint * localRotOfHipJoint;
 
       // Adjust the knee
-      Q::quat newWorldRotOfKneeJoint             = kneeJoint.rotation * Q::angleAxis(glm::radians(angleKneeNeedsToRotate), axisOfRot);
-      Q::quat newLocalRotOfKneeJoint             = newWorldRotOfKneeJoint * inverse(kneeJoint.rotation);
-      Q::quat localRotOfKneeJoint                = mIKChain[indexOfConstrainedJoint].rotation;
-      mIKChain[indexOfConstrainedJoint].rotation = newLocalRotOfKneeJoint * localRotOfKneeJoint;
+      Q::quat newWorldRotOfKneeJoint      = kneeJoint.rotation * Q::angleAxis(glm::radians(angleKneeNeedsToRotate), axisOfRot);
+      Q::quat newLocalRotOfKneeJoint      = newWorldRotOfKneeJoint * inverse(kneeJoint.rotation);
+      Q::quat localRotOfKneeJoint         = mIKChain[indexOfKneeJoint].rotation;
+      mIKChain[indexOfKneeJoint].rotation = newLocalRotOfKneeJoint * localRotOfKneeJoint;
    }
 }

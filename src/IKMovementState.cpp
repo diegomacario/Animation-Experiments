@@ -497,8 +497,8 @@ void IKMovementState::update(float deltaTime)
    mRightAnkleFinalTarget = glm::lerp(worldPosOfRightAnkle, rightAnkleGroundIKTarget, rightFootPinTrackValue);
 
    // Solve the IK chains of the left and right legs so that their end effectors (ankles) are at the positions we interpolated above
-   mLeftLeg.Solve(mModelTransform, currPose, mLeftAnkleFinalTarget);
-   mRightLeg.Solve(mModelTransform, currPose, mRightAnkleFinalTarget);
+   mLeftLeg.Solve(mModelTransform, currPose, mLeftAnkleFinalTarget, true);
+   mRightLeg.Solve(mModelTransform, currPose, mRightAnkleFinalTarget, true);
 
    // Blend the resulting IK chains into the animated pose
    // Note how the blend factor is equal to 1.0f
@@ -696,14 +696,14 @@ void IKMovementState::render()
    glEnable(GL_DEPTH_TEST);
 
    // Draw teapots at the ankle targets for debugging
-   mGameObject3DShader->use(true);
-   mGameObject3DShader->setUniformMat4("projectionView", mCamera3.getPerspectiveProjectionViewMatrix());
-   mGameObject3DShader->setUniformVec3("cameraPos", mCamera3.getPosition());
-   mTeapot->setPosition(mLeftAnkleFinalTarget + glm::vec3(0.0f, mAnkleVerticalOffset, 0.0f));
-   mTeapot->render(*mGameObject3DShader);
-   mTeapot->setPosition(mRightAnkleFinalTarget + glm::vec3(0.0f, mAnkleVerticalOffset, 0.0f));
-   mTeapot->render(*mGameObject3DShader);
-   mGameObject3DShader->use(false);
+   //mGameObject3DShader->use(true);
+   //mGameObject3DShader->setUniformMat4("projectionView", mCamera3.getPerspectiveProjectionViewMatrix());
+   //mGameObject3DShader->setUniformVec3("cameraPos", mCamera3.getPosition());
+   //mTeapot->setPosition(mLeftAnkleFinalTarget + glm::vec3(0.0f, mAnkleVerticalOffset, 0.0f));
+   //mTeapot->render(*mGameObject3DShader);
+   //mTeapot->setPosition(mRightAnkleFinalTarget + glm::vec3(0.0f, mAnkleVerticalOffset, 0.0f));
+   //mTeapot->render(*mGameObject3DShader);
+   //mGameObject3DShader->use(false);
 
    if (mWireframeModeForMesh)
    {

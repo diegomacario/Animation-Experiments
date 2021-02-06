@@ -44,17 +44,26 @@ IKLeg::IKLeg(Skeleton& skeleton, const std::string& hipName, const std::string& 
    }
 }
 
-void IKLeg::Solve(const Transform& model, Pose& pose, const glm::vec3& ankleTargetPosition)
+void IKLeg::Solve(const Transform& modelTransform, Pose& pose, const glm::vec3& ankleTargetPosition, bool constrained)
 {
-   mSolver.SetLocalTransform(0, combine(model, pose.GetGlobalTransform(mHipIndex)));
+   mSolver.SetLocalTransform(0, combine(modelTransform, pose.GetGlobalTransform(mHipIndex)));
    mSolver.SetLocalTransform(1, pose.GetLocalTransform(mKneeIndex));
    mSolver.SetLocalTransform(2, pose.GetLocalTransform(mAnkleIndex));
    mIKPose = pose;
 
    Transform target(ankleTargetPosition + glm::vec3(0, 1, 0) * mAnkleToGroundOffset, Q::quat(), glm::vec3(1, 1, 1));
-   mSolver.Solve(target);
 
-   Transform rootWorld = combine(model, pose.GetGlobalTransform(pose.GetParent(mHipIndex)));
+   if (constrained)
+   {
+      glm::vec3 characterRight = modelTransform.rotation * glm::vec3(1.0f, 0.0f, 0.0f);
+      mSolver.SolveThreeJointLegWithConstraints(target, 1, characterRight);
+   }
+   else
+   {
+      mSolver.Solve(target);
+   }
+
+   Transform rootWorld = combine(modelTransform, pose.GetGlobalTransform(pose.GetParent(mHipIndex)));
    mIKPose.SetLocalTransform(mHipIndex, combine(inverse(rootWorld), mSolver.GetLocalTransform(0)));
    mIKPose.SetLocalTransform(mKneeIndex, mSolver.GetLocalTransform(1));
    mIKPose.SetLocalTransform(mAnkleIndex, mSolver.GetLocalTransform(2));
