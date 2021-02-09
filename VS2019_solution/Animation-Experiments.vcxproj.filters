@@ -52,9 +52,6 @@
     <ClCompile Include="..\src\model_loader.cpp">
       <Filter>Animation-Experiments\Source Files\Base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\play_state.cpp">
-      <Filter>Animation-Experiments\Source Files\Base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\shader.cpp">
       <Filter>Animation-Experiments\Source Files\Base</Filter>
     </ClCompile>
@@ -157,6 +154,9 @@
     <ClCompile Include="..\src\IKCrossFadeTarget.cpp">
       <Filter>Animation-Experiments\Source Files\IK</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ModelViewerState.cpp">
+      <Filter>Animation-Experiments\Source Files\Base</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -208,9 +208,6 @@
       <Filter>Animation-Experiments\Header Files\Base</Filter>
     </ClInclude>
     <ClInclude Include="..\inc\model_loader.h">
-      <Filter>Animation-Experiments\Header Files\Base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\play_state.h">
       <Filter>Animation-Experiments\Header Files\Base</Filter>
     </ClInclude>
     <ClInclude Include="..\inc\resource_manager.h">
@@ -326,6 +323,9 @@
     </ClInclude>
     <ClInclude Include="..\inc\IKCrossFadeTarget.h">
       <Filter>Animation-Experiments\Header Files\IK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\ModelViewerState.h">
+      <Filter>Animation-Experiments\Header Files\Base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

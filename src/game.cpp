@@ -3,7 +3,7 @@
 #include "shader_loader.h"
 #include "texture_loader.h"
 #include "model_loader.h"
-#include "play_state.h"
+#include "ModelViewerState.h"
 #include "IKState.h"
 #include "MovementState.h"
 #include "IKMovementState.h"
@@ -87,12 +87,12 @@ bool Game::initialize(const std::string& title)
    // Initialize the states
    std::unordered_map<std::string, std::shared_ptr<State>> mStates;
 
-   mStates["play"] = std::make_shared<PlayState>(mFSM,
-                                                 mWindow,
-                                                 mCamera,
-                                                 gameObj3DShader,
-                                                 mTable,
-                                                 mTeapot);
+   mStates["viewer"] = std::make_shared<ModelViewerState>(mFSM,
+                                                          mWindow,
+                                                          mCamera,
+                                                          gameObj3DShader,
+                                                          mTable,
+                                                          mTeapot);
 
    mStates["ik"] = std::make_shared<IKState>(mFSM,
                                              mWindow,
@@ -116,7 +116,7 @@ bool Game::initialize(const std::string& title)
                                                               mTeapot);
 
    // Initialize the FSM
-   mFSM->initialize(std::move(mStates), "movement");
+   mFSM->initialize(std::move(mStates), "viewer");
 
    return true;
 }

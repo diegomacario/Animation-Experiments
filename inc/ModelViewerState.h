@@ -1,5 +1,5 @@
-#ifndef PLAY_STATE_H
-#define PLAY_STATE_H
+#ifndef MODEL_VIEWER_STATE_H
+#define MODEL_VIEWER_STATE_H
 
 #include <array>
 
@@ -9,23 +9,23 @@
 #include "SkeletonViewer.h"
 #include "Clip.h"
 
-class PlayState : public State
+class ModelViewerState : public State
 {
 public:
 
-   PlayState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
-             const std::shared_ptr<Window>&             window,
-             const std::shared_ptr<Camera>&             camera,
-             const std::shared_ptr<Shader>&             gameObject3DShader,
-             const std::shared_ptr<GameObject3D>&       table,
-             const std::shared_ptr<GameObject3D>&       teapot);
-   ~PlayState() = default;
+   ModelViewerState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
+                    const std::shared_ptr<Window>&             window,
+                    const std::shared_ptr<Camera>&             camera,
+                    const std::shared_ptr<Shader>&             gameObject3DShader,
+                    const std::shared_ptr<GameObject3D>&       table,
+                    const std::shared_ptr<GameObject3D>&       teapot);
+   ~ModelViewerState() = default;
 
-   PlayState(const PlayState&) = delete;
-   PlayState& operator=(const PlayState&) = delete;
+   ModelViewerState(const ModelViewerState&) = delete;
+   ModelViewerState& operator=(const ModelViewerState&) = delete;
 
-   PlayState(PlayState&&) = delete;
-   PlayState& operator=(PlayState&&) = delete;
+   ModelViewerState(ModelViewerState&&) = delete;
+   ModelViewerState& operator=(ModelViewerState&&) = delete;
 
    void enter() override;
    void processInput(float deltaTime) override;

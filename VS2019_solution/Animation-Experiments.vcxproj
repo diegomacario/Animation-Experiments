@@ -57,7 +57,7 @@
     <ClInclude Include="..\inc\model_loader.h" />
     <ClInclude Include="..\inc\IKMovementState.h" />
     <ClInclude Include="..\inc\MovementState.h" />
-    <ClInclude Include="..\inc\play_state.h" />
+    <ClInclude Include="..\inc\ModelViewerState.h" />
     <ClInclude Include="..\inc\Pose.h" />
     <ClInclude Include="..\inc\quat.h" />
     <ClInclude Include="..\inc\Ray.h" />
@@ -113,7 +113,7 @@
     <ClCompile Include="..\src\model_loader.cpp" />
     <ClCompile Include="..\src\IKMovementState.cpp" />
     <ClCompile Include="..\src\MovementState.cpp" />
-    <ClCompile Include="..\src\play_state.cpp" />
+    <ClCompile Include="..\src\ModelViewerState.cpp" />
     <ClCompile Include="..\src\Pose.cpp" />
     <ClCompile Include="..\src\quat.cpp" />
     <ClCompile Include="..\src\Ray.cpp" />

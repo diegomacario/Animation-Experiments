@@ -9,14 +9,14 @@
 #include "texture_loader.h"
 #include "GLTFLoader.h"
 #include "RearrangeBones.h"
-#include "play_state.h"
+#include "ModelViewerState.h"
 
-PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
-                     const std::shared_ptr<Window>&             window,
-                     const std::shared_ptr<Camera>&             camera,
-                     const std::shared_ptr<Shader>&             gameObject3DShader,
-                     const std::shared_ptr<GameObject3D>&       table,
-                     const std::shared_ptr<GameObject3D>&       teapot)
+ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
+                                   const std::shared_ptr<Window>&             window,
+                                   const std::shared_ptr<Camera>&             camera,
+                                   const std::shared_ptr<Shader>&             gameObject3DShader,
+                                   const std::shared_ptr<GameObject3D>&       table,
+                                   const std::shared_ptr<GameObject3D>&       teapot)
    : mFSM(finiteStateMachine)
    , mWindow(window)
    , mCamera(camera)
@@ -119,13 +119,13 @@ PlayState::PlayState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachi
    mSkeletonViewer.InitializeBones(mAnimationData.animatedPose);
 }
 
-void PlayState::enter()
+void ModelViewerState::enter()
 {
    resetCamera();
    resetScene();
 }
 
-void PlayState::processInput(float deltaTime)
+void ModelViewerState::processInput(float deltaTime)
 {
    // Close the game
    if (mWindow->keyIsPressed(GLFW_KEY_ESCAPE)) { mWindow->setShouldClose(true); }
@@ -248,7 +248,7 @@ void PlayState::processInput(float deltaTime)
    }
 }
 
-void PlayState::update(float deltaTime)
+void ModelViewerState::update(float deltaTime)
 {
    if (mPause)
    {
@@ -308,7 +308,7 @@ void PlayState::update(float deltaTime)
    mSkeletonViewer.UpdateBones(mAnimationData.animatedPose, mAnimationData.animatedPosePalette);
 }
 
-void PlayState::render()
+void ModelViewerState::render()
 {
    ImGui_ImplOpenGL3_NewFrame();
    ImGui_ImplGlfw_NewFrame();
@@ -419,12 +419,12 @@ void PlayState::render()
    mWindow->pollEvents();
 }
 
-void PlayState::exit()
+void ModelViewerState::exit()
 {
 
 }
 
-void PlayState::configureLights(const std::shared_ptr<Shader>& shader)
+void ModelViewerState::configureLights(const std::shared_ptr<Shader>& shader)
 {
    shader->use(true);
    shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
@@ -441,7 +441,7 @@ void PlayState::configureLights(const std::shared_ptr<Shader>& shader)
    shader->use(false);
 }
 
-void PlayState::switchFromGPUToCPU()
+void ModelViewerState::switchFromGPUToCPU()
 {
    int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
    int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
@@ -476,7 +476,7 @@ void PlayState::switchFromGPUToCPU()
    }
 }
 
-void PlayState::switchFromCPUToGPU()
+void ModelViewerState::switchFromCPUToGPU()
 {
    int positionsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("position");
    int normalsAttribLocOfStaticShader   = mStaticMeshShader->getAttributeLocation("normal");
@@ -522,7 +522,7 @@ void PlayState::switchFromCPUToGPU()
    }
 }
 
-void PlayState::userInterface()
+void ModelViewerState::userInterface()
 {
    ImGui::Begin("Animation Controller"); // Create a window called "Animation Controller"
 
@@ -559,12 +559,12 @@ void PlayState::userInterface()
    ImGui::End();
 }
 
-void PlayState::resetScene()
+void ModelViewerState::resetScene()
 {
 
 }
 
-void PlayState::resetCamera()
+void ModelViewerState::resetCamera()
 {
    mCamera->reposition(glm::vec3(0.00179474f, 8.32452f, 7.91094f),
                        glm::vec3(-0.0242029f, 1.65141f, 0.46319f),
