@@ -78,12 +78,6 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    // Configure the pin tracks for all the clips
    configurePinTracks();
 
-   // Set the initial clip and initialize the crossfade controller
-   mIKCrossFadeController.SetSkeleton(mSkeleton);
-   mIKCrossFadeController.Play(&mClips["Idle"], &mLeftFootPinTracks["Idle"], &mRightFootPinTracks["Idle"], false);
-   mIKCrossFadeController.Update(0.0f);
-   mIKCrossFadeController.GetCurrentPose().GetMatrixPalette(mPosePalette);
-
    // Configure the VAOs of the animated meshes
    int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
    int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
@@ -101,27 +95,6 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
                                       weightsAttribLocOfAnimatedShader,
                                       influencesAttribLocOfAnimatedShader);
    }
-
-   // Set the initial skinning mode
-   mCurrentSkinningMode = SkinningMode::GPU;
-   mSelectedSkinningMode = SkinningMode::GPU;
-   // Set the initial playback speed
-   mSelectedPlaybackSpeed = 1.0f;
-   // Set the initial rendering options
-   mDisplayMesh = true;
-   mDisplayBones = false;
-   mDisplayJoints = false;
-   mWireframeModeForMesh = false;
-   mWireframeModeForJoints = false;
-   mPerformDepthTesting = true;
-
-   // Set the model transform
-   mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
-
-   // Initialize the bones of the skeleton viewer
-   mSkeletonViewer.InitializeBones(mIKCrossFadeController.GetCurrentPose());
-
-   // --- --- ---
 
    // Load the ground
    data = LoadGLTFFile("resources/models/ground/terrain.gltf");
@@ -151,7 +124,6 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
 
    // Initialize the values we use to describe the position of the character
    mHeightOfOriginOfYPositionRay = 11.0f;
-   mPreviousYPositionOfCharacter = 0.0f;
    mSinkIntoGround               = 0.15f;
    mHeightOfHip                  = 2.0f;
    mHeightOfKnees                = 1.0f;
@@ -164,6 +136,47 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    mRightLeg = IKLeg(mSkeleton, "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase");
    mRightLeg.SetAnkleOffset(mAnkleVerticalOffset); // The right ankle is 0.2 units above the ground
 
+   initializeState();
+
+   // Initialize the bones of the skeleton viewer
+   mSkeletonViewer.InitializeBones(mIKCrossFadeController.GetCurrentPose());
+
+   glClearColor(0.036f, 0.827f, 1.0f, 1.0f);
+}
+
+void IKMovementState::initializeState()
+{
+   // Set the state values
+   mIsWalking = false;
+   mIsRunning = false;
+   mIsInAir = false;
+   mJumpingWhileIdle = false;
+   mJumpingWhileWalking = false;
+   mJumpingWhileRunning = false;
+
+   // Set the initial clip and initialize the crossfade controller
+   mIKCrossFadeController.SetSkeleton(mSkeleton);
+   mIKCrossFadeController.Play(&mClips["Idle"], &mLeftFootPinTracks["Idle"], &mRightFootPinTracks["Idle"], false);
+   mIKCrossFadeController.Update(0.0f);
+   mIKCrossFadeController.GetCurrentPose().GetMatrixPalette(mPosePalette);
+
+   // Set the initial skinning mode
+   mCurrentSkinningMode = SkinningMode::GPU;
+   mSelectedSkinningMode = SkinningMode::GPU;
+   // Set the initial playback speed
+   mSelectedPlaybackSpeed = 1.0f;
+   // Set the initial rendering options
+   mDisplayMesh = true;
+   mDisplayBones = false;
+   mDisplayJoints = false;
+   mWireframeModeForMesh = false;
+   mWireframeModeForJoints = false;
+   mPerformDepthTesting = true;
+
+   // Set the model transform
+   mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
+   mPreviousYPositionOfCharacter = 0.0f;
+
    // Shoot a ray downwards to determine the initial Y position of the character,
    // and sink it into the ground a little so that the IK solver has room to work
    determineYPosition();
@@ -172,6 +185,9 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
 
 void IKMovementState::enter()
 {
+   // Set the current state
+   mSelectedState = 3;
+   initializeState();
    resetCamera();
    resetScene();
 }
@@ -182,6 +198,23 @@ void IKMovementState::processInput(float deltaTime)
 
    // Close the game
    if (mWindow->keyIsPressed(GLFW_KEY_ESCAPE)) { mWindow->setShouldClose(true); }
+
+   // Change the state
+   if (mSelectedState != 3)
+   {
+      switch (mSelectedState)
+      {
+      case 0:
+         mFSM->changeState("viewer");
+         break;
+      case 1:
+         mFSM->changeState("movement");
+         break;
+      case 2:
+         mFSM->changeState("ik");
+         break;
+      }
+   }
 
    // Make the game full screen or windowed
    if (mWindow->keyIsPressed(GLFW_KEY_F) && !mWindow->keyHasBeenProcessed(GLFW_KEY_F))
@@ -926,6 +959,8 @@ void IKMovementState::userInterface()
    ImGui::Begin("Animation Controller"); // Create a window called "Animation Controller"
 
    ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+   ImGui::Combo("State", &mSelectedState, "Model Viewer\0Flat Movement\0Programmed IK Movement\0IK Movement\0");
 
    ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
 

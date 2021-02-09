@@ -29,6 +29,8 @@ public:
    IKState(IKState&&) = delete;
    IKState& operator=(IKState&&) = delete;
 
+   void initializeState();
+
    void enter() override;
    void processInput(float deltaTime) override;
    void update(float deltaTime) override;
@@ -93,6 +95,7 @@ private:
    SkeletonViewer            mSkeletonViewer;
    std::vector<FastClip>     mClips;
    std::string               mClipNames;
+   int                       mSelectedState;
    int                       mSelectedClip;
    int                       mSelectedSkinningMode;
    float                     mSelectedPlaybackSpeed;

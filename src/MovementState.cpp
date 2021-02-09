@@ -70,12 +70,6 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
    mClips["Jump"].SetLooping(false);
    mClips["Jump2"].SetLooping(false);
 
-   // Set the initial clip and initialize the crossfade controller
-   mCrossFadeController.SetSkeleton(mSkeleton);
-   mCrossFadeController.Play(&mClips["Idle"], false);
-   mCrossFadeController.Update(0.0f);
-   mCrossFadeController.GetCurrentPose().GetMatrixPalette(mPosePalette);
-
    // Configure the VAOs of the animated meshes
    int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
    int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
@@ -94,6 +88,28 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
                                       influencesAttribLocOfAnimatedShader);
    }
 
+   initializeState();
+
+   // Initialize the bones of the skeleton viewer
+   mSkeletonViewer.InitializeBones(mCrossFadeController.GetCurrentPose());
+}
+
+void MovementState::initializeState()
+{
+   // Set the state values
+   mIsWalking = false;
+   mIsRunning = false;
+   mIsInAir = false;
+   mJumpingWhileIdle = false;
+   mJumpingWhileWalking = false;
+   mJumpingWhileRunning = false;
+
+   // Set the initial clip and initialize the crossfade controller
+   mCrossFadeController.SetSkeleton(mSkeleton);
+   mCrossFadeController.Play(&mClips["Idle"], false);
+   mCrossFadeController.Update(0.0f);
+   mCrossFadeController.GetCurrentPose().GetMatrixPalette(mPosePalette);
+
    // Set the initial skinning mode
    mCurrentSkinningMode = SkinningMode::GPU;
    mSelectedSkinningMode = SkinningMode::GPU;
@@ -109,13 +125,13 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
 
    // Set the model transform
    mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
-
-   // Initialize the bones of the skeleton viewer
-   mSkeletonViewer.InitializeBones(mCrossFadeController.GetCurrentPose());
 }
 
 void MovementState::enter()
 {
+   // Set the current state
+   mSelectedState = 1;
+   initializeState();
    resetCamera();
    resetScene();
 }
@@ -128,6 +144,23 @@ void MovementState::processInput(float deltaTime)
    if (mWindow->keyIsPressed(GLFW_KEY_ESCAPE))
    {
       mWindow->setShouldClose(true);
+   }
+
+   // Change the state
+   if (mSelectedState != 1)
+   {
+      switch (mSelectedState)
+      {
+      case 0:
+         mFSM->changeState("viewer");
+         break;
+      case 2:
+         mFSM->changeState("ik");
+         break;
+      case 3:
+         mFSM->changeState("ik_movement");
+         break;
+      }
    }
 
    // Make the game full screen or windowed
@@ -592,6 +625,8 @@ void MovementState::userInterface()
    ImGui::Begin("Animation Controller"); // Create a window called "Animation Controller"
 
    ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+   ImGui::Combo("State", &mSelectedState, "Model Viewer\0Flat Movement\0Programmed IK Movement\0IK Movement\0");
 
    ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
 

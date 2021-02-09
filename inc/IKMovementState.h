@@ -31,6 +31,8 @@ public:
    IKMovementState(IKMovementState&&) = delete;
    IKMovementState& operator=(IKMovementState&&) = delete;
 
+   void initializeState();
+
    void enter() override;
    void processInput(float deltaTime) override;
    void update(float deltaTime) override;
@@ -75,6 +77,7 @@ private:
    std::vector<AnimatedMesh> mAnimatedMeshes;
    SkeletonViewer            mSkeletonViewer;
    SkinningMode              mCurrentSkinningMode;
+   int                       mSelectedState;
    int                       mSelectedSkinningMode;
    float                     mSelectedPlaybackSpeed;
    bool                      mDisplayMesh;

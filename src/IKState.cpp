@@ -91,37 +91,6 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
                                       influencesAttribLocOfAnimatedShader);
    }
 
-   // Set the initial clip
-   unsigned int numClips = static_cast<unsigned int>(mClips.size());
-   for (unsigned int clipIndex = 0; clipIndex < numClips; ++clipIndex)
-   {
-      if (mClips[clipIndex].GetName() == "Walking")
-      {
-         mSelectedClip = clipIndex;
-         mAnimationData.currentClipIndex = clipIndex;
-      }
-   }
-
-   // Set the initial skinning mode
-   mSelectedSkinningMode = SkinningMode::GPU;
-   // Set the initial playback speed
-   mSelectedPlaybackSpeed = 1.0f;
-   // Set the initial rendering options
-   mDisplayMesh = true;
-   mDisplayBones = false;
-   mDisplayJoints = false;
-   mWireframeModeForMesh = false;
-   mWireframeModeForJoints = false;
-   mPerformDepthTesting = true;
-
-   // Set the initial pose
-   mAnimationData.animatedPose = mSkeleton.GetRestPose();
-
-   // Initialize the bones of the skeleton viewer
-   mSkeletonViewer.InitializeBones(mAnimationData.animatedPose);
-
-   // --- --- ---
-
    // Load the ground
    data = LoadGLTFFile("resources/models/ground/IKCourse.gltf");
    mGroundMeshes = LoadStaticMeshes(data);
@@ -220,17 +189,52 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
    mRightFootPinTrack.GetFrame(3).mValue[0] = 1;
 
    // Initialize the values we use to describe the position of the character
-   mModelTransform               = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
    mHeightOfOriginOfYPositionRay = 11.0f;
-   mPreviousYPositionOfCharacter = 0.0f;
    mSinkIntoGround               = 0.15f;
-   mMotionTrackTime              = 0.0f;
    mMotionTrackPlaybackSpeed     = 0.3f;
    mMotionTrackDuration          = mMotionTrack.GetEndTime() - mMotionTrack.GetStartTime();
    mMotionTrackFutureTimeOffset  = 0.1f;
    mHeightOfHip                  = 2.0f;
    mHeightOfKnees                = 1.0f;
    mDistanceFromAnkleToToe       = 0.3f;
+
+   initializeState();
+
+   // Initialize the bones of the skeleton viewer
+   mSkeletonViewer.InitializeBones(mAnimationData.animatedPose);
+}
+
+void IKState::initializeState()
+{
+   // Set the initial clip
+   unsigned int numClips = static_cast<unsigned int>(mClips.size());
+   for (unsigned int clipIndex = 0; clipIndex < numClips; ++clipIndex)
+   {
+      if (mClips[clipIndex].GetName() == "Walking")
+      {
+         mSelectedClip = clipIndex;
+         mAnimationData.currentClipIndex = clipIndex;
+      }
+   }
+
+   // Set the initial skinning mode
+   mSelectedSkinningMode = SkinningMode::GPU;
+   // Set the initial playback speed
+   mSelectedPlaybackSpeed = 1.0f;
+   // Set the initial rendering options
+   mDisplayMesh = true;
+   mDisplayBones = false;
+   mDisplayJoints = false;
+   mWireframeModeForMesh = false;
+   mWireframeModeForJoints = false;
+   mPerformDepthTesting = true;
+
+   // Set the initial pose
+   mAnimationData.animatedPose = mSkeleton.GetRestPose();
+
+   mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
+   mPreviousYPositionOfCharacter = 0.0f;
+   mMotionTrackTime = 0.0f;
 
    // Shoot a ray downwards to determine the initial Y position of the character,
    // and sink it into the ground a little so that the IK solver has room to work
@@ -253,6 +257,9 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
 
 void IKState::enter()
 {
+   // Set the current state
+   mSelectedState = 2;
+   initializeState();
    resetCamera();
    resetScene();
 }
@@ -261,6 +268,23 @@ void IKState::processInput(float deltaTime)
 {
    // Close the game
    if (mWindow->keyIsPressed(GLFW_KEY_ESCAPE)) { mWindow->setShouldClose(true); }
+
+   // Change the state
+   if (mSelectedState != 2)
+   {
+      switch (mSelectedState)
+      {
+      case 0:
+         mFSM->changeState("viewer");
+         break;
+      case 1:
+         mFSM->changeState("movement");
+         break;
+      case 3:
+         mFSM->changeState("ik_movement");
+         break;
+      }
+   }
 
    // Make the game full screen or windowed
    if (mWindow->keyIsPressed(GLFW_KEY_F) && !mWindow->keyHasBeenProcessed(GLFW_KEY_F))
@@ -968,16 +992,21 @@ void IKState::userInterface()
 
    ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
+   ImGui::Combo("State", &mSelectedState, "Model Viewer\0Flat Movement\0Programmed IK Movement\0IK Movement\0");
+
+   ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
+
+   //ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
+
+   ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
+
    float durationOfCurrClip = mClips[mAnimationData.currentClipIndex].GetDuration();
    char progress[32];
    sprintf_s(progress, 32, "%.3f / %.3f", mAnimationData.playbackTime, durationOfCurrClip);
    ImGui::ProgressBar(mAnimationData.playbackTime / durationOfCurrClip, ImVec2(0.0f, 0.0f), progress);
 
-   ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
-
-   ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
-
-   ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
+   ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+   ImGui::Text("Playback Time");
 
    ImGui::Checkbox("Display Mesh", &mDisplayMesh);
 

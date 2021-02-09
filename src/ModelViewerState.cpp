@@ -86,6 +86,16 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
                                       influencesAttribLocOfAnimatedShader);
    }
 
+   initializeState();
+
+   // Initialize the bones of the skeleton viewer
+   mSkeletonViewer.InitializeBones(mAnimationData.animatedPose);
+}
+
+void ModelViewerState::initializeState()
+{
+   mPause = false;
+
    // Set the initial clip
    unsigned int numClips = static_cast<unsigned int>(mClips.size());
    for (unsigned int clipIndex = 0; clipIndex < numClips; ++clipIndex)
@@ -114,13 +124,13 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
 
    // Set the model transform
    mAnimationData.modelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
-
-   // Initialize the bones of the skeleton viewer
-   mSkeletonViewer.InitializeBones(mAnimationData.animatedPose);
 }
 
 void ModelViewerState::enter()
 {
+   // Set the current state
+   mSelectedState = 0;
+   initializeState();
    resetCamera();
    resetScene();
 }
@@ -129,6 +139,23 @@ void ModelViewerState::processInput(float deltaTime)
 {
    // Close the game
    if (mWindow->keyIsPressed(GLFW_KEY_ESCAPE)) { mWindow->setShouldClose(true); }
+
+   // Change the state
+   if (mSelectedState != 0)
+   {
+      switch (mSelectedState)
+      {
+      case 1:
+         mFSM->changeState("movement");
+         break;
+      case 2:
+         mFSM->changeState("ik");
+         break;
+      case 3:
+         mFSM->changeState("ik_movement");
+         break;
+      }
+   }
 
    // Make the game full screen or windowed
    if (mWindow->keyIsPressed(GLFW_KEY_F) && !mWindow->keyHasBeenProcessed(GLFW_KEY_F))
@@ -528,6 +555,14 @@ void ModelViewerState::userInterface()
 
    ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
+   ImGui::Combo("State", &mSelectedState, "Model Viewer\0Flat Movement\0Programmed IK Movement\0IK Movement\0");
+
+   ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
+
+   ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
+
+   ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
+
    float durationOfCurrClip = mClips[mAnimationData.currentClipIndex].GetDuration();
    char progress[32];
    sprintf_s(progress, 32, "%.3f / %.3f", mAnimationData.playbackTime, durationOfCurrClip);
@@ -538,11 +573,8 @@ void ModelViewerState::userInterface()
    //sprintf_s(progress, 32, "%.3f", normalizedPlaybackTime);
    //ImGui::ProgressBar(normalizedPlaybackTime, ImVec2(0.0f, 0.0f), progress);
 
-   ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
-
-   ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
-
-   ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
+   ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+   ImGui::Text("Playback Time");
 
    ImGui::Checkbox("Display Mesh", &mDisplayMesh);
 
@@ -566,8 +598,8 @@ void ModelViewerState::resetScene()
 
 void ModelViewerState::resetCamera()
 {
-   mCamera->reposition(glm::vec3(0.00179474f, 8.32452f, 7.91094f),
-                       glm::vec3(-0.0242029f, 1.65141f, 0.46319f),
+   mCamera->reposition(glm::vec3(0.00179474f, 6.62452f, 8.41094f),
+                       glm::vec3(-0.0242029f, 1.95141f, 0.46319f),
                        glm::vec3(0.0f, 1.0f, 0.0f),
                        45.0f);
 }
