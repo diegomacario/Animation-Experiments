@@ -35,9 +35,6 @@ private:
    ResourceManager<Model>                  mModelManager;
    ResourceManager<Texture>                mTextureManager;
    ResourceManager<Shader>                 mShaderManager;
-
-   std::shared_ptr<GameObject3D>           mTable;
-   std::shared_ptr<GameObject3D>           mTeapot;
 };
 
 #endif

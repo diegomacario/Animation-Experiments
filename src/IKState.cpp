@@ -18,16 +18,10 @@
 
 IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
                  const std::shared_ptr<Window>&             window,
-                 const std::shared_ptr<Camera>&             camera,
-                 const std::shared_ptr<Shader>&             gameObject3DShader,
-                 const std::shared_ptr<GameObject3D>&       table,
-                 const std::shared_ptr<GameObject3D>&       teapot)
+                 const std::shared_ptr<Camera>&             camera)
    : mFSM(finiteStateMachine)
    , mWindow(window)
    , mCamera(camera)
-   , mGameObject3DShader(gameObject3DShader)
-   , mTable(table)
-   , mTeapot(teapot)
 {
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
@@ -253,6 +247,8 @@ void IKState::initializeState()
          break;
       }
    }
+
+   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 void IKState::enter()
@@ -890,7 +886,6 @@ void IKState::exit()
 void IKState::configureLights(const std::shared_ptr<Shader>& shader)
 {
    shader->use(true);
-   //shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
    shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(-5.0f, 5.0f, -5.0f));
    shader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
    shader->setUniformFloat("pointLights[0].constantAtt", 1.0f);

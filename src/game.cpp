@@ -16,8 +16,6 @@ Game::Game()
    , mModelManager()
    , mTextureManager()
    , mShaderManager()
-   , mTable()
-   , mTeapot()
 {
 
 }
@@ -50,7 +48,7 @@ bool Game::initialize(const std::string& title)
                                       aspectRatio, // Aspect ratio
                                       0.1f,        // Near
                                       130.0f,      // Far
-                                      20.0f,       // Movement speed
+                                      10.0f,       // Movement speed
                                       0.1f);       // Mouse sensitivity
 
    // Initialize the 3D shader
@@ -66,20 +64,8 @@ bool Game::initialize(const std::string& title)
    gameObj3DShader->setUniformInt("numPointLightsInScene", 1);
 
    // Load the models
-   mModelManager.loadResource<ModelLoader>("table", "resources/models/table/table.obj");
+   mModelManager.loadResource<ModelLoader>("hardwood_floor", "resources/models/table/table.obj");
    mModelManager.loadResource<ModelLoader>("teapot", "resources/models/teapot/teapot.obj");
-
-   mTable = std::make_shared<GameObject3D>(mModelManager.getResource("table"),
-                                           glm::vec3(0.0f),
-                                           0.0f,
-                                           glm::vec3(0.0f, 0.0f, 0.0f),
-                                           0.10f);
-
-   mTeapot = std::make_shared<GameObject3D>(mModelManager.getResource("teapot"),
-                                            glm::vec3(0.0f, 7.5f / 22.5f, 0.0f),
-                                            0.0f,
-                                            glm::vec3(0.0f, 0.0f, 0.0f),
-                                            7.5f / 45.0f);
 
    // Create the FSM
    mFSM = std::make_shared<FiniteStateMachine>();
@@ -91,29 +77,23 @@ bool Game::initialize(const std::string& title)
                                                           mWindow,
                                                           mCamera,
                                                           gameObj3DShader,
-                                                          mTable,
-                                                          mTeapot);
-
-   mStates["ik"] = std::make_shared<IKState>(mFSM,
-                                             mWindow,
-                                             mCamera,
-                                             gameObj3DShader,
-                                             mTable,
-                                             mTeapot);
+                                                          mModelManager.getResource("hardwood_floor"));
 
    mStates["movement"] = std::make_shared<MovementState>(mFSM,
                                                          mWindow,
                                                          mCamera,
                                                          gameObj3DShader,
-                                                         mTable,
-                                                         mTeapot);
+                                                         mModelManager.getResource("hardwood_floor"));
+
+   mStates["ik"] = std::make_shared<IKState>(mFSM,
+                                             mWindow,
+                                             mCamera);
 
    mStates["ik_movement"] = std::make_shared<IKMovementState>(mFSM,
                                                               mWindow,
                                                               mCamera,
                                                               gameObj3DShader,
-                                                              mTable,
-                                                              mTeapot);
+                                                              mModelManager.getResource("teapot"));
 
    // Initialize the FSM
    mFSM->initialize(std::move(mStates), "viewer");

@@ -20,15 +20,19 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
                                  const std::shared_ptr<Window>&             window,
                                  const std::shared_ptr<Camera>&             camera,
                                  const std::shared_ptr<Shader>&             gameObject3DShader,
-                                 const std::shared_ptr<GameObject3D>&       table,
-                                 const std::shared_ptr<GameObject3D>&       teapot)
+                                 const std::shared_ptr<Model>&              teapot)
    : mFSM(finiteStateMachine)
    , mWindow(window)
    , mCamera3(14.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 0.25f)
    , mGameObject3DShader(gameObject3DShader)
-   , mTable(table)
-   , mTeapot(teapot)
 {
+   // Create the teapot
+   mTeapot = std::make_unique<GameObject3D>(teapot,
+                                            glm::vec3(0.0f, 7.5f / 22.5f, 0.0f),
+                                            0.0f,
+                                            glm::vec3(0.0f, 0.0f, 0.0f),
+                                            7.5f / 75.0f);
+
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
                                                                                        "resources/shaders/mesh_with_simple_illumination.frag");
@@ -140,8 +144,6 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
 
    // Initialize the bones of the skeleton viewer
    mSkeletonViewer.InitializeBones(mIKCrossFadeController.GetCurrentPose());
-
-   glClearColor(0.036f, 0.827f, 1.0f, 1.0f);
 }
 
 void IKMovementState::initializeState()
@@ -181,6 +183,8 @@ void IKMovementState::initializeState()
    // and sink it into the ground a little so that the IK solver has room to work
    determineYPosition();
    mPreviousYPositionOfCharacter = mModelTransform.position.y;
+
+   glClearColor(0.036f, 0.827f, 1.0f, 1.0f);
 }
 
 void IKMovementState::enter()
@@ -733,6 +737,7 @@ void IKMovementState::render()
    //mGameObject3DShader->setUniformMat4("projectionView", mCamera3.getPerspectiveProjectionViewMatrix());
    //mGameObject3DShader->setUniformVec3("cameraPos", mCamera3.getPosition());
    //mTeapot->setPosition(mLeftAnkleFinalTarget + glm::vec3(0.0f, mAnkleVerticalOffset, 0.0f));
+   //mTeapot->setRotation(Q::angleAxis(55.0f, glm::vec3(0.0f, 1.0f, 0.0f)) * mModelTransform.rotation);
    //mTeapot->render(*mGameObject3DShader);
    //mTeapot->setPosition(mRightAnkleFinalTarget + glm::vec3(0.0f, mAnkleVerticalOffset, 0.0f));
    //mTeapot->render(*mGameObject3DShader);

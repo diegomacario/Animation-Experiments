@@ -15,15 +15,19 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
                                    const std::shared_ptr<Window>&             window,
                                    const std::shared_ptr<Camera>&             camera,
                                    const std::shared_ptr<Shader>&             gameObject3DShader,
-                                   const std::shared_ptr<GameObject3D>&       table,
-                                   const std::shared_ptr<GameObject3D>&       teapot)
+                                   const std::shared_ptr<Model>&              hardwoodFloor)
    : mFSM(finiteStateMachine)
    , mWindow(window)
    , mCamera(camera)
    , mGameObject3DShader(gameObject3DShader)
-   , mTable(table)
-   , mTeapot(teapot)
 {
+   // Create the hardwood floor
+   mHardwoodFloor = std::make_unique<GameObject3D>(hardwoodFloor,
+                                                   glm::vec3(0.0f),
+                                                   0.0f,
+                                                   glm::vec3(0.0f, 0.0f, 0.0f),
+                                                   0.10f);
+
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
                                                                                        "resources/shaders/mesh_with_simple_illumination.frag");
@@ -124,6 +128,8 @@ void ModelViewerState::initializeState()
 
    // Set the model transform
    mAnimationData.modelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
+
+   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 void ModelViewerState::enter()
@@ -352,7 +358,7 @@ void ModelViewerState::render()
    mGameObject3DShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
    mGameObject3DShader->setUniformVec3("cameraPos", mCamera->getPosition());
 
-   mTable->render(*mGameObject3DShader);
+   mHardwoodFloor->render(*mGameObject3DShader);
 
    mGameObject3DShader->use(false);
 
