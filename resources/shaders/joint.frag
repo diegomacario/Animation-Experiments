@@ -44,13 +44,7 @@ vec3 calculateContributionOfPointLight(PointLight light, vec3 viewDir)
    // Diffuse
    vec3  lightDir    = normalize(light.worldPos - fragPos);
    vec3  diff        = max(dot(lightDir, norm), 0.0) * light.color * attenuation;
-   vec3  diffuse     =   (diff * vec3(0.0f, 1.0f, 0.0f));
-
-   // Specular
-   //vec3 reflectedDir = reflect(-lightDir, norm);
-   //vec3 spec         = pow(max(dot(reflectedDir, viewDir), 0.0), materialConstants.shininess) * light.color * attenuation;
-   //vec3 specular     =   (spec * vec3(texture(specularTex, uv))) *  materialTextureAvailabilities.specularTexIsAvailable
-   //                    - (spec * materialConstants.specular)              * (materialTextureAvailabilities.specularTexIsAvailable - 1);
+   vec3  diffuse     = (diff * vec3(0.0f, 1.0f, 0.0f));
 
    return diffuse + vec3(0.0f, 0.25f, 0.0f);
 }
