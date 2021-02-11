@@ -18,7 +18,7 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
                              const std::shared_ptr<Model>&              hardwoodFloor)
    : mFSM(finiteStateMachine)
    , mWindow(window)
-   , mCamera3(12.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 0.25f)
+   , mCamera3(14.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 0.25f)
    , mGameObject3DShader(gameObject3DShader)
 {
    // Create the hardwood floor
@@ -115,7 +115,6 @@ void MovementState::initializeState()
    mCrossFadeController.GetCurrentPose().GetMatrixPalette(mPosePalette);
 
    // Set the initial skinning mode
-   mCurrentSkinningMode = SkinningMode::GPU;
    mSelectedSkinningMode = SkinningMode::GPU;
    // Set the initial playback speed
    mSelectedPlaybackSpeed = 1.0f;
@@ -660,5 +659,5 @@ void MovementState::resetScene()
 
 void MovementState::resetCamera()
 {
-   mCamera3.reposition(12.0f, 25.0f, mModelTransform.position, mModelTransform.rotation, glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f);
+   mCamera3.reposition(14.0f, 25.0f, mModelTransform.position, mModelTransform.rotation, glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f);
 }

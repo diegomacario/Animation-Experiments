@@ -766,6 +766,24 @@ void IKState::render()
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
 
+   mStaticMeshShader->use(true);
+   mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
+   mStaticMeshShader->setUniformMat4("view", mCamera->getViewMatrix());
+   mStaticMeshShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
+   mGroundTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
+
+   // Loop over the ground meshes and render each one
+   for (unsigned int i = 0,
+      size = static_cast<unsigned int>(mGroundMeshes.size());
+      i < size;
+      ++i)
+   {
+      mGroundMeshes[i].Render();
+   }
+
+   mGroundTexture->unbind(0);
+   mStaticMeshShader->use(false);
+
    if (mWireframeModeForMesh)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -846,28 +864,6 @@ void IKState::render()
 
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    glEnable(GL_DEPTH_TEST);
-
-   // --- --- ---
-
-   mStaticMeshShader->use(true);
-   mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
-   mStaticMeshShader->setUniformMat4("view", mCamera->getViewMatrix());
-   mStaticMeshShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
-   mGroundTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
-
-   // Loop over the ground meshes and render each one
-   for (unsigned int i = 0,
-      size = static_cast<unsigned int>(mGroundMeshes.size());
-      i < size;
-      ++i)
-   {
-      mGroundMeshes[i].Render();
-   }
-
-   mGroundTexture->unbind(0);
-   mStaticMeshShader->use(false);
-
-   // --- --- ---
 
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

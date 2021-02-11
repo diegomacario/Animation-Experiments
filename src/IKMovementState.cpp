@@ -127,7 +127,7 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    mGroundTriangles = GetTrianglesFromMeshes(mGroundMeshes);
 
    // Initialize the values we use to describe the position of the character
-   mHeightOfOriginOfYPositionRay = 11.0f;
+   mHeightOfOriginOfYPositionRay = 100.0f;
    mSinkIntoGround               = 0.15f;
    mHeightOfHip                  = 2.0f;
    mHeightOfKnees                = 1.0f;
@@ -163,7 +163,6 @@ void IKMovementState::initializeState()
    mIKCrossFadeController.GetCurrentPose().GetMatrixPalette(mPosePalette);
 
    // Set the initial skinning mode
-   mCurrentSkinningMode = SkinningMode::GPU;
    mSelectedSkinningMode = SkinningMode::GPU;
    // Set the initial playback speed
    mSelectedPlaybackSpeed = 1.0f;
@@ -176,7 +175,7 @@ void IKMovementState::initializeState()
    mPerformDepthTesting = true;
 
    // Set the model transform
-   mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
+   mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.1f), Q::quat(), glm::vec3(1.0f));
    mPreviousYPositionOfCharacter = 0.0f;
 
    // Shoot a ray downwards to determine the initial Y position of the character,
@@ -732,6 +731,26 @@ void IKMovementState::render()
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
 
+   mStaticMeshShader->use(true);
+   mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
+   mStaticMeshShader->setUniformMat4("view", mCamera3.getViewMatrix());
+   mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
+   mGroundTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
+   mGroundEmissiveTexture->bind(1, mStaticMeshShader->getUniformLocation("emissiveTex"));
+
+   // Loop over the ground meshes and render each one
+   for (unsigned int i = 0,
+      size = static_cast<unsigned int>(mGroundMeshes.size());
+      i < size;
+      ++i)
+   {
+      mGroundMeshes[i].Render();
+   }
+
+   mGroundTexture->unbind(0);
+   mGroundEmissiveTexture->unbind(1);
+   mStaticMeshShader->use(false);
+
    // Draw teapots at the ankle targets for debugging
    //mGameObject3DShader->use(true);
    //mGameObject3DShader->setUniformMat4("projectionView", mCamera3.getPerspectiveProjectionViewMatrix());
@@ -755,7 +774,6 @@ void IKMovementState::render()
       mStaticMeshShader->setUniformMat4("model",      transformToMat4(mModelTransform));
       mStaticMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
       mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
-      //mStaticMeshShader->setUniformVec3("cameraPos",  mCamera3.getPosition());
       mDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
 
       // Loop over the meshes and render each one
@@ -777,7 +795,6 @@ void IKMovementState::render()
       mAnimatedMeshShader->setUniformMat4("view",             mCamera3.getViewMatrix());
       mAnimatedMeshShader->setUniformMat4("projection",       mCamera3.getPerspectiveProjectionMatrix());
       mAnimatedMeshShader->setUniformMat4Array("animated[0]", mSkinMatrices);
-      //mAnimatedMeshShader->setUniformVec3("cameraPos",        mCamera3.getPosition());
       mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("diffuseTex"));
 
       // Loop over the meshes and render each one
@@ -823,28 +840,6 @@ void IKMovementState::render()
 
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    glEnable(GL_DEPTH_TEST);
-
-   // --- --- ---
-
-   mStaticMeshShader->use(true);
-   mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
-   mStaticMeshShader->setUniformMat4("view", mCamera3.getViewMatrix());
-   mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
-   mGroundTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
-
-   // Loop over the ground meshes and render each one
-   for (unsigned int i = 0,
-      size = static_cast<unsigned int>(mGroundMeshes.size());
-      i < size;
-      ++i)
-   {
-      mGroundMeshes[i].Render();
-   }
-
-   mGroundTexture->unbind(0);
-   mStaticMeshShader->use(false);
-
-   // --- --- ---
 
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
