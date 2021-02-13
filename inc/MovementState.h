@@ -17,9 +17,7 @@ public:
 
    MovementState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
                  const std::shared_ptr<Window>&             window,
-                 const std::shared_ptr<Camera>&             camera,
-                 const std::shared_ptr<Shader>&             gameObject3DShader,
-                 const std::shared_ptr<Model>&              hardwoodFloor);
+                 const std::shared_ptr<Camera>&             camera);
    ~MovementState() = default;
 
    MovementState(const MovementState&) = delete;
@@ -55,9 +53,8 @@ private:
 
    Camera3                             mCamera3;
 
-   std::shared_ptr<Shader>             mGameObject3DShader;
-
-   std::unique_ptr<GameObject3D>       mHardwoodFloor;
+   std::vector<AnimatedMesh>           mGroundMeshes;
+   std::shared_ptr<Texture>            mGroundTexture;
 
    enum SkinningMode : int
    {

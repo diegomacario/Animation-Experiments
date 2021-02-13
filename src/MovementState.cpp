@@ -13,29 +13,19 @@
 
 MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
                              const std::shared_ptr<Window>&             window,
-                             const std::shared_ptr<Camera>&             camera,
-                             const std::shared_ptr<Shader>&             gameObject3DShader,
-                             const std::shared_ptr<Model>&              hardwoodFloor)
+                             const std::shared_ptr<Camera>&             camera)
    : mFSM(finiteStateMachine)
    , mWindow(window)
    , mCamera3(14.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 0.25f)
-   , mGameObject3DShader(gameObject3DShader)
 {
-   // Create the hardwood floor
-   mHardwoodFloor = std::make_unique<GameObject3D>(hardwoodFloor,
-                                                   glm::vec3(0.0f),
-                                                   0.0f,
-                                                   glm::vec3(0.0f, 0.0f, 0.0f),
-                                                   0.8f);
-
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
-                                                                                       "resources/shaders/mesh_with_simple_illumination.frag");
+                                                                                       "resources/shaders/diffuse_illumination_with_25_lights.frag");
    configureLights(mAnimatedMeshShader);
 
    // Initialize the static mesh shader
    mStaticMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh.vert",
-                                                                                     "resources/shaders/mesh_with_simple_illumination.frag");
+                                                                                     "resources/shaders/diffuse_illumination_with_25_lights.frag");
    configureLights(mStaticMeshShader);
 
    // Load the diffuse texture of the animated character
@@ -91,6 +81,29 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
                                       weightsAttribLocOfAnimatedShader,
                                       influencesAttribLocOfAnimatedShader);
    }
+
+   // Load the ground
+   data = LoadGLTFFile("resources/models/ground/platform.gltf");
+   mGroundMeshes = LoadStaticMeshes(data);
+   FreeGLTFFile(data);
+
+   int positionsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("position");
+   int normalsAttribLocOfStaticShader   = mStaticMeshShader->getAttributeLocation("normal");
+   int texCoordsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("texCoord");
+   for (unsigned int i = 0,
+        size = static_cast<unsigned int>(mGroundMeshes.size());
+        i < size;
+        ++i)
+   {
+      mGroundMeshes[i].ConfigureVAO(positionsAttribLocOfStaticShader,
+                                    normalsAttribLocOfStaticShader,
+                                    texCoordsAttribLocOfStaticShader,
+                                    -1,
+                                    -1);
+   }
+
+   // Load the texture of the ground
+   mGroundTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/platform_diffuse_4k.png");
 
    initializeState();
 
@@ -424,13 +437,23 @@ void MovementState::render()
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
 
-   mGameObject3DShader->use(true);
-   mGameObject3DShader->setUniformMat4("projectionView", mCamera3.getPerspectiveProjectionViewMatrix());
-   mGameObject3DShader->setUniformVec3("cameraPos", mCamera3.getPosition());
+   mStaticMeshShader->use(true);
+   mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
+   mStaticMeshShader->setUniformMat4("view", mCamera3.getViewMatrix());
+   mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
+   mGroundTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
 
-   mHardwoodFloor->render(*mGameObject3DShader);
+   // Loop over the ground meshes and render each one
+   for (unsigned int i = 0,
+      size = static_cast<unsigned int>(mGroundMeshes.size());
+      i < size;
+      ++i)
+   {
+      mGroundMeshes[i].Render();
+   }
 
-   mGameObject3DShader->use(false);
+   mGroundTexture->unbind(0);
+   mStaticMeshShader->use(false);
 
    if (mWireframeModeForCharacter)
    {
@@ -444,7 +467,6 @@ void MovementState::render()
       mStaticMeshShader->setUniformMat4("model",      transformToMat4(mModelTransform));
       mStaticMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
       mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
-      //mStaticMeshShader->setUniformVec3("cameraPos",  mCamera->getPosition());
       mDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
 
       // Loop over the meshes and render each one
@@ -466,7 +488,6 @@ void MovementState::render()
       mAnimatedMeshShader->setUniformMat4("view",             mCamera3.getViewMatrix());
       mAnimatedMeshShader->setUniformMat4("projection",       mCamera3.getPerspectiveProjectionMatrix());
       mAnimatedMeshShader->setUniformMat4Array("animated[0]", mSkinMatrices);
-      //mAnimatedMeshShader->setUniformVec3("cameraPos",        mCamera->getPosition());
       mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("diffuseTex"));
 
       // Loop over the meshes and render each one
@@ -530,17 +551,32 @@ void MovementState::exit()
 void MovementState::configureLights(const std::shared_ptr<Shader>& shader)
 {
    shader->use(true);
-   shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
-   shader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
-   shader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
-   shader->setUniformFloat("pointLights[0].linearAtt", 0.01f);
-   shader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
-   shader->setUniformVec3("pointLights[1].worldPos", glm::vec3(0.0f, 2.0f, -10.0f));
-   shader->setUniformVec3("pointLights[1].color", glm::vec3(1.0f, 1.0f, 1.0f));
-   shader->setUniformFloat("pointLights[1].constantAtt", 1.0f);
-   shader->setUniformFloat("pointLights[1].linearAtt", 0.01f);
-   shader->setUniformFloat("pointLights[1].quadraticAtt", 0.0f);
-   shader->setUniformInt("numPointLightsInScene", 2);
+
+   std::string nameOfArrOfLights = "pointLights[";
+   std::string lightIndexAsStr;
+
+   // Set up a symmetric square grid of 25 lights
+   float xPos = -40.0f;
+   float zPos = -40.0f;
+   int lightIndex = 0;
+   for (int i = 0; i < 5; ++i)
+   {
+      for (int k = 0; k < 5; ++k)
+      {
+         lightIndexAsStr = std::to_string(lightIndex);
+         shader->setUniformVec3(nameOfArrOfLights  + lightIndexAsStr + "].worldPos", glm::vec3(xPos, 7.0f, zPos));
+         shader->setUniformVec3(nameOfArrOfLights  + lightIndexAsStr + "].color", glm::vec3(1.0f, 1.0f, 1.0f));
+         shader->setUniformFloat(nameOfArrOfLights + lightIndexAsStr + "].constantAtt", 1.0f);
+         shader->setUniformFloat(nameOfArrOfLights + lightIndexAsStr + "].linearAtt", 0.0f);
+         shader->setUniformFloat(nameOfArrOfLights + lightIndexAsStr + "].quadraticAtt", 0.009f);
+         zPos += 20.0f;
+         ++lightIndex;
+      }
+      xPos += 20.0f;
+      zPos = -40.0f;
+   }
+
+   shader->setUniformInt("numPointLightsInScene", 25);
    shader->use(false);
 }
 
