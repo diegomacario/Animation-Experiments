@@ -79,7 +79,7 @@ private:
    bool                      mDisplayMesh;
    bool                      mDisplayBones;
    bool                      mDisplayJoints;
-   bool                      mWireframeModeForMesh;
+   bool                      mWireframeModeForCharacter;
    bool                      mWireframeModeForJoints;
    bool                      mPerformDepthTesting;
 

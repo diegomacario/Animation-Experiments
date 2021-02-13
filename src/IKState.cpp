@@ -219,8 +219,9 @@ void IKState::initializeState()
    mDisplayMesh = true;
    mDisplayBones = false;
    mDisplayJoints = false;
-   mWireframeModeForMesh = false;
+   mWireframeModeForCharacter = false;
    mWireframeModeForJoints = false;
+   mWireframeModeForTerrain = false;
    mPerformDepthTesting = true;
 
    // Set the initial pose
@@ -766,6 +767,11 @@ void IKState::render()
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
 
+   if (mWireframeModeForTerrain)
+   {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   }
+
    mStaticMeshShader->use(true);
    mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
    mStaticMeshShader->setUniformMat4("view", mCamera->getViewMatrix());
@@ -784,7 +790,9 @@ void IKState::render()
    mGroundTexture->unbind(0);
    mStaticMeshShader->use(false);
 
-   if (mWireframeModeForMesh)
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+   if (mWireframeModeForCharacter)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
    }
@@ -1005,9 +1013,11 @@ void IKState::userInterface()
 
    ImGui::Checkbox("Display Joints", &mDisplayJoints);
 
-   ImGui::Checkbox("Wireframe Mode for Mesh", &mWireframeModeForMesh);
+   ImGui::Checkbox("Wireframe Mode for Character", &mWireframeModeForCharacter);
 
    ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
+
+   ImGui::Checkbox("Wireframe Mode for Terrain", &mWireframeModeForTerrain);
 
    ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
 

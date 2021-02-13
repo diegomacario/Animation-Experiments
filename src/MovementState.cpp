@@ -122,7 +122,7 @@ void MovementState::initializeState()
    mDisplayMesh = true;
    mDisplayBones = false;
    mDisplayJoints = false;
-   mWireframeModeForMesh = false;
+   mWireframeModeForCharacter = false;
    mWireframeModeForJoints = false;
    mPerformDepthTesting = true;
 
@@ -432,7 +432,7 @@ void MovementState::render()
 
    mGameObject3DShader->use(false);
 
-   if (mWireframeModeForMesh)
+   if (mWireframeModeForCharacter)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
    }
@@ -643,7 +643,7 @@ void MovementState::userInterface()
 
    ImGui::Checkbox("Display Joints", &mDisplayJoints);
 
-   ImGui::Checkbox("Wireframe Mode for Mesh", &mWireframeModeForMesh);
+   ImGui::Checkbox("Wireframe Mode for Character", &mWireframeModeForCharacter);
 
    ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
 

@@ -81,9 +81,12 @@ private:
    bool                      mDisplayMesh;
    bool                      mDisplayBones;
    bool                      mDisplayJoints;
-   bool                      mWireframeModeForMesh;
+   bool                      mDisplayAnkleTargets;
+   bool                      mWireframeModeForCharacter;
    bool                      mWireframeModeForJoints;
+   bool                      mWireframeModeForTerrain;
    bool                      mPerformDepthTesting;
+   bool                      mSolveWithConstraints;
 
    // --- --- ---
 

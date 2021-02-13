@@ -94,8 +94,9 @@ private:
    bool                      mDisplayMesh;
    bool                      mDisplayBones;
    bool                      mDisplayJoints;
-   bool                      mWireframeModeForMesh;
+   bool                      mWireframeModeForCharacter;
    bool                      mWireframeModeForJoints;
+   bool                      mWireframeModeForTerrain;
    bool                      mPerformDepthTesting;
 
    AnimationData             mAnimationData;

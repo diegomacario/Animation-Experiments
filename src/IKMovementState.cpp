@@ -170,9 +170,13 @@ void IKMovementState::initializeState()
    mDisplayMesh = true;
    mDisplayBones = false;
    mDisplayJoints = false;
-   mWireframeModeForMesh = false;
+   mDisplayAnkleTargets = false;
+   mWireframeModeForCharacter = false;
    mWireframeModeForJoints = false;
+   mWireframeModeForTerrain = false;
    mPerformDepthTesting = true;
+   // Set the initial IK options
+   mSolveWithConstraints = true;
 
    // Set the model transform
    mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.1f), Q::quat(), glm::vec3(1.0f));
@@ -533,8 +537,8 @@ void IKMovementState::update(float deltaTime)
    mRightAnkleFinalTarget = glm::lerp(worldPosOfRightAnkle, rightAnkleGroundIKTarget, rightFootPinTrackValue);
 
    // Solve the IK chains of the left and right legs so that their end effectors (ankles) are at the positions we interpolated above
-   mLeftLeg.Solve(mModelTransform, currPose, mLeftAnkleFinalTarget, true);
-   mRightLeg.Solve(mModelTransform, currPose, mRightAnkleFinalTarget, true);
+   mLeftLeg.Solve(mModelTransform, currPose, mLeftAnkleFinalTarget, mSolveWithConstraints);
+   mRightLeg.Solve(mModelTransform, currPose, mRightAnkleFinalTarget, mSolveWithConstraints);
 
    // Blend the resulting IK chains into the animated pose
    // Note how the blend factor is equal to 1.0f
@@ -731,6 +735,11 @@ void IKMovementState::render()
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
 
+   if (mWireframeModeForTerrain)
+   {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   }
+
    mStaticMeshShader->use(true);
    mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
    mStaticMeshShader->setUniformMat4("view", mCamera3.getViewMatrix());
@@ -751,18 +760,23 @@ void IKMovementState::render()
    mGroundEmissiveTexture->unbind(1);
    mStaticMeshShader->use(false);
 
-   // Draw teapots at the ankle targets for debugging
-   //mGameObject3DShader->use(true);
-   //mGameObject3DShader->setUniformMat4("projectionView", mCamera3.getPerspectiveProjectionViewMatrix());
-   //mGameObject3DShader->setUniformVec3("cameraPos", mCamera3.getPosition());
-   //mTeapot->setPosition(mLeftAnkleFinalTarget + glm::vec3(0.0f, mAnkleVerticalOffset, 0.0f));
-   //mTeapot->setRotation(Q::angleAxis(55.0f, glm::vec3(0.0f, 1.0f, 0.0f)) * mModelTransform.rotation);
-   //mTeapot->render(*mGameObject3DShader);
-   //mTeapot->setPosition(mRightAnkleFinalTarget + glm::vec3(0.0f, mAnkleVerticalOffset, 0.0f));
-   //mTeapot->render(*mGameObject3DShader);
-   //mGameObject3DShader->use(false);
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-   if (mWireframeModeForMesh)
+   // Draw teapots at the ankle targets for debugging
+   if (mDisplayAnkleTargets)
+   {
+      mGameObject3DShader->use(true);
+      mGameObject3DShader->setUniformMat4("projectionView", mCamera3.getPerspectiveProjectionViewMatrix());
+      mGameObject3DShader->setUniformVec3("cameraPos", mCamera3.getPosition());
+      mTeapot->setPosition(mLeftAnkleFinalTarget + glm::vec3(0.0f, mAnkleVerticalOffset, 0.0f));
+      mTeapot->setRotation(Q::angleAxis(55.0f, glm::vec3(0.0f, 1.0f, 0.0f)) * mModelTransform.rotation);
+      mTeapot->render(*mGameObject3DShader);
+      mTeapot->setPosition(mRightAnkleFinalTarget + glm::vec3(0.0f, mAnkleVerticalOffset, 0.0f));
+      mTeapot->render(*mGameObject3DShader);
+      mGameObject3DShader->use(false);
+   }
+
+   if (mWireframeModeForCharacter)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
    }
@@ -972,11 +986,17 @@ void IKMovementState::userInterface()
 
    ImGui::Checkbox("Display Joints", &mDisplayJoints);
 
-   ImGui::Checkbox("Wireframe Mode for Mesh", &mWireframeModeForMesh);
+   ImGui::Checkbox("Display Ankle Targets", &mDisplayAnkleTargets);
+
+   ImGui::Checkbox("Wireframe Mode for Character", &mWireframeModeForCharacter);
 
    ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
 
+   ImGui::Checkbox("Wireframe Mode for Terrain", &mWireframeModeForTerrain);
+
    ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
+
+   ImGui::Checkbox("Solve with Constraints", &mSolveWithConstraints);
 
    ImGui::End();
 }
