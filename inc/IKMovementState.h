@@ -40,7 +40,7 @@ public:
 
 private:
 
-   void configureLights(const std::shared_ptr<Shader>& shader);
+   void configureLights(const std::shared_ptr<Shader>& shader, const glm::vec3& lightColor);
 
    void switchFromGPUToCPU();
    void switchFromCPUToGPU();
@@ -113,7 +113,8 @@ private:
    // --- --- ---
 
    std::vector<AnimatedMesh> mGroundMeshes;
-   std::shared_ptr<Texture>  mGroundTexture;
+   std::shared_ptr<Texture>  mGroundDiffuseTexture;
+   std::shared_ptr<Texture>  mGroundEmissiveTexture;
    std::vector<Triangle>     mGroundTriangles;
 
    IKLeg                     mLeftLeg;

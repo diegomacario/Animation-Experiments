@@ -23,7 +23,7 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
                                  const std::shared_ptr<Model>&              teapot)
    : mFSM(finiteStateMachine)
    , mWindow(window)
-   , mCamera3(14.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 0.25f)
+   , mCamera3(14.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 90.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 500.0f, 0.25f)
    , mGameObject3DShader(gameObject3DShader)
 {
    // Create the teapot
@@ -35,13 +35,15 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
 
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
-                                                                                       "resources/shaders/mesh_with_simple_illumination.frag");
-   configureLights(mAnimatedMeshShader);
+                                                                                       "resources/shaders/diffuse_and_scaled_emissive_illumination_same_tex.frag");
+   // Sunset color for the skin
+   configureLights(mAnimatedMeshShader, glm::vec3(1.0f, 0.252f, 0.039f));
 
    // Initialize the static mesh shader
    mStaticMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh.vert",
-                                                                                     "resources/shaders/mesh_with_simple_illumination.frag");
-   configureLights(mStaticMeshShader);
+                                                                                     "resources/shaders/diffuse_and_scaled_emissive_illumination_with_scaled_uvs.frag");
+   // Neutral color for the terrain
+   configureLights(mStaticMeshShader, glm::vec3(0.5f, 0.5f, 0.5f));
 
    // Load the diffuse texture of the animated character
    mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/Woman.png");
@@ -121,7 +123,8 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    }
 
    // Load the texture of the ground
-   mGroundTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/uv.png");
+   mGroundDiffuseTexture  = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/grass_2k.png");
+   mGroundEmissiveTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/lights_4k.png");
 
    // Get the triangles that make up the ground
    mGroundTriangles = GetTrianglesFromMeshes(mGroundMeshes);
@@ -187,7 +190,10 @@ void IKMovementState::initializeState()
    determineYPosition();
    mPreviousYPositionOfCharacter = mModelTransform.position.y;
 
-   glClearColor(0.036f, 0.827f, 1.0f, 1.0f);
+   // Light blue the sky
+   //glClearColor(0.036f, 0.827f, 1.0f, 1.0f);
+   // Dark blue for the sky
+   glClearColor(0.036f, 0.627f, 1.0f, 1.0f);
 }
 
 void IKMovementState::enter()
@@ -744,7 +750,7 @@ void IKMovementState::render()
    mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
    mStaticMeshShader->setUniformMat4("view", mCamera3.getViewMatrix());
    mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
-   mGroundTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
+   mGroundDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
    mGroundEmissiveTexture->bind(1, mStaticMeshShader->getUniformLocation("emissiveTex"));
 
    // Loop over the ground meshes and render each one
@@ -756,7 +762,7 @@ void IKMovementState::render()
       mGroundMeshes[i].Render();
    }
 
-   mGroundTexture->unbind(0);
+   mGroundDiffuseTexture->unbind(0);
    mGroundEmissiveTexture->unbind(1);
    mStaticMeshShader->use(false);
 
@@ -869,20 +875,21 @@ void IKMovementState::exit()
 
 }
 
-void IKMovementState::configureLights(const std::shared_ptr<Shader>& shader)
+void IKMovementState::configureLights(const std::shared_ptr<Shader>& shader, const glm::vec3& lightColor)
 {
    shader->use(true);
-   //shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
-   shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(-5.0f, 5.0f, -5.0f));
-   shader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 100.0f, 100.0f));
+   shader->setUniformVec3("pointLights[0].color", lightColor);
    shader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
-   shader->setUniformFloat("pointLights[0].linearAtt", 0.00001f);
+   shader->setUniformFloat("pointLights[0].linearAtt", 0.002f);
    shader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
-   shader->setUniformVec3("pointLights[1].worldPos", glm::vec3(27.0f, 5.0f, 15.5f));
-   shader->setUniformVec3("pointLights[1].color", glm::vec3(1.0f, 1.0f, 1.0f));
+
+   shader->setUniformVec3("pointLights[1].worldPos", glm::vec3(0.0f, 100.0f, -100.0f));
+   shader->setUniformVec3("pointLights[1].color", lightColor);
    shader->setUniformFloat("pointLights[1].constantAtt", 1.0f);
-   shader->setUniformFloat("pointLights[1].linearAtt", 0.00001f);
+   shader->setUniformFloat("pointLights[1].linearAtt", 0.002f);
    shader->setUniformFloat("pointLights[1].quadraticAtt", 0.0f);
+
    shader->setUniformInt("numPointLightsInScene", 2);
    shader->use(false);
 }
@@ -1008,7 +1015,7 @@ void IKMovementState::resetScene()
 
 void IKMovementState::resetCamera()
 {
-   mCamera3.reposition(14.0f, 25.0f, mModelTransform.position, mModelTransform.rotation, glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f);
+   mCamera3.reposition(14.0f, 25.0f, mModelTransform.position, mModelTransform.rotation, glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 90.0f, 0.0f, 90.0f);
 }
 
 void IKMovementState::configurePinTracks()

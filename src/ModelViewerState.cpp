@@ -30,12 +30,12 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
 
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
-                                                                                       "resources/shaders/mesh_with_simple_illumination.frag");
+                                                                                       "resources/shaders/diffuse_illumination.frag");
    configureLights(mAnimatedMeshShader);
 
    // Initialize the static mesh shader
    mStaticMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh.vert",
-                                                                                     "resources/shaders/mesh_with_simple_illumination.frag");
+                                                                                     "resources/shaders/diffuse_illumination.frag");
    configureLights(mStaticMeshShader);
 
    // Load the diffuse texture of the animated character
