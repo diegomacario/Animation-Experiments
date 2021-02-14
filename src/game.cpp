@@ -81,9 +81,7 @@ bool Game::initialize(const std::string& title)
 
    mStates["movement"] = std::make_shared<MovementState>(mFSM,
                                                          mWindow,
-                                                         mCamera,
-                                                         gameObj3DShader,
-                                                         mModelManager.getResource("hardwood_floor"));
+                                                         mCamera);
 
    mStates["ik"] = std::make_shared<IKState>(mFSM,
                                              mWindow,
