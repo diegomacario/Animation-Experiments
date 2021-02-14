@@ -8,9 +8,6 @@ struct PointLight
 {
    vec3  worldPos;
    vec3  color;
-   float constantAtt;
-   float linearAtt;
-   float quadraticAtt;
 };
 
 #define MAX_NUMBER_OF_POINT_LIGHTS 25
@@ -20,6 +17,10 @@ uniform int numPointLightsInScene;
 uniform vec3 cameraPos;
 
 uniform sampler2D diffuseTex;
+
+uniform float constantAtt;
+uniform float linearAtt;
+uniform float quadraticAtt;
 
 out vec4 fragColor;
 
@@ -42,7 +43,7 @@ vec3 calculateContributionOfPointLight(PointLight light, vec3 viewDir)
 {
    // Attenuation
    float distance    = length(light.worldPos - fragPos);
-   float attenuation = 1.0 / (light.constantAtt + (light.linearAtt * distance) + (light.quadraticAtt * distance * distance));
+   float attenuation = 1.0 / (constantAtt + (linearAtt * distance) + (quadraticAtt * distance * distance));
 
    // Diffuse
    vec3  lightDir    = normalize(light.worldPos - fragPos);

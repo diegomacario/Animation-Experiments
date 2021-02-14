@@ -87,6 +87,7 @@ private:
    bool                      mWireframeModeForTerrain;
    bool                      mPerformDepthTesting;
    bool                      mSolveWithConstraints;
+   int                       mSelectedNumberOfIterations;
    float                     mSelectedEmissiveTextureBrightnessScaleFactor;
    float                     mSelectedEmissiveTextureUVScaleFactor;
 

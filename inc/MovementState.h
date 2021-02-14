@@ -73,6 +73,9 @@ private:
    int                       mSelectedState;
    int                       mSelectedSkinningMode;
    float                     mSelectedPlaybackSpeed;
+   float                     mSelectedConstantAttenuation;
+   float                     mSelectedLinearAttenuation;
+   float                     mSelectedQuadraticAttenuation;
    bool                      mDisplayMesh;
    bool                      mDisplayBones;
    bool                      mDisplayJoints;

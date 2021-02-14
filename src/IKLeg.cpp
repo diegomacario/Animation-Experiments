@@ -44,8 +44,9 @@ IKLeg::IKLeg(Skeleton& skeleton, const std::string& hipName, const std::string& 
    }
 }
 
-void IKLeg::Solve(const Transform& modelTransform, Pose& pose, const glm::vec3& ankleTargetPosition, bool constrained)
+void IKLeg::Solve(const Transform& modelTransform, Pose& pose, const glm::vec3& ankleTargetPosition, bool constrained, int numIterations)
 {
+   mSolver.SetNumberOfIterations(numIterations);
    mSolver.SetLocalTransform(0, combine(modelTransform, pose.GetGlobalTransform(mHipIndex)));
    mSolver.SetLocalTransform(1, pose.GetLocalTransform(mKneeIndex));
    mSolver.SetLocalTransform(2, pose.GetLocalTransform(mAnkleIndex));

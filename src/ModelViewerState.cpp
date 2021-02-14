@@ -582,13 +582,13 @@ void ModelViewerState::userInterface()
    ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
    ImGui::Text("Playback Time");
 
-   ImGui::Checkbox("Display Mesh", &mDisplayMesh);
+   ImGui::Checkbox("Display Skin", &mDisplayMesh);
 
    ImGui::Checkbox("Display Bones", &mDisplayBones);
 
    ImGui::Checkbox("Display Joints", &mDisplayJoints);
 
-   ImGui::Checkbox("Wireframe Mode for Character", &mWireframeModeForCharacter);
+   ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
 
    ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
 

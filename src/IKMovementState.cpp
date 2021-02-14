@@ -180,6 +180,7 @@ void IKMovementState::initializeState()
    mPerformDepthTesting = true;
    // Set the initial IK options
    mSolveWithConstraints = true;
+   mSelectedNumberOfIterations = 15;
    // Set the initial beauty pass options
    mSelectedEmissiveTextureBrightnessScaleFactor = 1.0f;
    mSelectedEmissiveTextureUVScaleFactor = 10.0f;
@@ -546,8 +547,8 @@ void IKMovementState::update(float deltaTime)
    mRightAnkleFinalTarget = glm::lerp(worldPosOfRightAnkle, rightAnkleGroundIKTarget, rightFootPinTrackValue);
 
    // Solve the IK chains of the left and right legs so that their end effectors (ankles) are at the positions we interpolated above
-   mLeftLeg.Solve(mModelTransform, currPose, mLeftAnkleFinalTarget, mSolveWithConstraints);
-   mRightLeg.Solve(mModelTransform, currPose, mRightAnkleFinalTarget, mSolveWithConstraints);
+   mLeftLeg.Solve(mModelTransform, currPose, mLeftAnkleFinalTarget, mSolveWithConstraints, mSelectedNumberOfIterations);
+   mRightLeg.Solve(mModelTransform, currPose, mRightAnkleFinalTarget, mSolveWithConstraints, mSelectedNumberOfIterations);
 
    // Blend the resulting IK chains into the animated pose
    // Note how the blend factor is equal to 1.0f
@@ -992,7 +993,7 @@ void IKMovementState::userInterface()
 
    ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
 
-   ImGui::Checkbox("Display Mesh", &mDisplayMesh);
+   ImGui::Checkbox("Display Skin", &mDisplayMesh);
 
    ImGui::Checkbox("Display Bones", &mDisplayBones);
 
@@ -1000,7 +1001,7 @@ void IKMovementState::userInterface()
 
    ImGui::Checkbox("Display Ankle Targets", &mDisplayAnkleTargets);
 
-   ImGui::Checkbox("Wireframe Mode for Character", &mWireframeModeForCharacter);
+   ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
 
    ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
 
@@ -1009,6 +1010,8 @@ void IKMovementState::userInterface()
    ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
 
    ImGui::Checkbox("Solve with Constraints", &mSolveWithConstraints);
+
+   ImGui::SliderInt("Iterations", &mSelectedNumberOfIterations, 0, 100);
 
    ImGui::SliderFloat("Emissivity", &mSelectedEmissiveTextureBrightnessScaleFactor, 0.0f, 1.0f, "%.3f");
 

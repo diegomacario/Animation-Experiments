@@ -138,6 +138,9 @@ void MovementState::initializeState()
    mWireframeModeForCharacter = false;
    mWireframeModeForJoints = false;
    mPerformDepthTesting = true;
+   mSelectedConstantAttenuation = 1.0f;
+   mSelectedLinearAttenuation = 0.0f;
+   mSelectedQuadraticAttenuation = 0.009f;
 
    // Set the model transform
    mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
@@ -438,9 +441,12 @@ void MovementState::render()
    glEnable(GL_DEPTH_TEST);
 
    mStaticMeshShader->use(true);
-   mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
-   mStaticMeshShader->setUniformMat4("view", mCamera3.getViewMatrix());
-   mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
+   mStaticMeshShader->setUniformFloat("constantAtt",  mSelectedConstantAttenuation);
+   mStaticMeshShader->setUniformFloat("linearAtt",    mSelectedLinearAttenuation);
+   mStaticMeshShader->setUniformFloat("quadraticAtt", mSelectedQuadraticAttenuation);
+   mStaticMeshShader->setUniformMat4("model",         glm::mat4(1.0f));
+   mStaticMeshShader->setUniformMat4("view",          mCamera3.getViewMatrix());
+   mStaticMeshShader->setUniformMat4("projection",    mCamera3.getPerspectiveProjectionMatrix());
    mGroundTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
 
    // Loop over the ground meshes and render each one
@@ -464,9 +470,12 @@ void MovementState::render()
    if (mCurrentSkinningMode == SkinningMode::CPU && mDisplayMesh)
    {
       mStaticMeshShader->use(true);
-      mStaticMeshShader->setUniformMat4("model",      transformToMat4(mModelTransform));
-      mStaticMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
-      mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
+      mStaticMeshShader->setUniformFloat("constantAtt",  mSelectedConstantAttenuation);
+      mStaticMeshShader->setUniformFloat("linearAtt",    mSelectedLinearAttenuation);
+      mStaticMeshShader->setUniformFloat("quadraticAtt", mSelectedQuadraticAttenuation);
+      mStaticMeshShader->setUniformMat4("model",         transformToMat4(mModelTransform));
+      mStaticMeshShader->setUniformMat4("view",          mCamera3.getViewMatrix());
+      mStaticMeshShader->setUniformMat4("projection",    mCamera3.getPerspectiveProjectionMatrix());
       mDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
 
       // Loop over the meshes and render each one
@@ -484,6 +493,9 @@ void MovementState::render()
    else if (mCurrentSkinningMode == SkinningMode::GPU && mDisplayMesh)
    {
       mAnimatedMeshShader->use(true);
+      mAnimatedMeshShader->setUniformFloat("constantAtt",     mSelectedConstantAttenuation);
+      mAnimatedMeshShader->setUniformFloat("linearAtt",       mSelectedLinearAttenuation);
+      mAnimatedMeshShader->setUniformFloat("quadraticAtt",    mSelectedQuadraticAttenuation);
       mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mModelTransform));
       mAnimatedMeshShader->setUniformMat4("view",             mCamera3.getViewMatrix());
       mAnimatedMeshShader->setUniformMat4("projection",       mCamera3.getPerspectiveProjectionMatrix());
@@ -566,9 +578,6 @@ void MovementState::configureLights(const std::shared_ptr<Shader>& shader)
          lightIndexAsStr = std::to_string(lightIndex);
          shader->setUniformVec3(nameOfArrOfLights  + lightIndexAsStr + "].worldPos", glm::vec3(xPos, 7.0f, zPos));
          shader->setUniformVec3(nameOfArrOfLights  + lightIndexAsStr + "].color", glm::vec3(1.0f, 1.0f, 1.0f));
-         shader->setUniformFloat(nameOfArrOfLights + lightIndexAsStr + "].constantAtt", 1.0f);
-         shader->setUniformFloat(nameOfArrOfLights + lightIndexAsStr + "].linearAtt", 0.0f);
-         shader->setUniformFloat(nameOfArrOfLights + lightIndexAsStr + "].quadraticAtt", 0.009f);
          zPos += 20.0f;
          ++lightIndex;
       }
@@ -673,17 +682,23 @@ void MovementState::userInterface()
 
    ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
 
-   ImGui::Checkbox("Display Mesh", &mDisplayMesh);
+   ImGui::Checkbox("Display Skin", &mDisplayMesh);
 
    ImGui::Checkbox("Display Bones", &mDisplayBones);
 
    ImGui::Checkbox("Display Joints", &mDisplayJoints);
 
-   ImGui::Checkbox("Wireframe Mode for Character", &mWireframeModeForCharacter);
+   ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
 
    ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
 
    ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
+
+   ImGui::SliderFloat("Constant Att.", &mSelectedConstantAttenuation, 0.0f, 100.0f, "%.3f");
+
+   ImGui::SliderFloat("Linear Att.", &mSelectedLinearAttenuation, 0.0f, 1.0f, "%.3f");
+
+   ImGui::SliderFloat("Quadratic Att.", &mSelectedQuadraticAttenuation, 0.0f, 0.1f, "%.3f");
 
    ImGui::End();
 }

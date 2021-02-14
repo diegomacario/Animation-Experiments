@@ -569,8 +569,8 @@ void IKState::update(float deltaTime)
    worldPosOfRightAnkle = glm::lerp(worldPosOfRightAnkle, rightAnkleGroundIKTarget, rightLegPinTrackValue);
 
    // Solve the IK chains of the left and right legs so that their end effectors (ankles) are at the positions we interpolated above
-   mLeftLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfLeftAnkle, false);
-   mRightLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfRightAnkle, false);
+   mLeftLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfLeftAnkle, false, 15);
+   mRightLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfRightAnkle, false, 15);
 
    // Blend the resulting IK chains into the animated pose
    // Note how the blend factor is equal to 1.0f
@@ -1007,13 +1007,13 @@ void IKState::userInterface()
    ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
    ImGui::Text("Playback Time");
 
-   ImGui::Checkbox("Display Mesh", &mDisplayMesh);
+   ImGui::Checkbox("Display Skin", &mDisplayMesh);
 
    ImGui::Checkbox("Display Bones", &mDisplayBones);
 
    ImGui::Checkbox("Display Joints", &mDisplayJoints);
 
-   ImGui::Checkbox("Wireframe Mode for Character", &mWireframeModeForCharacter);
+   ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
 
    ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
 
