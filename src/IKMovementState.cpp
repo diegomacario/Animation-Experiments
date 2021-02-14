@@ -23,7 +23,7 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
                                  const std::shared_ptr<Model>&              teapot)
    : mFSM(finiteStateMachine)
    , mWindow(window)
-   , mCamera3(14.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 90.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 500.0f, 0.25f)
+   , mCamera3(8.0f, 15.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 90.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 500.0f, 0.25f)
    , mGameObject3DShader(gameObject3DShader)
 {
    // Create the teapot
@@ -180,9 +180,12 @@ void IKMovementState::initializeState()
    mPerformDepthTesting = true;
    // Set the initial IK options
    mSolveWithConstraints = true;
+   // Set the initial beauty pass options
+   mSelectedEmissiveTextureBrightnessScaleFactor = 1.0f;
+   mSelectedEmissiveTextureUVScaleFactor = 10.0f;
 
    // Set the model transform
-   mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.1f), Q::quat(), glm::vec3(1.0f));
+   mModelTransform = Transform(glm::vec3(81.9238f, 0.0f, -117.334f), Q::normalized(Q::quat(0.0f, -0.130078f, 0.0f, 0.991504f)), glm::vec3(1.0f));
    mPreviousYPositionOfCharacter = 0.0f;
 
    // Shoot a ray downwards to determine the initial Y position of the character,
@@ -750,6 +753,8 @@ void IKMovementState::render()
    mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
    mStaticMeshShader->setUniformMat4("view", mCamera3.getViewMatrix());
    mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
+   mStaticMeshShader->setUniformFloat("emissiveTextureBrightnessScaleFactor", mSelectedEmissiveTextureBrightnessScaleFactor);
+   mStaticMeshShader->setUniformFloat("emissiveTextureUVScaleFactor", mSelectedEmissiveTextureUVScaleFactor);
    mGroundDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
    mGroundEmissiveTexture->bind(1, mStaticMeshShader->getUniformLocation("emissiveTex"));
 
@@ -1005,6 +1010,10 @@ void IKMovementState::userInterface()
 
    ImGui::Checkbox("Solve with Constraints", &mSolveWithConstraints);
 
+   ImGui::SliderFloat("Emissivity", &mSelectedEmissiveTextureBrightnessScaleFactor, 0.0f, 1.0f, "%.3f");
+
+   ImGui::SliderFloat("UV Scale", &mSelectedEmissiveTextureUVScaleFactor, 0.0f, 100.0f, "%.3f");
+
    ImGui::End();
 }
 
@@ -1015,7 +1024,7 @@ void IKMovementState::resetScene()
 
 void IKMovementState::resetCamera()
 {
-   mCamera3.reposition(14.0f, 25.0f, mModelTransform.position, mModelTransform.rotation, glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 90.0f, 0.0f, 90.0f);
+   mCamera3.reposition(8.0f, 15.0f, mModelTransform.position, mModelTransform.rotation, glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 90.0f, 0.0f, 90.0f);
 }
 
 void IKMovementState::configurePinTracks()

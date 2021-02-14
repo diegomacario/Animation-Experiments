@@ -22,6 +22,9 @@ uniform vec3 cameraPos;
 uniform sampler2D diffuseTex;
 uniform sampler2D emissiveTex;
 
+uniform float emissiveTextureBrightnessScaleFactor;
+uniform float emissiveTextureUVScaleFactor;
+
 out vec4 fragColor;
 
 vec3 calculateContributionOfPointLight(PointLight light, vec3 viewDir);
@@ -51,7 +54,7 @@ vec3 calculateContributionOfPointLight(PointLight light, vec3 viewDir)
    vec3  diffuse     = (diff * (vec3(texture(diffuseTex, uv))));
 
    // Emissive
-   vec3 emissive     = vec3(texture(emissiveTex, uv * 10.0)) * 1.0;
+   vec3 emissive     = vec3(texture(emissiveTex, uv * emissiveTextureUVScaleFactor)) * emissiveTextureBrightnessScaleFactor;
 
    return diffuse + emissive;
 }
