@@ -2,9 +2,7 @@
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 
-#include <array>
-#include <random>
-
+#include "resource_manager.h"
 #include "shader_loader.h"
 #include "texture_loader.h"
 #include "GLTFLoader.h"
@@ -13,21 +11,11 @@
 
 ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
                                    const std::shared_ptr<Window>&             window,
-                                   const std::shared_ptr<Camera>&             camera,
-                                   const std::shared_ptr<Shader>&             gameObject3DShader,
-                                   const std::shared_ptr<Model>&              hardwoodFloor)
+                                   const std::shared_ptr<Camera>&             camera)
    : mFSM(finiteStateMachine)
    , mWindow(window)
    , mCamera(camera)
-   , mGameObject3DShader(gameObject3DShader)
 {
-   // Create the hardwood floor
-   mHardwoodFloor = std::make_unique<GameObject3D>(hardwoodFloor,
-                                                   glm::vec3(0.0f),
-                                                   0.0f,
-                                                   glm::vec3(0.0f, 0.0f, 0.0f),
-                                                   0.10f);
-
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
                                                                                        "resources/shaders/diffuse_illumination.frag");
@@ -37,6 +25,11 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
    mStaticMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh.vert",
                                                                                      "resources/shaders/diffuse_illumination.frag");
    configureLights(mStaticMeshShader);
+
+   // Initialize the ground shader
+   mGroundShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh.vert",
+                                                                                 "resources/shaders/ambient_diffuse_illumination.frag");
+   configureLights(mGroundShader);
 
    // Load the diffuse texture of the animated character
    mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/Woman.png");
@@ -89,6 +82,29 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
                                       weightsAttribLocOfAnimatedShader,
                                       influencesAttribLocOfAnimatedShader);
    }
+
+   // Load the ground
+   data = LoadGLTFFile("resources/models/table/table.gltf");
+   mGroundMeshes = LoadStaticMeshes(data);
+   FreeGLTFFile(data);
+
+   int positionsAttribLocOfStaticShader = mGroundShader->getAttributeLocation("position");
+   int normalsAttribLocOfStaticShader   = mGroundShader->getAttributeLocation("normal");
+   int texCoordsAttribLocOfStaticShader = mGroundShader->getAttributeLocation("texCoord");
+   for (unsigned int i = 0,
+        size = static_cast<unsigned int>(mGroundMeshes.size());
+        i < size;
+        ++i)
+   {
+      mGroundMeshes[i].ConfigureVAO(positionsAttribLocOfStaticShader,
+                                    normalsAttribLocOfStaticShader,
+                                    texCoordsAttribLocOfStaticShader,
+                                    -1,
+                                    -1);
+   }
+
+   // Load the texture of the ground
+   mGroundTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/table/table_ambient_diffuse.jpg");
 
    initializeState();
 
@@ -354,13 +370,26 @@ void ModelViewerState::render()
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
 
-   mGameObject3DShader->use(true);
-   mGameObject3DShader->setUniformMat4("projectionView", mCamera->getPerspectiveProjectionViewMatrix());
-   mGameObject3DShader->setUniformVec3("cameraPos", mCamera->getPosition());
+   mGroundShader->use(true);
 
-   mHardwoodFloor->render(*mGameObject3DShader);
+   glm::mat4 modelMatrix(1.0f);
+   modelMatrix = glm::scale(modelMatrix, glm::vec3(0.10f));
+   mGroundShader->setUniformMat4("model",      modelMatrix);
+   mGroundShader->setUniformMat4("view",       mCamera->getViewMatrix());
+   mGroundShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
+   mGroundTexture->bind(0, mGroundShader->getUniformLocation("diffuseTex"));
 
-   mGameObject3DShader->use(false);
+   // Loop over the ground meshes and render each one
+   for (unsigned int i = 0,
+      size = static_cast<unsigned int>(mGroundMeshes.size());
+      i < size;
+      ++i)
+   {
+      mGroundMeshes[i].Render();
+   }
+
+   mGroundTexture->unbind(0);
+   mGroundShader->use(false);
 
    if (mWireframeModeForCharacter)
    {

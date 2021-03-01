@@ -1,10 +1,11 @@
 #ifndef MODEL_VIEWER_STATE_H
 #define MODEL_VIEWER_STATE_H
 
-#include <array>
-
-#include "game.h"
-#include "line.h"
+#include "state.h"
+#include "finite_state_machine.h"
+#include "window.h"
+#include "camera.h"
+#include "texture.h"
 #include "AnimatedMesh.h"
 #include "SkeletonViewer.h"
 #include "Clip.h"
@@ -15,9 +16,7 @@ public:
 
    ModelViewerState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
                     const std::shared_ptr<Window>&             window,
-                    const std::shared_ptr<Camera>&             camera,
-                    const std::shared_ptr<Shader>&             gameObject3DShader,
-                    const std::shared_ptr<Model>&              hardwoodFloor);
+                    const std::shared_ptr<Camera>&             camera);
    ~ModelViewerState() = default;
 
    ModelViewerState(const ModelViewerState&) = delete;
@@ -53,9 +52,9 @@ private:
 
    std::shared_ptr<Camera>             mCamera;
 
-   std::shared_ptr<Shader>             mGameObject3DShader;
-
-   std::unique_ptr<GameObject3D>       mHardwoodFloor;
+   std::vector<AnimatedMesh>           mGroundMeshes;
+   std::shared_ptr<Texture>            mGroundTexture;
+   std::shared_ptr<Shader>             mGroundShader;
 
    enum SkinningMode : int
    {

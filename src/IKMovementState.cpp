@@ -5,9 +5,7 @@
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/compatibility.hpp>
 
-#include <array>
-#include <random>
-
+#include "resource_manager.h"
 #include "shader_loader.h"
 #include "texture_loader.h"
 #include "GLTFLoader.h"
@@ -17,22 +15,11 @@
 #include "IKMovementState.h"
 
 IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
-                                 const std::shared_ptr<Window>&             window,
-                                 const std::shared_ptr<Camera>&             camera,
-                                 const std::shared_ptr<Shader>&             gameObject3DShader,
-                                 const std::shared_ptr<Model>&              teapot)
+                                 const std::shared_ptr<Window>&             window)
    : mFSM(finiteStateMachine)
    , mWindow(window)
    , mCamera3(8.0f, 15.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 90.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 500.0f, 0.25f)
-   , mGameObject3DShader(gameObject3DShader)
 {
-   // Create the teapot
-   mTeapot = std::make_unique<GameObject3D>(teapot,
-                                            glm::vec3(0.0f, 7.5f / 22.5f, 0.0f),
-                                            0.0f,
-                                            glm::vec3(0.0f, 0.0f, 0.0f),
-                                            7.5f / 75.0f);
-
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
                                                                                        "resources/shaders/diffuse_and_scaled_emissive_illumination_same_tex.frag");
@@ -173,7 +160,6 @@ void IKMovementState::initializeState()
    mDisplayMesh = true;
    mDisplayBones = false;
    mDisplayJoints = false;
-   mDisplayAnkleTargets = false;
    mWireframeModeForCharacter = false;
    mWireframeModeForJoints = false;
    mWireframeModeForTerrain = false;
@@ -774,20 +760,6 @@ void IKMovementState::render()
 
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-   // Draw teapots at the ankle targets for debugging
-   if (mDisplayAnkleTargets)
-   {
-      mGameObject3DShader->use(true);
-      mGameObject3DShader->setUniformMat4("projectionView", mCamera3.getPerspectiveProjectionViewMatrix());
-      mGameObject3DShader->setUniformVec3("cameraPos", mCamera3.getPosition());
-      mTeapot->setPosition(mLeftAnkleFinalTarget + glm::vec3(0.0f, mAnkleVerticalOffset, 0.0f));
-      mTeapot->setRotation(Q::angleAxis(55.0f, glm::vec3(0.0f, 1.0f, 0.0f)) * mModelTransform.rotation);
-      mTeapot->render(*mGameObject3DShader);
-      mTeapot->setPosition(mRightAnkleFinalTarget + glm::vec3(0.0f, mAnkleVerticalOffset, 0.0f));
-      mTeapot->render(*mGameObject3DShader);
-      mGameObject3DShader->use(false);
-   }
-
    if (mWireframeModeForCharacter)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -998,8 +970,6 @@ void IKMovementState::userInterface()
    ImGui::Checkbox("Display Bones", &mDisplayBones);
 
    ImGui::Checkbox("Display Joints", &mDisplayJoints);
-
-   ImGui::Checkbox("Display Ankle Targets", &mDisplayAnkleTargets);
 
    ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
 

@@ -1,10 +1,10 @@
 #ifndef MOVEMENT_STATE_H
 #define MOVEMENT_STATE_H
 
-#include <array>
-
-#include "game.h"
-#include "line.h"
+#include "state.h"
+#include "finite_state_machine.h"
+#include "window.h"
+#include "texture.h"
 #include "AnimatedMesh.h"
 #include "SkeletonViewer.h"
 #include "Clip.h"
@@ -16,8 +16,7 @@ class MovementState : public State
 public:
 
    MovementState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
-                 const std::shared_ptr<Window>&             window,
-                 const std::shared_ptr<Camera>&             camera);
+                 const std::shared_ptr<Window>&             window);
    ~MovementState() = default;
 
    MovementState(const MovementState&) = delete;

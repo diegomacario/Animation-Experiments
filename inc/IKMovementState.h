@@ -1,14 +1,13 @@
 #ifndef IK_MOVEMENT_STATE_H
 #define IK_MOVEMENT_STATE_H
 
-#include <array>
-
-#include "game.h"
-#include "line.h"
+#include "state.h"
+#include "finite_state_machine.h"
+#include "window.h"
+#include "texture.h"
 #include "AnimatedMesh.h"
 #include "SkeletonViewer.h"
 #include "Clip.h"
-#include "Triangle.h"
 #include "IKLeg.h"
 #include "IKCrossFadeController.h"
 #include "Camera3.h"
@@ -18,10 +17,7 @@ class IKMovementState : public State
 public:
 
    IKMovementState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
-                   const std::shared_ptr<Window>&             window,
-                   const std::shared_ptr<Camera>&             camera,
-                   const std::shared_ptr<Shader>&             gameObject3DShader,
-                   const std::shared_ptr<Model>&              teapot);
+                   const std::shared_ptr<Window>&             window);
    ~IKMovementState() = default;
 
    IKMovementState(const IKMovementState&) = delete;
@@ -57,10 +53,6 @@ private:
 
    Camera3                             mCamera3;
 
-   std::shared_ptr<Shader>             mGameObject3DShader;
-
-   std::unique_ptr<GameObject3D>       mTeapot;
-
    enum SkinningMode : int
    {
       GPU = 0,
@@ -81,7 +73,6 @@ private:
    bool                      mDisplayMesh;
    bool                      mDisplayBones;
    bool                      mDisplayJoints;
-   bool                      mDisplayAnkleTargets;
    bool                      mWireframeModeForCharacter;
    bool                      mWireframeModeForJoints;
    bool                      mWireframeModeForTerrain;

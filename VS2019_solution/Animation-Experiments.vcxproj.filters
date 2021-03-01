@@ -34,22 +34,7 @@
     <ClCompile Include="..\src\game.cpp">
       <Filter>Animation-Experiments\Source Files\Base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\game_object_3D.cpp">
-      <Filter>Animation-Experiments\Source Files\Base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\line.cpp">
-      <Filter>Animation-Experiments\Source Files\Base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\main.cpp">
-      <Filter>Animation-Experiments\Source Files\Base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mesh.cpp">
-      <Filter>Animation-Experiments\Source Files\Base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\model.cpp">
-      <Filter>Animation-Experiments\Source Files\Base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\model_loader.cpp">
       <Filter>Animation-Experiments\Source Files\Base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shader.cpp">
@@ -193,21 +178,6 @@
       <Filter>Animation-Experiments\Header Files\Base</Filter>
     </ClInclude>
     <ClInclude Include="..\inc\game.h">
-      <Filter>Animation-Experiments\Header Files\Base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\game_object_3D.h">
-      <Filter>Animation-Experiments\Header Files\Base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\line.h">
-      <Filter>Animation-Experiments\Header Files\Base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\mesh.h">
-      <Filter>Animation-Experiments\Header Files\Base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\model.h">
-      <Filter>Animation-Experiments\Header Files\Base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\model_loader.h">
       <Filter>Animation-Experiments\Header Files\Base</Filter>
     </ClInclude>
     <ClInclude Include="..\inc\resource_manager.h">

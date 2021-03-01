@@ -1,10 +1,11 @@
 #ifndef IK_STATE_H
 #define IK_STATE_H
 
-#include <array>
-
-#include "game.h"
-#include "line.h"
+#include "state.h"
+#include "finite_state_machine.h"
+#include "window.h"
+#include "camera.h"
+#include "texture.h"
 #include "AnimatedMesh.h"
 #include "SkeletonViewer.h"
 #include "Clip.h"

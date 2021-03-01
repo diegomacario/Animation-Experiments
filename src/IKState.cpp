@@ -5,9 +5,7 @@
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/compatibility.hpp>
 
-#include <array>
-#include <random>
-
+#include "resource_manager.h"
 #include "shader_loader.h"
 #include "texture_loader.h"
 #include "GLTFLoader.h"

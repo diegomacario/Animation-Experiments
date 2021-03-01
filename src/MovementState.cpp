@@ -2,9 +2,7 @@
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 
-#include <array>
-#include <random>
-
+#include "resource_manager.h"
 #include "shader_loader.h"
 #include "texture_loader.h"
 #include "GLTFLoader.h"
@@ -12,8 +10,7 @@
 #include "MovementState.h"
 
 MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
-                             const std::shared_ptr<Window>&             window,
-                             const std::shared_ptr<Camera>&             camera)
+                             const std::shared_ptr<Window>&             window)
    : mFSM(finiteStateMachine)
    , mWindow(window)
    , mCamera3(14.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 30.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 0.25f)

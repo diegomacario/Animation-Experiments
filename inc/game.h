@@ -1,8 +1,6 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "model.h"
-#include "game_object_3D.h"
 #include "camera.h"
 #include "window.h"
 #include "state.h"
@@ -31,10 +29,6 @@ private:
    std::shared_ptr<Window>                 mWindow;
 
    std::shared_ptr<Camera>                 mCamera;
-
-   ResourceManager<Model>                  mModelManager;
-   ResourceManager<Texture>                mTextureManager;
-   ResourceManager<Shader>                 mShaderManager;
 };
 
 #endif

@@ -1,8 +1,5 @@
 #include <iostream>
 
-#include "shader_loader.h"
-#include "texture_loader.h"
-#include "model_loader.h"
 #include "ModelViewerState.h"
 #include "IKState.h"
 #include "MovementState.h"
@@ -13,9 +10,6 @@ Game::Game()
    : mFSM()
    , mWindow()
    , mCamera()
-   , mModelManager()
-   , mTextureManager()
-   , mShaderManager()
 {
 
 }
@@ -51,22 +45,6 @@ bool Game::initialize(const std::string& title)
                                       10.0f,       // Movement speed
                                       0.1f);       // Mouse sensitivity
 
-   // Initialize the 3D shader
-   auto gameObj3DShader = mShaderManager.loadResource<ShaderLoader>("game_object_3D",
-                                                                    "resources/shaders/game_object_3D.vert",
-                                                                    "resources/shaders/game_object_3D.frag");
-   gameObj3DShader->use(true);
-   gameObj3DShader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
-   gameObj3DShader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
-   gameObj3DShader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
-   gameObj3DShader->setUniformFloat("pointLights[0].linearAtt", 0.01f);
-   gameObj3DShader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
-   gameObj3DShader->setUniformInt("numPointLightsInScene", 1);
-
-   // Load the models
-   mModelManager.loadResource<ModelLoader>("hardwood_floor", "resources/models/table/table.obj");
-   mModelManager.loadResource<ModelLoader>("teapot", "resources/models/teapot/teapot.obj");
-
    // Create the FSM
    mFSM = std::make_shared<FiniteStateMachine>();
 
@@ -75,23 +53,17 @@ bool Game::initialize(const std::string& title)
 
    mStates["viewer"] = std::make_shared<ModelViewerState>(mFSM,
                                                           mWindow,
-                                                          mCamera,
-                                                          gameObj3DShader,
-                                                          mModelManager.getResource("hardwood_floor"));
+                                                          mCamera);
 
    mStates["movement"] = std::make_shared<MovementState>(mFSM,
-                                                         mWindow,
-                                                         mCamera);
+                                                         mWindow);
 
    mStates["ik"] = std::make_shared<IKState>(mFSM,
                                              mWindow,
                                              mCamera);
 
    mStates["ik_movement"] = std::make_shared<IKMovementState>(mFSM,
-                                                              mWindow,
-                                                              mCamera,
-                                                              gameObj3DShader,
-                                                              mModelManager.getResource("teapot"));
+                                                              mWindow);
 
    // Initialize the FSM
    mFSM->initialize(std::move(mStates), "viewer");
