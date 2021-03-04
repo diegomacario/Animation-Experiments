@@ -2,16 +2,6 @@
 
 #include "Track.h"
 
-// Instantiate the desired Track classes from the Track class template
-template Track<float, 1>;
-template Track<glm::vec3, 3>;
-template Track<Q::quat, 4>;
-
-// Instantiate the desired FastTrack classes from the FastTrack class template
-template FastTrack<float, 1>;
-template FastTrack<glm::vec3, 3>;
-template FastTrack<Q::quat, 4>;
-
 namespace TrackHelpers
 {
    float     Interpolate(float a, float b, float t)                       { return a + (b - a) * t; }
@@ -475,11 +465,6 @@ void FastTrack<T, N>::GenerateSampleToFrameIndexMap()
    }
 }
 
-// Instantiate the desired OptimizeTrack functions from the OptimizeTrack function template
-template FastTrack<float, 1>     OptimizeTrack(Track<float, 1>& input);
-template FastTrack<glm::vec3, 3> OptimizeTrack(Track<glm::vec3, 3>& input);
-template FastTrack<Q::quat, 4>   OptimizeTrack(Track<Q::quat, 4>& input);
-
 template<typename T, unsigned int N>
 FastTrack<T, N> OptimizeTrack(Track<T, N>& track)
 {
@@ -501,3 +486,18 @@ FastTrack<T, N> OptimizeTrack(Track<T, N>& track)
 
    return result;
 }
+
+// Instantiate the desired Track classes from the Track class template
+template class Track<float, 1>;
+template class Track<glm::vec3, 3>;
+template class Track<Q::quat, 4>;
+
+// Instantiate the desired FastTrack classes from the FastTrack class template
+template class FastTrack<float, 1>;
+template class FastTrack<glm::vec3, 3>;
+template class FastTrack<Q::quat, 4>;
+
+// Instantiate the desired OptimizeTrack functions from the OptimizeTrack function template
+template FastTrack<float, 1>     OptimizeTrack(Track<float, 1>& input);
+template FastTrack<glm::vec3, 3> OptimizeTrack(Track<glm::vec3, 3>& input);
+template FastTrack<Q::quat, 4>   OptimizeTrack(Track<Q::quat, 4>& input);

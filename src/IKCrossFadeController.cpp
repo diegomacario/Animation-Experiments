@@ -3,9 +3,6 @@
 #include "IKCrossFadeController.h"
 #include "Blending.h"
 
-template TIKCrossFadeController<Clip>;
-template TIKCrossFadeController<FastClip>;
-
 template <typename CLIP>
 TIKCrossFadeController<CLIP>::TIKCrossFadeController()
    : mCurrentClip(nullptr)
@@ -240,3 +237,7 @@ float TIKCrossFadeController<CLIP>::GetPlaybackTime()
 {
    return mPlaybackTime;
 }
+
+// Instantiate the desired IKCrossFadeController classes from the IKCrossFadeController class template
+template class TIKCrossFadeController<Clip>;
+template class TIKCrossFadeController<FastClip>;

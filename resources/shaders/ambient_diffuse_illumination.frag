@@ -1,5 +1,3 @@
-#version 330 core
-
 in vec3 fragPos;
 in vec3 norm;
 in vec2 uv;

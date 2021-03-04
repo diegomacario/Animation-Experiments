@@ -134,7 +134,11 @@ void MovementState::initializeState()
    mDisplayJoints = false;
    mWireframeModeForCharacter = false;
    mWireframeModeForJoints = false;
+#ifdef __EMSCRIPTEN__
+   mPerformDepthTesting = false;
+#else
    mPerformDepthTesting = true;
+#endif
    mSelectedConstantAttenuation = 1.0f;
    mSelectedLinearAttenuation = 0.0f;
    mSelectedQuadraticAttenuation = 0.009f;
@@ -181,6 +185,7 @@ void MovementState::processInput(float deltaTime)
       }
    }
 
+#ifndef __EMSCRIPTEN__
    // Make the game full screen or windowed
    if (mWindow->keyIsPressed(GLFW_KEY_F) && !mWindow->keyHasBeenProcessed(GLFW_KEY_F))
    {
@@ -209,6 +214,7 @@ void MovementState::processInput(float deltaTime)
       mWindow->setKeyAsProcessed(GLFW_KEY_8);
       mWindow->setNumberOfSamples(8);
    }
+#endif
 
    // Reset the camera
    if (mWindow->keyIsPressed(GLFW_KEY_R)) { resetCamera(); }
@@ -432,7 +438,11 @@ void MovementState::render()
 
    userInterface();
 
+#ifdef __EMSCRIPTEN__
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#else
    mWindow->clearAndBindMultisampleFramebuffer();
+#endif
 
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
@@ -458,10 +468,12 @@ void MovementState::render()
    mGroundTexture->unbind(0);
    mStaticMeshShader->use(false);
 
+#ifndef __EMSCRIPTEN__
    if (mWireframeModeForCharacter)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
    }
+#endif
 
    // Render the animated meshes
    if (mCurrentSkinningMode == SkinningMode::CPU && mDisplayMesh)
@@ -512,7 +524,9 @@ void MovementState::render()
       mAnimatedMeshShader->use(false);
    }
 
+#ifndef __EMSCRIPTEN__
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
 
    if (!mPerformDepthTesting)
    {
@@ -529,10 +543,12 @@ void MovementState::render()
 
    glLineWidth(1.0f);
 
+#ifndef __EMSCRIPTEN__
    if (mWireframeModeForJoints)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
    }
+#endif
 
    // Render the joints
    if (mDisplayJoints)
@@ -540,13 +556,17 @@ void MovementState::render()
       mSkeletonViewer.RenderJoints(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix(), mPosePalette);
    }
 
+#ifndef __EMSCRIPTEN__
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
    glEnable(GL_DEPTH_TEST);
 
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+#ifndef __EMSCRIPTEN__
    mWindow->generateAntiAliasedImage();
+#endif
 
    mWindow->swapBuffers();
    mWindow->pollEvents();
@@ -685,13 +705,15 @@ void MovementState::userInterface()
 
    ImGui::Checkbox("Display Joints", &mDisplayJoints);
 
+#ifndef __EMSCRIPTEN__
    ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
 
    ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
 
    ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
+#endif
 
-   ImGui::SliderFloat("Constant Att.", &mSelectedConstantAttenuation, 0.0f, 100.0f, "%.3f");
+   ImGui::SliderFloat("Constant Att.", &mSelectedConstantAttenuation, 0.0f, 50.0f, "%.3f");
 
    ImGui::SliderFloat("Linear Att.", &mSelectedLinearAttenuation, 0.0f, 1.0f, "%.3f");
 

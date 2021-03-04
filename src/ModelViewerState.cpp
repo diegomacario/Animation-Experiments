@@ -137,7 +137,11 @@ void ModelViewerState::initializeState()
    mDisplayJoints = false;
    mWireframeModeForCharacter = false;
    mWireframeModeForJoints = false;
+#ifdef __EMSCRIPTEN__
+   mPerformDepthTesting = false;
+#else
    mPerformDepthTesting = true;
+#endif
 
    // Set the initial pose
    mAnimationData.animatedPose = mSkeleton.GetRestPose();
@@ -179,6 +183,7 @@ void ModelViewerState::processInput(float deltaTime)
       }
    }
 
+#ifndef __EMSCRIPTEN__
    // Make the game full screen or windowed
    if (mWindow->keyIsPressed(GLFW_KEY_F) && !mWindow->keyHasBeenProcessed(GLFW_KEY_F))
    {
@@ -239,6 +244,7 @@ void ModelViewerState::processInput(float deltaTime)
       mWindow->setKeyAsProcessed(GLFW_KEY_8);
       mWindow->setNumberOfSamples(8);
    }
+#endif
 
    // Reset the camera
    if (mWindow->keyIsPressed(GLFW_KEY_R)) { resetCamera(); }
@@ -365,7 +371,11 @@ void ModelViewerState::render()
 
    userInterface();
 
+#ifdef __EMSCRIPTEN__
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#else
    mWindow->clearAndBindMultisampleFramebuffer();
+#endif
 
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
@@ -391,10 +401,12 @@ void ModelViewerState::render()
    mGroundTexture->unbind(0);
    mGroundShader->use(false);
 
+#ifndef __EMSCRIPTEN__
    if (mWireframeModeForCharacter)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
    }
+#endif
 
    // Render the animated meshes
    if (mAnimationData.currentSkinningMode == SkinningMode::CPU && mDisplayMesh)
@@ -441,7 +453,9 @@ void ModelViewerState::render()
       mAnimatedMeshShader->use(false);
    }
 
+#ifndef __EMSCRIPTEN__
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
 
    if (!mPerformDepthTesting)
    {
@@ -458,10 +472,12 @@ void ModelViewerState::render()
 
    glLineWidth(1.0f);
 
+#ifndef __EMSCRIPTEN__
    if (mWireframeModeForJoints)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
    }
+#endif
 
    // Render the joints
    if (mDisplayJoints)
@@ -469,13 +485,17 @@ void ModelViewerState::render()
       mSkeletonViewer.RenderJoints(mAnimationData.modelTransform, mCamera->getPerspectiveProjectionViewMatrix(), mAnimationData.animatedPosePalette);
    }
 
+#ifndef __EMSCRIPTEN__
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
    glEnable(GL_DEPTH_TEST);
 
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+#ifndef __EMSCRIPTEN__
    mWindow->generateAntiAliasedImage();
+#endif
 
    mWindow->swapBuffers();
    mWindow->pollEvents();
@@ -600,12 +620,12 @@ void ModelViewerState::userInterface()
 
    float durationOfCurrClip = mClips[mAnimationData.currentClipIndex].GetDuration();
    char progress[32];
-   sprintf_s(progress, 32, "%.3f / %.3f", mAnimationData.playbackTime, durationOfCurrClip);
+   snprintf(progress, 32, "%.3f / %.3f", mAnimationData.playbackTime, durationOfCurrClip);
    ImGui::ProgressBar(mAnimationData.playbackTime / durationOfCurrClip, ImVec2(0.0f, 0.0f), progress);
 
    //float normalizedPlaybackTime = (mAnimationData.playbackTime - mClips[mAnimationData.currentClipIndex].GetStartTime()) / mClips[mAnimationData.currentClipIndex].GetDuration();
    //char progress[32];
-   //sprintf_s(progress, 32, "%.3f", normalizedPlaybackTime);
+   //snprintf(progress, 32, "%.3f", normalizedPlaybackTime);
    //ImGui::ProgressBar(normalizedPlaybackTime, ImVec2(0.0f, 0.0f), progress);
 
    ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -617,11 +637,13 @@ void ModelViewerState::userInterface()
 
    ImGui::Checkbox("Display Joints", &mDisplayJoints);
 
+#ifndef __EMSCRIPTEN__
    ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
 
    ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
 
    ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
+#endif
 
    ImGui::End();
 }

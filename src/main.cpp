@@ -1,8 +1,19 @@
 #include <iostream>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#endif
+
 #include "game.h"
 
-int main(int argc, char* argv[])
+#ifdef __EMSCRIPTEN__
+void mainLoop(void* game)
+{
+   static_cast<Game*>(game)->executeGameLoop();
+}
+#endif
+
+int main()
 {
    Game game;
 
@@ -12,7 +23,11 @@ int main(int argc, char* argv[])
       return -1;
    }
 
+#ifdef __EMSCRIPTEN__
+   emscripten_set_main_loop_arg(mainLoop, static_cast<void*>(&game), 0, true);
+#else
    game.executeGameLoop();
+#endif
 
    return 0;
 }

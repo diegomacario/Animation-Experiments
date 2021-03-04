@@ -71,6 +71,20 @@ bool Game::initialize(const std::string& title)
    return true;
 }
 
+#ifdef __EMSCRIPTEN__
+void Game::executeGameLoop()
+{
+   static double lastFrame = 0.0;
+
+   double currentFrame = glfwGetTime();
+   float deltaTime     = static_cast<float>(currentFrame - lastFrame);
+   lastFrame           = currentFrame;
+
+   mFSM->processInputInCurrentState(deltaTime);
+   mFSM->updateCurrentState(deltaTime);
+   mFSM->renderCurrentState();
+}
+#else
 void Game::executeGameLoop()
 {
    double currentFrame = 0.0;
@@ -88,3 +102,4 @@ void Game::executeGameLoop()
       mFSM->renderCurrentState();
    }
 }
+#endif

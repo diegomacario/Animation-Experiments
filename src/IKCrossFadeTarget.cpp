@@ -1,8 +1,5 @@
 #include "IKCrossFadeTarget.h"
 
-template TIKCrossFadeTarget<Clip>;
-template TIKCrossFadeTarget<FastClip>;
-
 template <typename CLIP>
 TIKCrossFadeTarget<CLIP>::TIKCrossFadeTarget()
    : mClip(nullptr)
@@ -38,3 +35,7 @@ TIKCrossFadeTarget<CLIP>::TIKCrossFadeTarget(CLIP*        clip,
 {
 
 }
+
+// Instantiate the desired IKCrossFadeTarget structs from the IKCrossFadeTarget struct template
+template struct TIKCrossFadeTarget<Clip>;
+template struct TIKCrossFadeTarget<FastClip>;

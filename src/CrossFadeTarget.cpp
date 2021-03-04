@@ -1,8 +1,5 @@
 #include "CrossFadeTarget.h"
 
-template TCrossFadeTarget<Clip>;
-template TCrossFadeTarget<FastClip>;
-
 template <typename CLIP>
 TCrossFadeTarget<CLIP>::TCrossFadeTarget()
    : mClip(nullptr)
@@ -25,3 +22,7 @@ TCrossFadeTarget<CLIP>::TCrossFadeTarget(CLIP* clip, Pose& pose, float fadeDurat
 {
 
 }
+
+// Instantiate the desired CrossFadeTarget structs from the CrossFadeTarget struct template
+template struct TCrossFadeTarget<Clip>;
+template struct TCrossFadeTarget<FastClip>;

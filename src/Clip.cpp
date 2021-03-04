@@ -1,8 +1,5 @@
 #include "Clip.h"
 
-template TClip<TransformTrack>;
-template TClip<FastTransformTrack>;
-
 template <typename TRACK>
 TClip<TRACK>::TClip()
    : mName("Unnamed")
@@ -259,3 +256,7 @@ FastClip OptimizeClip(Clip& clip)
 
    return fastClip;
 }
+
+// Instantiate the desired Clip classes from the Clip class template
+template class TClip<TransformTrack>;
+template class TClip<FastTransformTrack>;

@@ -1,8 +1,5 @@
 #include "TransformTrack.h"
 
-template TTransformTrack<VectorTrack, QuaternionTrack>;
-template TTransformTrack<FastVectorTrack, FastQuaternionTrack>;
-
 template <typename VTRACK, typename QTRACK>
 TTransformTrack<VTRACK, QTRACK>::TTransformTrack()
    : mJointID(0)
@@ -178,3 +175,7 @@ FastTransformTrack OptimizeTransformTrack(TransformTrack& transformTrack)
 
    return result;
 }
+
+// Instantiate the desired TransformTrack classes from the TransformTrack class template
+template class TTransformTrack<VectorTrack, QuaternionTrack>;
+template class TTransformTrack<FastVectorTrack, FastQuaternionTrack>;

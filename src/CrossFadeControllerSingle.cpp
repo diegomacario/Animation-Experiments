@@ -1,9 +1,6 @@
 #include "CrossFadeControllerSingle.h"
 #include "Blending.h"
 
-template TCrossFadeControllerSingle<Clip>;
-template TCrossFadeControllerSingle<FastClip>;
-
 template <typename CLIP>
 TCrossFadeControllerSingle<CLIP>::TCrossFadeControllerSingle()
    : mCurrentClip(nullptr)
@@ -144,3 +141,7 @@ Pose& TCrossFadeControllerSingle<CLIP>::GetCurrentPose()
 {
    return mCurrentPose;
 }
+
+// Instantiate the desired CrossFadeControllerSingle classes from the CrossFadeControllerSingle class template
+template class TCrossFadeControllerSingle<Clip>;
+template class TCrossFadeControllerSingle<FastClip>;

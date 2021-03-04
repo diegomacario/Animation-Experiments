@@ -1,9 +1,6 @@
 #include "CrossFadeControllerMultiple.h"
 #include "Blending.h"
 
-template TCrossFadeControllerMultiple<Clip>;
-template TCrossFadeControllerMultiple<FastClip>;
-
 template <typename CLIP>
 TCrossFadeControllerMultiple<CLIP>::TCrossFadeControllerMultiple()
    : mCurrentClip(nullptr)
@@ -191,3 +188,7 @@ float TCrossFadeControllerMultiple<CLIP>::GetPlaybackTime()
 {
    return mPlaybackTime;
 }
+
+// Instantiate the desired CrossFadeControllerMultiple classes from the CrossFadeControllerMultiple class template
+template class TCrossFadeControllerMultiple<Clip>;
+template class TCrossFadeControllerMultiple<FastClip>;

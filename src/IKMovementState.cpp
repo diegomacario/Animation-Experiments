@@ -163,7 +163,11 @@ void IKMovementState::initializeState()
    mWireframeModeForCharacter = false;
    mWireframeModeForJoints = false;
    mWireframeModeForTerrain = false;
+#ifdef __EMSCRIPTEN__
+   mPerformDepthTesting = false;
+#else
    mPerformDepthTesting = true;
+#endif
    // Set the initial IK options
    mSolveWithConstraints = true;
    mSelectedNumberOfIterations = 15;
@@ -219,6 +223,7 @@ void IKMovementState::processInput(float deltaTime)
       }
    }
 
+#ifndef __EMSCRIPTEN__
    // Make the game full screen or windowed
    if (mWindow->keyIsPressed(GLFW_KEY_F) && !mWindow->keyHasBeenProcessed(GLFW_KEY_F))
    {
@@ -247,6 +252,7 @@ void IKMovementState::processInput(float deltaTime)
       mWindow->setKeyAsProcessed(GLFW_KEY_8);
       mWindow->setNumberOfSamples(8);
    }
+#endif
 
    // Reset the camera
    if (mWindow->keyIsPressed(GLFW_KEY_R)) { resetCamera(); }
@@ -726,15 +732,21 @@ void IKMovementState::render()
 
    userInterface();
 
+#ifdef __EMSCRIPTEN__
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#else
    mWindow->clearAndBindMultisampleFramebuffer();
+#endif
 
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
 
+#ifndef __EMSCRIPTEN__
    if (mWireframeModeForTerrain)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
    }
+#endif
 
    mStaticMeshShader->use(true);
    mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
@@ -758,12 +770,14 @@ void IKMovementState::render()
    mGroundEmissiveTexture->unbind(1);
    mStaticMeshShader->use(false);
 
+#ifndef __EMSCRIPTEN__
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
    if (mWireframeModeForCharacter)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
    }
+#endif
 
    // Render the animated meshes
    if (mCurrentSkinningMode == SkinningMode::CPU && mDisplayMesh)
@@ -808,7 +822,9 @@ void IKMovementState::render()
       mAnimatedMeshShader->use(false);
    }
 
+#ifndef __EMSCRIPTEN__
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
 
    if (!mPerformDepthTesting)
    {
@@ -825,10 +841,12 @@ void IKMovementState::render()
 
    glLineWidth(1.0f);
 
+#ifndef __EMSCRIPTEN__
    if (mWireframeModeForJoints)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
    }
+#endif
 
    // Render the joints
    if (mDisplayJoints)
@@ -836,13 +854,17 @@ void IKMovementState::render()
       mSkeletonViewer.RenderJoints(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix(), mPosePalette);
    }
 
+#ifndef __EMSCRIPTEN__
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
    glEnable(GL_DEPTH_TEST);
 
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+#ifndef __EMSCRIPTEN__
    mWindow->generateAntiAliasedImage();
+#endif
 
    mWindow->swapBuffers();
    mWindow->pollEvents();
@@ -971,6 +993,7 @@ void IKMovementState::userInterface()
 
    ImGui::Checkbox("Display Joints", &mDisplayJoints);
 
+#ifndef __EMSCRIPTEN__
    ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
 
    ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
@@ -978,6 +1001,7 @@ void IKMovementState::userInterface()
    ImGui::Checkbox("Wireframe Mode for Terrain", &mWireframeModeForTerrain);
 
    ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
+#endif
 
    ImGui::Checkbox("Solve with Constraints", &mSolveWithConstraints);
 
