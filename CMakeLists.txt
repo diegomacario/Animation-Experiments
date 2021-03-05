@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.11.1 FATAL_ERROR)
 project(Animation-Experiments)
 
 include_directories("${CMAKE_SOURCE_DIR}/inc"
-                    "${CMAKE_SOURCE_DIR}/dependencies/win/inc")
+                    "${CMAKE_SOURCE_DIR}/dependencies/win/inc/desktop_and_web")
 
 set(project_headers
     inc/AnimatedMesh.h
@@ -13,8 +13,8 @@ set(project_headers
     inc/CCDSolver.h
     inc/Clip.h
     inc/CrossFadeControllerMultiple.h
-    inc/CrossFadeControllerQueue.h
-    inc/CrossFadeControllerSingle.h
+    #inc/CrossFadeControllerQueue.h
+    #inc/CrossFadeControllerSingle.h
     inc/CrossFadeTarget.h
     inc/FABRIKSolver.h
     inc/finite_state_machine.h
@@ -56,8 +56,8 @@ set(project_sources
     src/CCDSolver.cpp
     src/Clip.cpp
     src/CrossFadeControllerMultiple.cpp
-    src/CrossFadeControllerQueue.cpp
-    src/CrossFadeControllerSingle.cpp
+    #src/CrossFadeControllerQueue.cpp
+    #src/CrossFadeControllerSingle.cpp
     src/CrossFadeTarget.cpp
     src/FABRIKSolver.cpp
     src/finite_state_machine.cpp

@@ -176,7 +176,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)\..\inc;$(ProjectDir)\..\dependencies\win\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\..\inc;$(ProjectDir)\..\dependencies\win\inc\desktop;$(ProjectDir)\..\dependencies\win\inc\desktop_and_web;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)\..\dependencies\win\lib\debug;$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)\..\src;$(ProjectDir)\..\dependencies\win\src;$(SourcePath)</SourcePath>
     <LocalDebuggerEnvironment>PATH=%PATH%;$(ProjectDir)..\dependencies\win\dll\debug$(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
@@ -188,7 +188,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)\..\inc;$(ProjectDir)\..\dependencies\win\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\..\inc;$(ProjectDir)\..\dependencies\win\inc\desktop;$(ProjectDir)\..\dependencies\win\inc\desktop_and_web;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)\..\dependencies\win\lib\release;$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)\..\src;$(ProjectDir)\..\dependencies\win\src;$(SourcePath)</SourcePath>
     <LocalDebuggerEnvironment>PATH=%PATH%;$(ProjectDir)..\dependencies\win\dll\release$(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
