@@ -160,12 +160,10 @@ void IKMovementState::initializeState()
    mDisplayMesh = true;
    mDisplayBones = false;
    mDisplayJoints = false;
+#ifndef __EMSCRIPTEN__
    mWireframeModeForCharacter = false;
    mWireframeModeForJoints = false;
    mWireframeModeForTerrain = false;
-#ifdef __EMSCRIPTEN__
-   mPerformDepthTesting = false;
-#else
    mPerformDepthTesting = true;
 #endif
    // Set the initial IK options
@@ -822,14 +820,16 @@ void IKMovementState::render()
       mAnimatedMeshShader->use(false);
    }
 
-#ifndef __EMSCRIPTEN__
+#ifdef __EMSCRIPTEN__
+   glDisable(GL_DEPTH_TEST);
+#else
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-#endif
 
    if (!mPerformDepthTesting)
    {
       glDisable(GL_DEPTH_TEST);
    }
+#endif
 
    glLineWidth(2.0f);
 

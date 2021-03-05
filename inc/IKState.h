@@ -95,10 +95,12 @@ private:
    bool                      mDisplayMesh;
    bool                      mDisplayBones;
    bool                      mDisplayJoints;
+#ifndef __EMSCRIPTEN__
    bool                      mWireframeModeForCharacter;
    bool                      mWireframeModeForJoints;
    bool                      mWireframeModeForTerrain;
    bool                      mPerformDepthTesting;
+#endif
 
    AnimationData             mAnimationData;
 

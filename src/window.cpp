@@ -13,7 +13,9 @@ Window::Window(const std::string& title)
    , mWidthOfFramebufferInPix(0)
    , mHeightOfFramebufferInPix(0)
    , mTitle(title)
+#ifndef __EMSCRIPTEN__
    , mIsFullScreen(false)
+#endif
    , mKeys()
    , mProcessedKeys()
    , mMouseMoved(false)
@@ -24,19 +26,23 @@ Window::Window(const std::string& title)
    , mCursorYOffset(0.0)
    , mScrollWheelMoved(false)
    , mScrollYOffset(0.0)
+#ifndef __EMSCRIPTEN__
    , mMultisampleFBO(0)
    , mMultisampleTexture(0)
    , mMultisampleRBO(0)
    , mNumOfSamples(1)
+#endif
 {
 
 }
 
 Window::~Window()
 {
+#ifndef __EMSCRIPTEN__
    glDeleteFramebuffers(1, &mMultisampleFBO);
    glDeleteTextures(1, &mMultisampleTexture);
    glDeleteRenderbuffers(1, &mMultisampleRBO);
+#endif
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -78,11 +84,7 @@ bool Window::initialize()
       return false;
    }
 
-   glfwGetFramebufferSize(mWindow, &mWidthOfFramebufferInPix, &mHeightOfFramebufferInPix);
-
    glfwMakeContextCurrent(mWindow);
-
-   setInputCallbacks();
 
    enableCursor(true);
 
@@ -96,10 +98,11 @@ bool Window::initialize()
    }
 #endif
 
-   glViewport(0, 0, mWidthOfFramebufferInPix, mHeightOfFramebufferInPix);
    glEnable(GL_CULL_FACE);
 
 #ifndef __EMSCRIPTEN__
+   glfwGetFramebufferSize(mWindow, &mWidthOfFramebufferInPix, &mHeightOfFramebufferInPix);
+
    if (!configureAntiAliasingSupport())
    {
       std::cout << "Error - Window::initialize - Failed to configure anti aliasing support" << "\n";
@@ -108,6 +111,8 @@ bool Window::initialize()
       return false;
    }
 #endif
+
+   setInputCallbacks();
 
    // Initialize ImGui
    // Setup Dear ImGui context
@@ -180,6 +185,7 @@ unsigned int Window::getHeightOfFramebufferInPix() const
    return mHeightOfFramebufferInPix;
 }
 
+#ifndef __EMSCRIPTEN__
 bool Window::isFullScreen() const
 {
    return mIsFullScreen;
@@ -203,6 +209,7 @@ void Window::setFullScreen(bool fullScreen)
 
    mIsFullScreen = fullScreen;
 }
+#endif
 
 bool Window::keyIsPressed(int key) const
 {
@@ -306,16 +313,7 @@ void Window::setInputCallbacks()
 
 void Window::framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
-   glfwGetWindowSize(window, &mWidthOfWindowInPix, &mHeightOfWindowInPix);
-
-   mWidthOfFramebufferInPix = width;
-   mHeightOfFramebufferInPix = height;
-
-#ifndef __EMSCRIPTEN__
-   resizeFramebuffers();
-#endif
-
-   glViewport(0, 0, width, height);
+   updateBufferAndViewportSizes(width, height);
 }
 
 void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -453,3 +451,58 @@ void Window::setNumberOfSamples(unsigned int numOfSamples)
    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
 #endif
+
+void Window::updateBufferAndViewportSizes(int widthOfFramebufferInPix, int heightOfFramebufferInPix)
+{
+   mWidthOfFramebufferInPix = widthOfFramebufferInPix;
+   mHeightOfFramebufferInPix = heightOfFramebufferInPix;
+   glfwGetWindowSize(mWindow, &mWidthOfWindowInPix, &mHeightOfWindowInPix);
+
+#ifndef __EMSCRIPTEN__
+   resizeFramebuffers();
+
+   // Clear the multisample framebuffer
+   glBindFramebuffer(GL_FRAMEBUFFER, mMultisampleFBO);
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
+
+   float aspectRatioOfScene  = 1280.0f / 720.0f;
+
+   int lowerLeftCornerOfViewportXInPix, lowerLeftCornerOfViewportYInPix, widthOfViewportInPix, heightOfViewportInPix;
+
+   // Let's say we want to use the width of the window for the viewport
+   // What height would we need to keep the aspect ratio of the scene?
+   float requiredHeight = mWidthOfFramebufferInPix * (1.0f / aspectRatioOfScene);
+
+   // If the required height is greater than the height of the window, then we use the height of the window for the viewport
+   if (requiredHeight > mHeightOfFramebufferInPix)
+   {
+      // What width would we need to keep the aspect ratio of the scene?
+      float requiredWidth = mHeightOfFramebufferInPix * aspectRatioOfScene;
+      if (requiredWidth > mWidthOfFramebufferInPix)
+      {
+         std::cout << "Error - Window::updateBufferAndViewportSizes - Couldn't calculate dimensions that preserve the aspect ratio of the scene" << '\n';
+      }
+      else
+      {
+         float widthOfTheTwoVerticalBars = mWidthOfFramebufferInPix - requiredWidth;
+
+         lowerLeftCornerOfViewportXInPix = static_cast<int>(widthOfTheTwoVerticalBars / 2.0f);
+         lowerLeftCornerOfViewportYInPix = 0;
+         widthOfViewportInPix            = static_cast<int>(requiredWidth);
+         heightOfViewportInPix           = mHeightOfFramebufferInPix;
+      }
+   }
+   else
+   {
+      float heightOfTheTwoHorizontalBars = mHeightOfFramebufferInPix - requiredHeight;
+
+      lowerLeftCornerOfViewportXInPix = 0;
+      lowerLeftCornerOfViewportYInPix = static_cast<int>(heightOfTheTwoHorizontalBars / 2.0f);
+      widthOfViewportInPix            = mWidthOfFramebufferInPix;
+      heightOfViewportInPix           = static_cast<int>(requiredHeight);
+   }
+
+   glViewport(lowerLeftCornerOfViewportXInPix, lowerLeftCornerOfViewportYInPix, widthOfViewportInPix, heightOfViewportInPix);
+}

@@ -36,8 +36,10 @@ public:
    unsigned int getHeightOfWindowInPix() const;
    unsigned int getWidthOfFramebufferInPix() const;
    unsigned int getHeightOfFramebufferInPix() const;
+#ifndef __EMSCRIPTEN__
    bool         isFullScreen() const;
    void         setFullScreen(bool fullScreen);
+#endif
 
    // Keyboard
    bool         keyIsPressed(int key) const;
@@ -77,6 +79,8 @@ private:
    void         cursorPosCallback(GLFWwindow* window, double xPos, double yPos);
    void         scrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 
+   void         updateBufferAndViewportSizes(int widthOfFramebufferInPix, int heightOfFramebufferInPix);
+
    // Window
    GLFWwindow*                    mWindow;
    int                            mWidthOfWindowInPix;
@@ -84,7 +88,9 @@ private:
    int                            mWidthOfFramebufferInPix;
    int                            mHeightOfFramebufferInPix;
    std::string                    mTitle;
+#ifndef __EMSCRIPTEN__
    bool                           mIsFullScreen;
+#endif
 
    // Keyboard
    std::bitset<GLFW_KEY_LAST + 1> mKeys;
@@ -103,11 +109,12 @@ private:
    float                          mScrollYOffset;
 
    // Anti aliasing support
+#ifndef __EMSCRIPTEN__
    unsigned int                   mMultisampleFBO;
    unsigned int                   mMultisampleTexture;
    unsigned int                   mMultisampleRBO;
-
    unsigned int                   mNumOfSamples;
+#endif
 };
 
 #endif

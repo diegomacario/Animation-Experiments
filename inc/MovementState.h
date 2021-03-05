@@ -78,9 +78,11 @@ private:
    bool                      mDisplayMesh;
    bool                      mDisplayBones;
    bool                      mDisplayJoints;
+#ifndef __EMSCRIPTEN__
    bool                      mWireframeModeForCharacter;
    bool                      mWireframeModeForJoints;
    bool                      mPerformDepthTesting;
+#endif
 
    // --- --- ---
 
