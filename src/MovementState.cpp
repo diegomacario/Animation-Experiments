@@ -26,10 +26,10 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
    configureLights(mStaticMeshShader);
 
    // Load the diffuse texture of the animated character
-   mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/Woman.png");
+   mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/woman.png");
 
    // Load the animated character
-   cgltf_data* data        = LoadGLTFFile("resources/models/woman/Woman.gltf");
+   cgltf_data* data        = LoadGLTFFile("resources/models/woman/woman.gltf");
    mSkeleton               = LoadSkeleton(data);
    mAnimatedMeshes         = LoadAnimatedMeshes(data);
    std::vector<Clip> clips = LoadClips(data);
@@ -100,7 +100,7 @@ MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteSt
    }
 
    // Load the texture of the ground
-   mGroundTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/platform_diffuse_4k.png");
+   mGroundTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/platform.png");
 
    initializeState();
 

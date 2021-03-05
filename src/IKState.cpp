@@ -32,10 +32,10 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
    configureLights(mStaticMeshShader);
 
    // Load the diffuse texture of the animated character
-   mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/Woman.png");
+   mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/woman.png");
 
    // Load the animated character
-   cgltf_data* data        = LoadGLTFFile("resources/models/woman/Woman.gltf");
+   cgltf_data* data        = LoadGLTFFile("resources/models/woman/woman.gltf");
    mSkeleton               = LoadSkeleton(data);
    mAnimatedMeshes         = LoadAnimatedMeshes(data);
    std::vector<Clip> clips = LoadClips(data);
@@ -84,7 +84,7 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
    }
 
    // Load the ground
-   data = LoadGLTFFile("resources/models/ground/IKCourse.gltf");
+   data = LoadGLTFFile("resources/models/ground/ik_course.gltf");
    mGroundMeshes = LoadStaticMeshes(data);
    FreeGLTFFile(data);
 

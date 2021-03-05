@@ -33,10 +33,10 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    configureLights(mStaticMeshShader, glm::vec3(0.5f, 0.5f, 0.5f));
 
    // Load the diffuse texture of the animated character
-   mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/Woman.png");
+   mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/woman.png");
 
    // Load the animated character
-   cgltf_data* data        = LoadGLTFFile("resources/models/woman/Woman.gltf");
+   cgltf_data* data        = LoadGLTFFile("resources/models/woman/woman.gltf");
    mSkeleton               = LoadSkeleton(data);
    mAnimatedMeshes         = LoadAnimatedMeshes(data);
    std::vector<Clip> clips = LoadClips(data);
@@ -110,8 +110,8 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    }
 
    // Load the texture of the ground
-   mGroundDiffuseTexture  = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/grass_2k.png");
-   mGroundEmissiveTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/lights_4k.png");
+   mGroundDiffuseTexture  = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/grass.png");
+   mGroundEmissiveTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/lights.png");
 
    // Get the triangles that make up the ground
    mGroundTriangles = GetTrianglesFromMeshes(mGroundMeshes);

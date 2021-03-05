@@ -32,10 +32,10 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
    configureLights(mGroundShader);
 
    // Load the diffuse texture of the animated character
-   mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/Woman.png");
+   mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/woman.png");
 
    // Load the animated character
-   cgltf_data* data        = LoadGLTFFile("resources/models/woman/Woman.gltf");
+   cgltf_data* data        = LoadGLTFFile("resources/models/woman/woman.gltf");
    mSkeleton               = LoadSkeleton(data);
    mAnimatedMeshes         = LoadAnimatedMeshes(data);
    std::vector<Clip> clips = LoadClips(data);
@@ -84,7 +84,7 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
    }
 
    // Load the ground
-   data = LoadGLTFFile("resources/models/table/table.gltf");
+   data = LoadGLTFFile("resources/models/table/wooden_floor.gltf");
    mGroundMeshes = LoadStaticMeshes(data);
    FreeGLTFFile(data);
 
@@ -104,7 +104,7 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
    }
 
    // Load the texture of the ground
-   mGroundTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/table/table_ambient_diffuse.jpg");
+   mGroundTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/table/wooden_floor.jpg");
 
    initializeState();
 
