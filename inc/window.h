@@ -1,7 +1,11 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#ifdef __EMSCRIPTEN__
+#define GLFW_INCLUDE_ES3
+#else
 #include <glad/glad.h>
+#endif
 #include <GLFW/glfw3.h>
 
 #include <bitset>
@@ -55,12 +59,15 @@ public:
    float        getScrollYOffset() const;
 
    // Anti aliasing support
+
+#ifndef __EMSCRIPTEN__
    bool         configureAntiAliasingSupport();
    bool         createMultisampleFramebuffer();
    void         clearAndBindMultisampleFramebuffer();
    void         generateAntiAliasedImage();
    void         resizeFramebuffers();
    void         setNumberOfSamples(unsigned int numOfSamples);
+#endif
 
 private:
 

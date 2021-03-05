@@ -22,17 +22,22 @@ public:
    std::shared_ptr<Shader> loadResource(const std::string& vShaderFilePath,
                                         const std::string& fShaderFilePath) const;
 
+#ifndef __EMSCRIPTEN__
    std::shared_ptr<Shader> loadResource(const std::string& vShaderFilePath,
                                         const std::string& fShaderFilePath,
                                         const std::string& gShaderFilePath) const;
+#endif
 
 private:
 
    bool                    readShaderFile(const std::string& shaderFilePath, std::string& outShaderCode) const;
+   void                    addVersionToShaderCode(std::string& ioShaderCode, GLenum shaderType) const;
 
-   unsigned int            createAndCompileShader(const std::string& shaderFilePath, GLenum shaderType) const;
+   unsigned int            createAndCompileShader(const std::string& shaderCode, GLenum shaderType) const;
    unsigned int            createAndLinkShaderProgram(unsigned int vShaderID, unsigned int fShaderID) const;
+#ifndef __EMSCRIPTEN__
    unsigned int            createAndLinkShaderProgram(unsigned int vShaderID, unsigned int fShaderID, unsigned int gShaderID) const;
+#endif
 
    bool                    shaderCompilationSucceeded(unsigned int shaderID) const;
    bool                    shaderProgramLinkingSucceeded(unsigned int shaderProgID) const;

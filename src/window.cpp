@@ -61,6 +61,9 @@ bool Window::initialize()
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+#ifdef __EMSCRIPTEN__
+   glfwWindowHint(GLFW_SAMPLES, 8);
+#endif
 
 #ifdef __APPLE__
    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -83,6 +86,7 @@ bool Window::initialize()
 
    enableCursor(true);
 
+#ifndef __EMSCRIPTEN__
    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
    {
       std::cout << "Error - Window::initialize - Failed to load pointers to OpenGL functions using GLAD" << "\n";
@@ -90,10 +94,12 @@ bool Window::initialize()
       mWindow = nullptr;
       return false;
    }
+#endif
 
    glViewport(0, 0, mWidthOfFramebufferInPix, mHeightOfFramebufferInPix);
    glEnable(GL_CULL_FACE);
 
+#ifndef __EMSCRIPTEN__
    if (!configureAntiAliasingSupport())
    {
       std::cout << "Error - Window::initialize - Failed to configure anti aliasing support" << "\n";
@@ -101,6 +107,7 @@ bool Window::initialize()
       mWindow = nullptr;
       return false;
    }
+#endif
 
    // Initialize ImGui
    // Setup Dear ImGui context
@@ -115,7 +122,11 @@ bool Window::initialize()
 
    // Setup Platform/Renderer bindings
    ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
+#ifdef __EMSCRIPTEN__
+   ImGui_ImplOpenGL3_Init("#version 300 es");
+#else
    ImGui_ImplOpenGL3_Init("#version 330 core");
+#endif
 
    return true;
 }
@@ -300,7 +311,9 @@ void Window::framebufferSizeCallback(GLFWwindow* window, int width, int height)
    mWidthOfFramebufferInPix = width;
    mHeightOfFramebufferInPix = height;
 
+#ifndef __EMSCRIPTEN__
    resizeFramebuffers();
+#endif
 
    glViewport(0, 0, width, height);
 }
@@ -348,9 +361,14 @@ void Window::scrollCallback(GLFWwindow* window, double xOffset, double yOffset)
    // I'm going to make the camera ask the window if it should update its FOVY. Is there a better way to do this?
    mScrollYOffset = static_cast<float>(yOffset);
 
+#ifdef __EMSCRIPTEN__
+   mScrollYOffset *= -0.02f;
+#endif
+
    mScrollWheelMoved = true;
 }
 
+#ifndef __EMSCRIPTEN__
 bool Window::configureAntiAliasingSupport()
 {
    if (!createMultisampleFramebuffer())
@@ -434,3 +452,4 @@ void Window::setNumberOfSamples(unsigned int numOfSamples)
    glRenderbufferStorageMultisample(GL_RENDERBUFFER, mNumOfSamples, GL_DEPTH_COMPONENT, mWidthOfFramebufferInPix, mHeightOfFramebufferInPix);
    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
+#endif

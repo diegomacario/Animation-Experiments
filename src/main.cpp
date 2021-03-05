@@ -7,7 +7,7 @@
 #include "game.h"
 
 #ifdef __EMSCRIPTEN__
-void mainLoop(void* game)
+void gameLoop(void* game)
 {
    static_cast<Game*>(game)->executeGameLoop();
 }
@@ -24,7 +24,7 @@ int main()
    }
 
 #ifdef __EMSCRIPTEN__
-   emscripten_set_main_loop_arg(mainLoop, static_cast<void*>(&game), 0, true);
+   emscripten_set_main_loop_arg(gameLoop, static_cast<void*>(&game), 0, true);
 #else
    game.executeGameLoop();
 #endif

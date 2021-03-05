@@ -1,4 +1,8 @@
+#ifdef __EMSCRIPTEN__
+#include <GLES3/gl3.h>
+#else
 #include <glad/glad.h>
+#endif
 
 #include <vector>
 #include <fstream>
@@ -17,6 +21,9 @@ std::shared_ptr<Shader> ShaderLoader::loadResource(const std::string& vShaderFil
    {
       return nullptr;
    }
+
+   addVersionToShaderCode(vShaderCode, GL_VERTEX_SHADER);
+   addVersionToShaderCode(fShaderCode, GL_FRAGMENT_SHADER);
 
    // Compile the vertex shader
    unsigned int vShaderID = createAndCompileShader(vShaderCode, GL_VERTEX_SHADER);
@@ -67,6 +74,7 @@ std::shared_ptr<Shader> ShaderLoader::loadResource(const std::string& vShaderFil
    return std::make_shared<Shader>(shaderProgID, std::move(attributes), std::move(uniforms));
 }
 
+#ifndef __EMSCRIPTEN__
 std::shared_ptr<Shader> ShaderLoader::loadResource(const std::string& vShaderFilePath,
                                                    const std::string& fShaderFilePath,
                                                    const std::string& gShaderFilePath) const
@@ -79,6 +87,10 @@ std::shared_ptr<Shader> ShaderLoader::loadResource(const std::string& vShaderFil
    {
       return nullptr;
    }
+
+   addVersionToShaderCode(vShaderCode, GL_VERTEX_SHADER);
+   addVersionToShaderCode(fShaderCode, GL_FRAGMENT_SHADER);
+   addVersionToShaderCode(gShaderCode, GL_GEOMETRY_SHADER);
 
    // Compile the vertex shader
    unsigned int vShaderID = createAndCompileShader(vShaderCode, GL_VERTEX_SHADER);
@@ -143,6 +155,7 @@ std::shared_ptr<Shader> ShaderLoader::loadResource(const std::string& vShaderFil
 
    return std::make_shared<Shader>(shaderProgID, std::move(attributes), std::move(uniforms));
 }
+#endif
 
 bool ShaderLoader::readShaderFile(const std::string& shaderFilePath, std::string& outShaderCode) const
 {
@@ -162,6 +175,21 @@ bool ShaderLoader::readShaderFile(const std::string& shaderFilePath, std::string
       std::cout << "Error - ShaderLoader::createAndCompileShader - The following shader file could not be opened: " << shaderFilePath << "\n";
       return false;
    }
+}
+
+void ShaderLoader::addVersionToShaderCode(std::string& ioShaderCode, GLenum shaderType) const
+{
+#ifdef __EMSCRIPTEN__
+   std::string shaderVersion("#version 300 es\n");
+   if (shaderType == GL_FRAGMENT_SHADER)
+   {
+      shaderVersion += "precision mediump float;\n";
+   }
+#else
+   std::string shaderVersion("#version 330 core\n");
+#endif
+
+   ioShaderCode = shaderVersion + ioShaderCode;
 }
 
 unsigned int ShaderLoader::createAndCompileShader(const std::string& shaderCode, GLenum shaderType) const
@@ -186,6 +214,7 @@ unsigned int ShaderLoader::createAndLinkShaderProgram(unsigned int vShaderID, un
    return shaderProgID;
 }
 
+#ifndef __EMSCRIPTEN__
 unsigned int ShaderLoader::createAndLinkShaderProgram(unsigned int vShaderID, unsigned int fShaderID, unsigned int gShaderID) const
 {
    unsigned int shaderProgID = glCreateProgram();
@@ -198,6 +227,7 @@ unsigned int ShaderLoader::createAndLinkShaderProgram(unsigned int vShaderID, un
 
    return shaderProgID;
 }
+#endif
 
 bool ShaderLoader::shaderCompilationSucceeded(unsigned int shaderID) const
 {
@@ -218,10 +248,17 @@ void ShaderLoader::logShaderCompilationErrors(unsigned int shaderID, GLenum shad
    int infoLogLength = 0;
    glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
 
-   std::vector<char> infoLog(infoLogLength);
-   glGetShaderInfoLog(shaderID, infoLogLength, nullptr, &infoLog[0]);
+   if (infoLogLength > 0)
+   {
+      std::vector<char> infoLog(infoLogLength);
+      glGetShaderInfoLog(shaderID, infoLogLength, nullptr, &infoLog[0]);
 
-   std::cout << "Error - ShaderLoader::checkForCompilationErrors - The error below occurred while compiling this shader: " << shaderFilePath << "\n" << infoLog.data() << "\n";
+      std::cout << "Error - ShaderLoader::checkForCompilationErrors - The error below occurred while compiling this shader: " << shaderFilePath << "\n" << infoLog.data() << "\n";
+   }
+   else
+   {
+      std::cout << "Error - ShaderLoader::checkForCompilationErrors - An unknown error occurred while compiling this shader: " << shaderFilePath << "\n";
+   }
 }
 
 void ShaderLoader::logShaderProgramLinkingErrors(unsigned int shaderProgID) const
@@ -229,10 +266,17 @@ void ShaderLoader::logShaderProgramLinkingErrors(unsigned int shaderProgID) cons
    int infoLogLength = 0;
    glGetProgramiv(shaderProgID, GL_INFO_LOG_LENGTH, &infoLogLength);
 
-   std::vector<char> infoLog(infoLogLength);
-   glGetProgramInfoLog(shaderProgID, infoLogLength, nullptr, &infoLog[0]);
+   if (infoLogLength > 0)
+   {
+      std::vector<char> infoLog(infoLogLength);
+      glGetProgramInfoLog(shaderProgID, infoLogLength, nullptr, &infoLog[0]);
 
-   std::cout << "Error - ShaderLoader::checkForLinkingErrors - The following error occurred while linking a shader program:\n" << infoLog.data() << "\n";
+      std::cout << "Error - ShaderLoader::checkForLinkingErrors - The following error occurred while linking a shader program:\n" << infoLog.data() << "\n";
+   }
+   else
+   {
+      std::cout << "Error - ShaderLoader::checkForLinkingErrors - An unknown error occurred while linking a shader program" << "\n";
+   }
 }
 
 void ShaderLoader::readAttributes(unsigned int shaderProgID, std::map<std::string, unsigned int>& outAttributes) const
