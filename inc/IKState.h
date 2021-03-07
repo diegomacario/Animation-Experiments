@@ -4,7 +4,11 @@
 #include "state.h"
 #include "finite_state_machine.h"
 #include "window.h"
+#ifdef USE_THIRD_PERSON_CAMERA
+#include "Camera3.h"
+#else
 #include "camera.h"
+#endif
 #include "texture.h"
 #include "AnimatedMesh.h"
 #include "SkeletonViewer.h"
@@ -16,9 +20,14 @@ class IKState : public State
 {
 public:
 
+#ifdef USE_THIRD_PERSON_CAMERA
+   IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
+           const std::shared_ptr<Window>&             window);
+#else
    IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
            const std::shared_ptr<Window>&             window,
            const std::shared_ptr<Camera>&             camera);
+#endif
    ~IKState() = default;
 
    IKState(const IKState&) = delete;
@@ -52,7 +61,11 @@ private:
 
    std::shared_ptr<Window>             mWindow;
 
+#ifdef USE_THIRD_PERSON_CAMERA
+   Camera3                             mCamera3;
+#else
    std::shared_ptr<Camera>             mCamera;
+#endif
 
    enum SkinningMode : int
    {

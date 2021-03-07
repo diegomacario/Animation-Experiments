@@ -14,12 +14,21 @@
 #include "Blending.h"
 #include "IKState.h"
 
+#ifdef USE_THIRD_PERSON_CAMERA
+IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
+                 const std::shared_ptr<Window>&             window)
+#else
 IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
                  const std::shared_ptr<Window>&             window,
                  const std::shared_ptr<Camera>&             camera)
+#endif
    : mFSM(finiteStateMachine)
    , mWindow(window)
+#ifdef USE_THIRD_PERSON_CAMERA
+   , mCamera3(9.5f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 2.5f, 0.0f), 2.0f, 14.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 0.25f)
+#else
    , mCamera(camera)
+#endif
 {
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
@@ -298,6 +307,7 @@ void IKState::processInput(float deltaTime)
       {
          // Disable the cursor when fullscreen
          //mWindow->enableCursor(false);
+#ifndef USE_THIRD_PERSON_CAMERA
          if (mCamera->isFree())
          {
             // Disable the cursor when fullscreen with a free camera
@@ -305,9 +315,11 @@ void IKState::processInput(float deltaTime)
             // Going from windowed to fullscreen changes the position of the cursor, so we reset the first move flag to avoid a jump
             mWindow->resetFirstMove();
          }
+#endif
       }
       else if (!mWindow->isFullScreen())
       {
+#ifndef USE_THIRD_PERSON_CAMERA
          if (mCamera->isFree())
          {
             // Disable the cursor when windowed with a free camera
@@ -320,6 +332,7 @@ void IKState::processInput(float deltaTime)
             // Enable the cursor when windowed with a fixed camera
             mWindow->enableCursor(true);
          }
+#endif
       }
    }
 
@@ -349,6 +362,21 @@ void IKState::processInput(float deltaTime)
    // Reset the camera
    if (mWindow->keyIsPressed(GLFW_KEY_R)) { resetCamera(); }
 
+#ifdef USE_THIRD_PERSON_CAMERA
+   // Orient the camera
+   if (mWindow->mouseMoved() && mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
+   {
+      mCamera3.processMouseMovement(mWindow->getCursorXOffset(), mWindow->getCursorYOffset());
+      mWindow->resetMouseMoved();
+   }
+
+   // Adjust the distance between the player and the camera
+   if (mWindow->scrollWheelMoved())
+   {
+      mCamera3.processScrollWheelMovement(mWindow->getScrollYOffset());
+      mWindow->resetScrollWheelMoved();
+   }
+#else
    // Make the camera free or fixed
    if (mWindow->keyIsPressed(GLFW_KEY_C) && !mWindow->keyHasBeenProcessed(GLFW_KEY_C))
    {
@@ -395,6 +423,7 @@ void IKState::processInput(float deltaTime)
          mWindow->resetScrollWheelMoved();
       }
    }
+#endif
 }
 
 void IKState::update(float deltaTime)
@@ -560,6 +589,10 @@ void IKState::update(float deltaTime)
    mModelTransform.position = glm::lerp(currPosOfCharacterWithPreviousHeight, mModelTransform.position, deltaTime * 10.0f);
    // Update mPreviousYPositionOfCharacter
    mPreviousYPositionOfCharacter = mModelTransform.position.y;
+
+#ifdef USE_THIRD_PERSON_CAMERA
+   mCamera3.processPlayerMovement(mModelTransform.position, mModelTransform.rotation);
+#endif
 
    // Interpolate between the current world position of the left ankle and its ground IK target based on the value of the pin track
    // If the pin track says that the foot should be on the ground, then the ground IK target will be favored
@@ -781,9 +814,14 @@ void IKState::render()
 #endif
 
    mStaticMeshShader->use(true);
-   mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
-   mStaticMeshShader->setUniformMat4("view", mCamera->getViewMatrix());
+   mStaticMeshShader->setUniformMat4("model",      glm::mat4(1.0f));
+#ifdef USE_THIRD_PERSON_CAMERA
+   mStaticMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
+   mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
+#else
+   mStaticMeshShader->setUniformMat4("view",       mCamera->getViewMatrix());
    mStaticMeshShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
+#endif
    mGroundTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
 
    // Loop over the ground meshes and render each one
@@ -812,9 +850,13 @@ void IKState::render()
    {
       mStaticMeshShader->use(true);
       mStaticMeshShader->setUniformMat4("model",      transformToMat4(mModelTransform));
+#ifdef USE_THIRD_PERSON_CAMERA
+      mStaticMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
+      mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
+#else
       mStaticMeshShader->setUniformMat4("view",       mCamera->getViewMatrix());
       mStaticMeshShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
-      //mStaticMeshShader->setUniformVec3("cameraPos",  mCamera->getPosition());
+#endif
       mDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
 
       // Loop over the meshes and render each one
@@ -833,10 +875,14 @@ void IKState::render()
    {
       mAnimatedMeshShader->use(true);
       mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mModelTransform));
+#ifdef USE_THIRD_PERSON_CAMERA
+      mAnimatedMeshShader->setUniformMat4("view",             mCamera3.getViewMatrix());
+      mAnimatedMeshShader->setUniformMat4("projection",       mCamera3.getPerspectiveProjectionMatrix());
+#else
       mAnimatedMeshShader->setUniformMat4("view",             mCamera->getViewMatrix());
       mAnimatedMeshShader->setUniformMat4("projection",       mCamera->getPerspectiveProjectionMatrix());
+#endif
       mAnimatedMeshShader->setUniformMat4Array("animated[0]", mAnimationData.skinMatrices);
-      //mAnimatedMeshShader->setUniformVec3("cameraPos",        mCamera->getPosition());
       mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("diffuseTex"));
 
       // Loop over the meshes and render each one
@@ -868,7 +914,11 @@ void IKState::render()
    // Render the bones
    if (mDisplayBones)
    {
+#ifdef USE_THIRD_PERSON_CAMERA
+      mSkeletonViewer.RenderBones(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix());
+#else
       mSkeletonViewer.RenderBones(mModelTransform, mCamera->getPerspectiveProjectionViewMatrix());
+#endif
    }
 
    glLineWidth(1.0f);
@@ -883,7 +933,11 @@ void IKState::render()
    // Render the joints
    if (mDisplayJoints)
    {
+#ifdef USE_THIRD_PERSON_CAMERA
+      mSkeletonViewer.RenderJoints(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix(), mAnimationData.animatedPosePalette);
+#else
       mSkeletonViewer.RenderJoints(mModelTransform, mCamera->getPerspectiveProjectionViewMatrix(), mAnimationData.animatedPosePalette);
+#endif
    }
 
 #ifndef __EMSCRIPTEN__
@@ -1053,8 +1107,13 @@ void IKState::resetScene()
 
 void IKState::resetCamera()
 {
+#ifdef USE_THIRD_PERSON_CAMERA
+   mCamera3.reposition(9.5f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 2.5f, 0.0f), 2.0f, 14.0f, 0.0f, 90.0f);
+   mCamera3.processMouseMovement(-90.0f / 0.25f, 0.0f);
+#else
    mCamera->reposition(glm::vec3(9.94739f, 12.5202f, 30.2262f),
                        glm::vec3(10.0207f, 8.6164f, 21.0199f),
                        glm::vec3(0.0f, 1.0f, 0.0f),
                        45.0f);
+#endif
 }

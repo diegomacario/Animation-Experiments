@@ -1,7 +1,9 @@
 #ifndef GAME_H
 #define GAME_H
 
+#ifndef USE_THIRD_PERSON_CAMERA
 #include "camera.h"
+#endif
 #include "window.h"
 #include "state.h"
 #include "finite_state_machine.h"
@@ -28,7 +30,9 @@ private:
 
    std::shared_ptr<Window>                 mWindow;
 
+#ifndef USE_THIRD_PERSON_CAMERA
    std::shared_ptr<Camera>                 mCamera;
+#endif
 };
 
 #endif

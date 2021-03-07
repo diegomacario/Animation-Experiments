@@ -9,7 +9,9 @@
 Game::Game()
    : mFSM()
    , mWindow()
+#ifndef USE_THIRD_PERSON_CAMERA
    , mCamera()
+#endif
 {
 
 }
@@ -30,6 +32,7 @@ bool Game::initialize(const std::string& title)
       return false;
    }
 
+#ifndef USE_THIRD_PERSON_CAMERA
    // Initialize the camera
    float widthInPix = 1280.0f;
    float heightInPix = 720.0f;
@@ -44,6 +47,7 @@ bool Game::initialize(const std::string& title)
                                       130.0f,      // Far
                                       10.0f,       // Movement speed
                                       0.1f);       // Mouse sensitivity
+#endif
 
    // Create the FSM
    mFSM = std::make_shared<FiniteStateMachine>();
@@ -51,16 +55,26 @@ bool Game::initialize(const std::string& title)
    // Initialize the states
    std::unordered_map<std::string, std::shared_ptr<State>> mStates;
 
+#ifdef USE_THIRD_PERSON_CAMERA
+   mStates["viewer"] = std::make_shared<ModelViewerState>(mFSM,
+                                                          mWindow);
+#else
    mStates["viewer"] = std::make_shared<ModelViewerState>(mFSM,
                                                           mWindow,
                                                           mCamera);
+#endif
 
    mStates["movement"] = std::make_shared<MovementState>(mFSM,
                                                          mWindow);
 
+#ifdef USE_THIRD_PERSON_CAMERA
+   mStates["ik"] = std::make_shared<IKState>(mFSM,
+                                             mWindow);
+#else
    mStates["ik"] = std::make_shared<IKState>(mFSM,
                                              mWindow,
                                              mCamera);
+#endif
 
    mStates["ik_movement"] = std::make_shared<IKMovementState>(mFSM,
                                                               mWindow);
