@@ -125,27 +125,27 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
    mMotionTrack.GetFrame(0).mTime     = 0.0f;
    mMotionTrack.GetFrame(0).mValue[0] = 0.0f;
    mMotionTrack.GetFrame(0).mValue[1] = 0.0f;
-   mMotionTrack.GetFrame(0).mValue[2] = 1.0f;
+   mMotionTrack.GetFrame(0).mValue[2] = 10.0f;
    // Frame 1
-   mMotionTrack.GetFrame(1).mTime     = 1.0f;
-   mMotionTrack.GetFrame(1).mValue[0] = 0.0f;
+   mMotionTrack.GetFrame(1).mTime     = 2.0f;
+   mMotionTrack.GetFrame(1).mValue[0] = 22.0f;
    mMotionTrack.GetFrame(1).mValue[1] = 0.0f;
    mMotionTrack.GetFrame(1).mValue[2] = 10.0f;
    // Frame 2
-   mMotionTrack.GetFrame(2).mTime     = 3.0f;
+   mMotionTrack.GetFrame(2).mTime     = 2.75f;
    mMotionTrack.GetFrame(2).mValue[0] = 22.0f;
    mMotionTrack.GetFrame(2).mValue[1] = 0.0f;
-   mMotionTrack.GetFrame(2).mValue[2] = 10.0f;
+   mMotionTrack.GetFrame(2).mValue[2] = 2.0f;
    // Frame 3
-   mMotionTrack.GetFrame(3).mTime     = 4.0f;
-   mMotionTrack.GetFrame(3).mValue[0] = 22.0f;
+   mMotionTrack.GetFrame(3).mTime     = 4.75f;
+   mMotionTrack.GetFrame(3).mValue[0] = 0.0f;
    mMotionTrack.GetFrame(3).mValue[1] = 0.0f;
-   mMotionTrack.GetFrame(3).mValue[2] = 2.0f;
+   mMotionTrack.GetFrame(3).mValue[2] = 1.0f;
    // Frame 4
-   mMotionTrack.GetFrame(4).mTime     = 6.0f;
+   mMotionTrack.GetFrame(4).mTime     = 5.5f;
    mMotionTrack.GetFrame(4).mValue[0] = 0.0f;
    mMotionTrack.GetFrame(4).mValue[1] = 0.0f;
-   mMotionTrack.GetFrame(4).mValue[2] = 1.0f;
+   mMotionTrack.GetFrame(4).mValue[2] = 10.0f;
 
    // Create the IK legs
    mLeftLeg = IKLeg(mSkeleton, "LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase");
@@ -236,7 +236,7 @@ void IKState::initializeState()
    // Set the initial pose
    mAnimationData.animatedPose = mSkeleton.GetRestPose();
 
-   mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
+   mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::lookRotation(glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0, 1, 0)), glm::vec3(1.0f));
    mPreviousYPositionOfCharacter = 0.0f;
    mMotionTrackTime = 0.0f;
 
@@ -440,9 +440,9 @@ void IKState::update(float deltaTime)
    // so that the speed at which the character moves matches its animation
    mMotionTrackTime += deltaTime * mMotionTrackPlaybackSpeed;
    // Loop mMotionTrackTime so that it doesn't become infinitely large
-   if (mMotionTrackTime > 6.0f)
+   if (mMotionTrackTime > 5.5f)
    {
-      mMotionTrackTime -= 6.0f;
+      mMotionTrackTime -= 5.5f;
    }
 
    // Sample the motion track to get the X and Z world space position values of the character
