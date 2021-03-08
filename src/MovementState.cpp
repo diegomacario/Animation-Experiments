@@ -689,7 +689,9 @@ void MovementState::switchFromCPUToGPU()
 
 void MovementState::userInterface()
 {
-   ImGui::Begin("Animation Controller"); // Create a window called "Animation Controller"
+   ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Appearing);
+
+   ImGui::Begin("Flat Movement", nullptr, ImGuiWindowFlags_NoResize);
 
    ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 

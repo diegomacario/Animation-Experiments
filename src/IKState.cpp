@@ -25,7 +25,7 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
    : mFSM(finiteStateMachine)
    , mWindow(window)
 #ifdef USE_THIRD_PERSON_CAMERA
-   , mCamera3(9.5f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 2.5f, 0.0f), 2.0f, 14.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 0.25f)
+   , mCamera3(12.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 2.5f, 0.0f), 2.0f, 14.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 0.25f)
 #else
    , mCamera(camera)
 #endif
@@ -1061,7 +1061,9 @@ void IKState::switchFromCPUToGPU()
 
 void IKState::userInterface()
 {
-   ImGui::Begin("Animation Controller"); // Create a window called "Animation Controller"
+   ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Appearing);
+
+   ImGui::Begin("Programmed IK Movement", nullptr, ImGuiWindowFlags_NoResize);
 
    ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
@@ -1108,7 +1110,7 @@ void IKState::resetScene()
 void IKState::resetCamera()
 {
 #ifdef USE_THIRD_PERSON_CAMERA
-   mCamera3.reposition(9.5f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 2.5f, 0.0f), 2.0f, 14.0f, 0.0f, 90.0f);
+   mCamera3.reposition(12.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 2.5f, 0.0f), 2.0f, 14.0f, 0.0f, 90.0f);
    mCamera3.processMouseMovement(-90.0f / 0.25f, 0.0f);
 #else
    mCamera->reposition(glm::vec3(9.94739f, 12.5202f, 30.2262f),

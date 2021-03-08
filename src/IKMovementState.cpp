@@ -977,7 +977,9 @@ void IKMovementState::switchFromCPUToGPU()
 
 void IKMovementState::userInterface()
 {
-   ImGui::Begin("Animation Controller"); // Create a window called "Animation Controller"
+   ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Appearing);
+
+   ImGui::Begin("IK Movement", nullptr, ImGuiWindowFlags_NoResize);
 
    ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
@@ -1005,7 +1007,7 @@ void IKMovementState::userInterface()
 
    ImGui::Checkbox("Solve with Constraints", &mSolveWithConstraints);
 
-   ImGui::SliderInt("Iterations", &mSelectedNumberOfIterations, 0, 100);
+   ImGui::SliderInt("IK Iterations", &mSelectedNumberOfIterations, 0, 100);
 
    ImGui::SliderFloat("Emissivity", &mSelectedEmissiveTextureBrightnessScaleFactor, 0.0f, 1.0f, "%.3f");
 
