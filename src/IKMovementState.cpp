@@ -21,10 +21,16 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    , mCamera3(8.0f, 15.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 90.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 500.0f, 0.25f)
 {
    // Initialize the animated mesh shader
-   mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
-                                                                                       "resources/shaders/diffuse_and_scaled_emissive_illumination_same_tex.frag");
+   mAnimatedCharacterMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
+                                                                                                "resources/shaders/diffuse_and_scaled_emissive_illumination_same_tex.frag");
    // Sunset color for the skin
-   configureLights(mAnimatedMeshShader, glm::vec3(1.0f, 0.252f, 0.039f));
+   configureLights(mAnimatedCharacterMeshShader, glm::vec3(1.0f, 0.252f, 0.039f));
+
+   // Initialize the animated mesh shader
+   mStaticCharacterMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh.vert",
+                                                                                              "resources/shaders/diffuse_and_scaled_emissive_illumination_same_tex.frag");
+   // Sunset color for the skin
+   configureLights(mStaticCharacterMeshShader, glm::vec3(1.0f, 0.252f, 0.039f));
 
    // Initialize the static mesh shader
    mStaticMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh.vert",
@@ -72,11 +78,11 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    configurePinTracks();
 
    // Configure the VAOs of the animated meshes
-   int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
-   int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
-   int texCoordsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("texCoord");
-   int weightsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("weights");
-   int influencesAttribLocOfAnimatedShader = mAnimatedMeshShader->getAttributeLocation("joints");
+   int positionsAttribLocOfAnimatedShader  = mAnimatedCharacterMeshShader->getAttributeLocation("position");
+   int normalsAttribLocOfAnimatedShader    = mAnimatedCharacterMeshShader->getAttributeLocation("normal");
+   int texCoordsAttribLocOfAnimatedShader  = mAnimatedCharacterMeshShader->getAttributeLocation("texCoord");
+   int weightsAttribLocOfAnimatedShader    = mAnimatedCharacterMeshShader->getAttributeLocation("weights");
+   int influencesAttribLocOfAnimatedShader = mAnimatedCharacterMeshShader->getAttributeLocation("joints");
    for (unsigned int i = 0,
         size = static_cast<unsigned int>(mAnimatedMeshes.size());
         i < size;
@@ -780,11 +786,11 @@ void IKMovementState::render()
    // Render the animated meshes
    if (mCurrentSkinningMode == SkinningMode::CPU && mDisplayMesh)
    {
-      mStaticMeshShader->use(true);
-      mStaticMeshShader->setUniformMat4("model",      transformToMat4(mModelTransform));
-      mStaticMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
-      mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
-      mDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
+      mStaticCharacterMeshShader->use(true);
+      mStaticCharacterMeshShader->setUniformMat4("model",      transformToMat4(mModelTransform));
+      mStaticCharacterMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
+      mStaticCharacterMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
+      mDiffuseTexture->bind(0, mStaticCharacterMeshShader->getUniformLocation("diffuseTex"));
 
       // Loop over the meshes and render each one
       for (unsigned int i = 0,
@@ -796,16 +802,16 @@ void IKMovementState::render()
       }
 
       mDiffuseTexture->unbind(0);
-      mStaticMeshShader->use(false);
+      mStaticCharacterMeshShader->use(false);
    }
    else if (mCurrentSkinningMode == SkinningMode::GPU && mDisplayMesh)
    {
-      mAnimatedMeshShader->use(true);
-      mAnimatedMeshShader->setUniformMat4("model",            transformToMat4(mModelTransform));
-      mAnimatedMeshShader->setUniformMat4("view",             mCamera3.getViewMatrix());
-      mAnimatedMeshShader->setUniformMat4("projection",       mCamera3.getPerspectiveProjectionMatrix());
-      mAnimatedMeshShader->setUniformMat4Array("animated[0]", mSkinMatrices);
-      mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("diffuseTex"));
+      mAnimatedCharacterMeshShader->use(true);
+      mAnimatedCharacterMeshShader->setUniformMat4("model",            transformToMat4(mModelTransform));
+      mAnimatedCharacterMeshShader->setUniformMat4("view",             mCamera3.getViewMatrix());
+      mAnimatedCharacterMeshShader->setUniformMat4("projection",       mCamera3.getPerspectiveProjectionMatrix());
+      mAnimatedCharacterMeshShader->setUniformMat4Array("animated[0]", mSkinMatrices);
+      mDiffuseTexture->bind(0, mAnimatedCharacterMeshShader->getUniformLocation("diffuseTex"));
 
       // Loop over the meshes and render each one
       for (unsigned int i = 0,
@@ -817,7 +823,7 @@ void IKMovementState::render()
       }
 
       mDiffuseTexture->unbind(0);
-      mAnimatedMeshShader->use(false);
+      mAnimatedCharacterMeshShader->use(false);
    }
 
 #ifdef __EMSCRIPTEN__
@@ -896,11 +902,11 @@ void IKMovementState::configureLights(const std::shared_ptr<Shader>& shader, con
 
 void IKMovementState::switchFromGPUToCPU()
 {
-   int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
-   int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
-   int texCoordsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("texCoord");
-   int weightsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("weights");
-   int influencesAttribLocOfAnimatedShader = mAnimatedMeshShader->getAttributeLocation("joints");
+   int positionsAttribLocOfAnimatedShader  = mAnimatedCharacterMeshShader->getAttributeLocation("position");
+   int normalsAttribLocOfAnimatedShader    = mAnimatedCharacterMeshShader->getAttributeLocation("normal");
+   int texCoordsAttribLocOfAnimatedShader  = mAnimatedCharacterMeshShader->getAttributeLocation("texCoord");
+   int weightsAttribLocOfAnimatedShader    = mAnimatedCharacterMeshShader->getAttributeLocation("weights");
+   int influencesAttribLocOfAnimatedShader = mAnimatedCharacterMeshShader->getAttributeLocation("joints");
    for (unsigned int i = 0,
         size = static_cast<unsigned int>(mAnimatedMeshes.size());
         i < size;
@@ -913,9 +919,9 @@ void IKMovementState::switchFromGPUToCPU()
                                         influencesAttribLocOfAnimatedShader);
    }
 
-   int positionsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("position");
-   int normalsAttribLocOfStaticShader   = mStaticMeshShader->getAttributeLocation("normal");
-   int texCoordsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("texCoord");
+   int positionsAttribLocOfStaticShader = mStaticCharacterMeshShader->getAttributeLocation("position");
+   int normalsAttribLocOfStaticShader   = mStaticCharacterMeshShader->getAttributeLocation("normal");
+   int texCoordsAttribLocOfStaticShader = mStaticCharacterMeshShader->getAttributeLocation("texCoord");
    for (unsigned int i = 0,
         size = static_cast<unsigned int>(mAnimatedMeshes.size());
         i < size;
@@ -931,9 +937,9 @@ void IKMovementState::switchFromGPUToCPU()
 
 void IKMovementState::switchFromCPUToGPU()
 {
-   int positionsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("position");
-   int normalsAttribLocOfStaticShader   = mStaticMeshShader->getAttributeLocation("normal");
-   int texCoordsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("texCoord");
+   int positionsAttribLocOfStaticShader = mStaticCharacterMeshShader->getAttributeLocation("position");
+   int normalsAttribLocOfStaticShader   = mStaticCharacterMeshShader->getAttributeLocation("normal");
+   int texCoordsAttribLocOfStaticShader = mStaticCharacterMeshShader->getAttributeLocation("texCoord");
    for (unsigned int i = 0,
         size = static_cast<unsigned int>(mAnimatedMeshes.size());
         i < size;
@@ -946,11 +952,11 @@ void IKMovementState::switchFromCPUToGPU()
                                         -1);
    }
 
-   int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
-   int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
-   int texCoordsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("texCoord");
-   int weightsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("weights");
-   int influencesAttribLocOfAnimatedShader = mAnimatedMeshShader->getAttributeLocation("joints");
+   int positionsAttribLocOfAnimatedShader  = mAnimatedCharacterMeshShader->getAttributeLocation("position");
+   int normalsAttribLocOfAnimatedShader    = mAnimatedCharacterMeshShader->getAttributeLocation("normal");
+   int texCoordsAttribLocOfAnimatedShader  = mAnimatedCharacterMeshShader->getAttributeLocation("texCoord");
+   int weightsAttribLocOfAnimatedShader    = mAnimatedCharacterMeshShader->getAttributeLocation("weights");
+   int influencesAttribLocOfAnimatedShader = mAnimatedCharacterMeshShader->getAttributeLocation("joints");
    for (unsigned int i = 0,
         size = static_cast<unsigned int>(mAnimatedMeshes.size());
         i < size;

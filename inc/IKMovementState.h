@@ -59,7 +59,8 @@ private:
       CPU = 1,
    };
 
-   std::shared_ptr<Shader>   mAnimatedMeshShader;
+   std::shared_ptr<Shader>   mAnimatedCharacterMeshShader;
+   std::shared_ptr<Shader>   mStaticCharacterMeshShader;
    std::shared_ptr<Shader>   mStaticMeshShader;
    std::shared_ptr<Texture>  mDiffuseTexture;
 

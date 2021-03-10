@@ -25,7 +25,7 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
    : mFSM(finiteStateMachine)
    , mWindow(window)
 #ifdef USE_THIRD_PERSON_CAMERA
-   , mCamera3(12.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 2.5f, 0.0f), 2.0f, 14.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 0.25f)
+   , mCamera3(12.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 2.5f, 0.0f), 2.0f, 40.0f, 2.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 0.25f)
 #else
    , mCamera(camera)
 #endif
@@ -93,7 +93,7 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
    }
 
    // Load the ground
-   data = LoadGLTFFile("resources/models/ground/ik_course.gltf");
+   data = LoadGLTFFile("resources/models/ground/catwalk.gltf");
    mGroundMeshes = LoadStaticMeshes(data);
    FreeGLTFFile(data);
 
@@ -113,7 +113,7 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
    }
 
    // Load the texture of the ground
-   mGroundTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/uv.png");
+   mGroundTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/ground/catwalk_uv.png");
 
    // Get the triangles that make up the ground
    mGroundTriangles = GetTrianglesFromMeshes(mGroundMeshes);
@@ -127,22 +127,22 @@ IKState::IKState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
    mMotionTrack.GetFrame(0).mValue[1] = 0.0f;
    mMotionTrack.GetFrame(0).mValue[2] = 10.0f;
    // Frame 1
-   mMotionTrack.GetFrame(1).mTime     = 2.0f;
-   mMotionTrack.GetFrame(1).mValue[0] = 22.0f;
+   mMotionTrack.GetFrame(1).mTime     = 4.82f;
+   mMotionTrack.GetFrame(1).mValue[0] = 53.0f;
    mMotionTrack.GetFrame(1).mValue[1] = 0.0f;
    mMotionTrack.GetFrame(1).mValue[2] = 10.0f;
    // Frame 2
-   mMotionTrack.GetFrame(2).mTime     = 2.75f;
-   mMotionTrack.GetFrame(2).mValue[0] = 22.0f;
+   mMotionTrack.GetFrame(2).mTime     = 5.57f;
+   mMotionTrack.GetFrame(2).mValue[0] = 53.0f;
    mMotionTrack.GetFrame(2).mValue[1] = 0.0f;
    mMotionTrack.GetFrame(2).mValue[2] = 2.0f;
    // Frame 3
-   mMotionTrack.GetFrame(3).mTime     = 4.75f;
+   mMotionTrack.GetFrame(3).mTime     = 10.39f;
    mMotionTrack.GetFrame(3).mValue[0] = 0.0f;
    mMotionTrack.GetFrame(3).mValue[1] = 0.0f;
    mMotionTrack.GetFrame(3).mValue[2] = 1.0f;
    // Frame 4
-   mMotionTrack.GetFrame(4).mTime     = 5.5f;
+   mMotionTrack.GetFrame(4).mTime     = 11.14f;
    mMotionTrack.GetFrame(4).mValue[0] = 0.0f;
    mMotionTrack.GetFrame(4).mValue[1] = 0.0f;
    mMotionTrack.GetFrame(4).mValue[2] = 10.0f;
@@ -440,9 +440,9 @@ void IKState::update(float deltaTime)
    // so that the speed at which the character moves matches its animation
    mMotionTrackTime += deltaTime * mMotionTrackPlaybackSpeed;
    // Loop mMotionTrackTime so that it doesn't become infinitely large
-   if (mMotionTrackTime > 5.5f)
+   if (mMotionTrackTime > mMotionTrackDuration)
    {
-      mMotionTrackTime -= 5.5f;
+      mMotionTrackTime -= mMotionTrackDuration;
    }
 
    // Sample the motion track to get the X and Z world space position values of the character
@@ -604,8 +604,8 @@ void IKState::update(float deltaTime)
    worldPosOfRightAnkle = glm::lerp(worldPosOfRightAnkle, rightAnkleGroundIKTarget, rightLegPinTrackValue);
 
    // Solve the IK chains of the left and right legs so that their end effectors (ankles) are at the positions we interpolated above
-   mLeftLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfLeftAnkle, false, 15);
-   mRightLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfRightAnkle, false, 15);
+   mLeftLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfLeftAnkle, true, 15);
+   mRightLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfRightAnkle, true, 15);
 
    // Blend the resulting IK chains into the animated pose
    // Note how the blend factor is equal to 1.0f
@@ -964,17 +964,43 @@ void IKState::exit()
 void IKState::configureLights(const std::shared_ptr<Shader>& shader)
 {
    shader->use(true);
-   shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(-5.0f, 5.0f, -5.0f));
+
+   // To the right of bridge
+   shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(28.0f, 20.0f, 20.0f));
    shader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
    shader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
    shader->setUniformFloat("pointLights[0].linearAtt", 0.00001f);
    shader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
-   shader->setUniformVec3("pointLights[1].worldPos", glm::vec3(27.0f, 5.0f, 15.5f));
+
+   // Under bridge
+   shader->setUniformVec3("pointLights[1].worldPos", glm::vec3(28.0f, 3.0f, 5.0f));
    shader->setUniformVec3("pointLights[1].color", glm::vec3(1.0f, 1.0f, 1.0f));
-   shader->setUniformFloat("pointLights[1].constantAtt", 1.0f);
+   shader->setUniformFloat("pointLights[1].constantAtt", 3.0f);
    shader->setUniformFloat("pointLights[1].linearAtt", 0.00001f);
    shader->setUniformFloat("pointLights[1].quadraticAtt", 0.0f);
-   shader->setUniformInt("numPointLightsInScene", 2);
+
+   // To the left of bridge
+   shader->setUniformVec3("pointLights[2].worldPos", glm::vec3(28.0f, 3.0f, -15.0f));
+   shader->setUniformVec3("pointLights[2].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   shader->setUniformFloat("pointLights[2].constantAtt", 5.0f);
+   shader->setUniformFloat("pointLights[2].linearAtt", 0.00001f);
+   shader->setUniformFloat("pointLights[2].quadraticAtt", 0.0f);
+
+   // Starting point
+   shader->setUniformVec3("pointLights[3].worldPos", glm::vec3(-5.0f, 10.0f, 5.0f));
+   shader->setUniformVec3("pointLights[3].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   shader->setUniformFloat("pointLights[3].constantAtt", 1.0f);
+   shader->setUniformFloat("pointLights[3].linearAtt", 0.00001f);
+   shader->setUniformFloat("pointLights[3].quadraticAtt", 0.01f);
+
+   // Far side
+   shader->setUniformVec3("pointLights[4].worldPos", glm::vec3(58.0f, 10.0f, 6.0f));
+   shader->setUniformVec3("pointLights[4].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   shader->setUniformFloat("pointLights[4].constantAtt", 1.0f);
+   shader->setUniformFloat("pointLights[4].linearAtt", 0.00001f);
+   shader->setUniformFloat("pointLights[4].quadraticAtt", 0.01f);
+
+   shader->setUniformInt("numPointLightsInScene", 5);
    shader->use(false);
 }
 
@@ -1110,7 +1136,7 @@ void IKState::resetScene()
 void IKState::resetCamera()
 {
 #ifdef USE_THIRD_PERSON_CAMERA
-   mCamera3.reposition(12.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 2.5f, 0.0f), 2.0f, 14.0f, 0.0f, 90.0f);
+   mCamera3.reposition(12.0f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 2.5f, 0.0f), 2.0f, 40.0f, 0.0f, 90.0f);
    mCamera3.processMouseMovement(-90.0f / 0.25f, 0.0f);
 #else
    mCamera->reposition(glm::vec3(9.94739f, 12.5202f, 30.2262f),

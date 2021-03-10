@@ -83,7 +83,10 @@ bool DoesRayIntersectTriangle(const Ray& ray, const Triangle& triangle, glm::vec
 
    // If the ray is perpendicular to the normal of the triangle, the ray and the plane in which the triangle lies are parallel
    // TODO: Use constant here
-   if (glm::abs(rayDirDotNormal) < 0.0000001f)
+   // NOTE: This check has been updated to also exclude triangles whose normal points in the same direction as the ray by adding this:
+   //       rayDirDotNormal > 0
+   //       When that is the case, the ray is hitting the backface of the triangle, which is why we want to ignore it
+   if (rayDirDotNormal > 0 || glm::abs(rayDirDotNormal) < 0.0000001f)
    {
       return false;
    }

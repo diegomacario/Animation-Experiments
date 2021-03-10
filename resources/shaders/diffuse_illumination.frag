@@ -11,7 +11,7 @@ struct PointLight
    float quadraticAtt;
 };
 
-#define MAX_NUMBER_OF_POINT_LIGHTS 4
+#define MAX_NUMBER_OF_POINT_LIGHTS 5
 uniform PointLight pointLights[MAX_NUMBER_OF_POINT_LIGHTS];
 uniform int numPointLightsInScene;
 
