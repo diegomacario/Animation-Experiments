@@ -114,6 +114,8 @@ private:
    bool                      mWireframeModeForTerrain;
    bool                      mPerformDepthTesting;
 #endif
+   bool                      mSolveWithConstraints;
+   int                       mSelectedNumberOfIterations;
 
    AnimationData             mAnimationData;
 

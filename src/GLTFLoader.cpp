@@ -304,6 +304,10 @@ namespace GLTFHelpers
             influences.push_back(jointsIndices);
          }
          break;
+         case cgltf_attribute_type_invalid:
+         case cgltf_attribute_type_tangent:
+         case cgltf_attribute_type_color:
+            break;
          }
       }
    }
@@ -378,6 +382,12 @@ namespace GLTFHelpers
             normals.push_back(glm::normalize(normal));
          }
          break;
+         case cgltf_attribute_type_invalid:
+         case cgltf_attribute_type_tangent:
+         case cgltf_attribute_type_color:
+         case cgltf_attribute_type_joints:
+         case cgltf_attribute_type_weights:
+            break;
          }
       }
    }

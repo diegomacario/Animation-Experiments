@@ -232,6 +232,9 @@ void IKState::initializeState()
    mWireframeModeForTerrain = false;
    mPerformDepthTesting = true;
 #endif
+   // Set the initial IK options
+   mSolveWithConstraints = true;
+   mSelectedNumberOfIterations = 15;
 
    // Set the initial pose
    mAnimationData.animatedPose = mSkeleton.GetRestPose();
@@ -604,8 +607,8 @@ void IKState::update(float deltaTime)
    worldPosOfRightAnkle = glm::lerp(worldPosOfRightAnkle, rightAnkleGroundIKTarget, rightLegPinTrackValue);
 
    // Solve the IK chains of the left and right legs so that their end effectors (ankles) are at the positions we interpolated above
-   mLeftLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfLeftAnkle, true, 15);
-   mRightLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfRightAnkle, true, 15);
+   mLeftLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfLeftAnkle, mSolveWithConstraints, mSelectedNumberOfIterations);
+   mRightLeg.Solve(mModelTransform, mAnimationData.animatedPose, worldPosOfRightAnkle, mSolveWithConstraints, mSelectedNumberOfIterations);
 
    // Blend the resulting IK chains into the animated pose
    // Note how the blend factor is equal to 1.0f
@@ -1124,6 +1127,10 @@ void IKState::userInterface()
 
    ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
 #endif
+
+   ImGui::Checkbox("Solve with Constraints", &mSolveWithConstraints);
+
+   ImGui::SliderInt("IK Iterations", &mSelectedNumberOfIterations, 0, 100);
 
    ImGui::End();
 }
