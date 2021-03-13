@@ -1,0 +1,47 @@
+<!doctypehtml>
+    <html lang=en-us>
+
+    <head>
+        <meta charset=utf-8>
+        <meta content="text/html; charset=utf-8" http-equiv=Content-Type>
+        <style>
+            body {
+                font-family: arial;
+                margin: 0;
+                padding: none
+            }
+
+            canvas.emscripten {
+                border: 0 none;
+                background-color: #000
+            }
+
+            #output {
+                width: 100%;
+                height: 200px;
+                margin: 0 auto;
+                margin-top: 10px;
+                border-left: 0;
+                border-right: 0;
+                padding-left: 0;
+                padding-right: 0;
+                display: block;
+                background-color: #000;
+                color: #fff;
+                font-family: 'Lucida Console', Monaco, monospace;
+                outline: 0
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class=spinner id=spinner></div>
+        <div class=emscripten id=status>Downloading...</div>
+        <div class=emscripten><progress hidden id=progress max=100 value=0></progress></div>
+        <div class=emscripten_border><canvas class=emscripten id=canvas oncontextmenu=event.preventDefault()
+                tabindex=-1></canvas></div><textarea id=output rows=8></textarea>
+        <script src="ae.js"></script>
+        <script async src=Animation-Experiments.js></script>
+    </body>
+
+    </html>

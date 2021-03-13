@@ -24,6 +24,10 @@ public:
    bool  initialize(const std::string& title);
    void  executeGameLoop();
 
+#ifdef __EMSCRIPTEN__
+   void  updateWindowDimensions(int width, int height);
+#endif
+
 private:
 
    std::shared_ptr<FiniteStateMachine>     mFSM;

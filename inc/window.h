@@ -61,7 +61,6 @@ public:
    float        getScrollYOffset() const;
 
    // Anti aliasing support
-
 #ifndef __EMSCRIPTEN__
    bool         configureAntiAliasingSupport();
    bool         createMultisampleFramebuffer();
@@ -69,6 +68,10 @@ public:
    void         generateAntiAliasedImage();
    void         resizeFramebuffers();
    void         setNumberOfSamples(unsigned int numOfSamples);
+#endif
+
+#ifdef __EMSCRIPTEN__
+   void         updateWindowDimensions(int width, int height);
 #endif
 
 private:

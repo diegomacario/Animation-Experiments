@@ -7,15 +7,24 @@
 #include "game.h"
 
 #ifdef __EMSCRIPTEN__
-void gameLoop(void* game)
+Game game;
+
+void gameLoop()
 {
-   static_cast<Game*>(game)->executeGameLoop();
+   game.executeGameLoop();
+}
+
+extern "C" void EMSCRIPTEN_KEEPALIVE updateWindowDimensions(int width, int height)
+{
+   game.updateWindowDimensions(width, height);
 }
 #endif
 
 int main()
 {
+#ifndef __EMSCRIPTEN__
    Game game;
+#endif
 
    if (!game.initialize("Animation Experiments"))
    {
@@ -24,7 +33,7 @@ int main()
    }
 
 #ifdef __EMSCRIPTEN__
-   emscripten_set_main_loop_arg(gameLoop, static_cast<void*>(&game), 0, true);
+   emscripten_set_main_loop(gameLoop, 0, true);
 #else
    game.executeGameLoop();
 #endif

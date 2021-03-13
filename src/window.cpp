@@ -6,6 +6,18 @@
 
 #include "window.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+
+EM_JS(int, getCanvasWidth, (), {
+  return window.innerWidth;
+});
+
+EM_JS(int, getCanvasHeight, (), {
+  return window.innerHeight;
+});
+#endif
+
 Window::Window(const std::string& title)
    : mWindow(nullptr)
    , mWidthOfWindowInPix(0)
@@ -75,7 +87,16 @@ bool Window::initialize()
    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-   mWindow = glfwCreateWindow(1280, 720, mTitle.c_str(), nullptr, nullptr);
+   int width, height;
+#ifdef __EMSCRIPTEN__
+   width = getCanvasWidth();
+   height = getCanvasHeight();
+#else
+   width = 1280;
+   height = 720;
+#endif
+
+   mWindow = glfwCreateWindow(width, height, mTitle.c_str(), nullptr, nullptr);
    if (!mWindow)
    {
       std::cout << "Error - Window::initialize - Failed to create the GLFW window" << "\n";
@@ -100,9 +121,9 @@ bool Window::initialize()
 
    glEnable(GL_CULL_FACE);
 
-#ifndef __EMSCRIPTEN__
    glfwGetFramebufferSize(mWindow, &mWidthOfFramebufferInPix, &mHeightOfFramebufferInPix);
 
+#ifndef __EMSCRIPTEN__
    if (!configureAntiAliasingSupport())
    {
       std::cout << "Error - Window::initialize - Failed to configure anti aliasing support" << "\n";
@@ -113,6 +134,8 @@ bool Window::initialize()
 #endif
 
    setInputCallbacks();
+
+   updateBufferAndViewportSizes(mWidthOfFramebufferInPix, mHeightOfFramebufferInPix);
 
    // Initialize ImGui
    // Setup Dear ImGui context
@@ -448,6 +471,15 @@ void Window::setNumberOfSamples(unsigned int numOfSamples)
    glBindRenderbuffer(GL_RENDERBUFFER, mMultisampleRBO);
    glRenderbufferStorageMultisample(GL_RENDERBUFFER, mNumOfSamples, GL_DEPTH_COMPONENT, mWidthOfFramebufferInPix, mHeightOfFramebufferInPix);
    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+}
+#endif
+
+#ifdef __EMSCRIPTEN__
+void Window::updateWindowDimensions(int width, int height)
+{
+   mWidthOfWindowInPix  = width;
+   mHeightOfWindowInPix = height;
+   glfwSetWindowSize(mWindow, width, height);
 }
 #endif
 

@@ -117,3 +117,10 @@ void Game::executeGameLoop()
    }
 }
 #endif
+
+#ifdef __EMSCRIPTEN__
+void Game::updateWindowDimensions(int width, int height)
+{
+   mWindow->updateWindowDimensions(width, height);
+}
+#endif
