@@ -1092,45 +1092,54 @@ void IKState::userInterface()
 {
    ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Appearing);
 
-   ImGui::Begin("Programmed IK Movement", nullptr, ImGuiWindowFlags_NoResize);
+   ImGui::Begin("Programmed IK Movement", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
 
    ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
    ImGui::Combo("State", &mSelectedState, "Model Viewer\0Flat Movement\0Programmed IK Movement\0IK Movement\0");
 
-   ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
+   if (ImGui::CollapsingHeader("Instructions", nullptr))
+   {
+      ImGui::BulletText("Hold the right mouse button and move the mouse\nto rotate the camera around the character.");
+      ImGui::BulletText("Use the scroll wheel to zoom in and out.");
+   }
 
-   //ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
+   if (ImGui::CollapsingHeader("Controls", nullptr))
+   {
+      ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
 
-   ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
+      //ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
 
-   float durationOfCurrClip = mClips[mAnimationData.currentClipIndex].GetDuration();
-   char progress[32];
-   snprintf(progress, 32, "%.3f / %.3f", mAnimationData.playbackTime, durationOfCurrClip);
-   ImGui::ProgressBar(mAnimationData.playbackTime / durationOfCurrClip, ImVec2(0.0f, 0.0f), progress);
+      ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
 
-   ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-   ImGui::Text("Playback Time");
+      float durationOfCurrClip = mClips[mAnimationData.currentClipIndex].GetDuration();
+      char progress[32];
+      snprintf(progress, 32, "%.3f / %.3f", mAnimationData.playbackTime, durationOfCurrClip);
+      ImGui::ProgressBar(mAnimationData.playbackTime / durationOfCurrClip, ImVec2(0.0f, 0.0f), progress);
 
-   ImGui::Checkbox("Display Skin", &mDisplayMesh);
+      ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+      ImGui::Text("Playback Time");
 
-   ImGui::Checkbox("Display Bones", &mDisplayBones);
+      ImGui::Checkbox("Display Skin", &mDisplayMesh);
 
-   ImGui::Checkbox("Display Joints", &mDisplayJoints);
+      ImGui::Checkbox("Display Bones", &mDisplayBones);
+
+      ImGui::Checkbox("Display Joints", &mDisplayJoints);
 
 #ifndef __EMSCRIPTEN__
-   ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
+      ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
 
-   ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
+      ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
 
-   ImGui::Checkbox("Wireframe Mode for Terrain", &mWireframeModeForTerrain);
+      ImGui::Checkbox("Wireframe Mode for Terrain", &mWireframeModeForTerrain);
 
-   ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
+      ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
 #endif
 
-   ImGui::Checkbox("Solve with Constraints", &mSolveWithConstraints);
+      ImGui::Checkbox("Solve with Constraints", &mSolveWithConstraints);
 
-   ImGui::SliderInt("IK Iterations", &mSelectedNumberOfIterations, 0, 100);
+      ImGui::SliderInt("IK Iterations", &mSelectedNumberOfIterations, 0, 100);
+   }
 
    ImGui::End();
 }

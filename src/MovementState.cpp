@@ -691,35 +691,47 @@ void MovementState::userInterface()
 {
    ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Appearing);
 
-   ImGui::Begin("Flat Movement", nullptr, ImGuiWindowFlags_NoResize);
+   ImGui::Begin("Flat Movement", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
 
    ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
    ImGui::Combo("State", &mSelectedState, "Model Viewer\0Flat Movement\0Programmed IK Movement\0IK Movement\0");
 
-   ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
+   if (ImGui::CollapsingHeader("Instructions", nullptr))
+   {
+      ImGui::BulletText("Hold the right mouse button and move the mouse\nto rotate the camera around the character.");
+      ImGui::BulletText("Use the WASD keys to move.");
+      ImGui::BulletText("Hold the Shift key to run.");
+      ImGui::BulletText("Press the spacebar to jump.");
+      ImGui::BulletText("Use the scroll wheel to zoom in and out.");
+   }
 
-   ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
+   if (ImGui::CollapsingHeader("Controls", nullptr))
+   {
+      ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
 
-   ImGui::Checkbox("Display Skin", &mDisplayMesh);
+      ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
 
-   ImGui::Checkbox("Display Bones", &mDisplayBones);
+      ImGui::Checkbox("Display Skin", &mDisplayMesh);
 
-   ImGui::Checkbox("Display Joints", &mDisplayJoints);
+      ImGui::Checkbox("Display Bones", &mDisplayBones);
+
+      ImGui::Checkbox("Display Joints", &mDisplayJoints);
 
 #ifndef __EMSCRIPTEN__
-   ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
+      ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
 
-   ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
+      ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
 
-   ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
+      ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
 #endif
 
-   ImGui::SliderFloat("Constant Att.", &mSelectedConstantAttenuation, 0.0f, 50.0f, "%.3f");
+      ImGui::SliderFloat("Constant Att.", &mSelectedConstantAttenuation, 0.0f, 50.0f, "%.3f");
 
-   ImGui::SliderFloat("Linear Att.", &mSelectedLinearAttenuation, 0.0f, 1.0f, "%.3f");
+      ImGui::SliderFloat("Linear Att.", &mSelectedLinearAttenuation, 0.0f, 1.0f, "%.3f");
 
-   ImGui::SliderFloat("Quadratic Att.", &mSelectedQuadraticAttenuation, 0.0f, 0.1f, "%.3f");
+      ImGui::SliderFloat("Quadratic Att.", &mSelectedQuadraticAttenuation, 0.0f, 0.1f, "%.3f");
+   }
 
    ImGui::End();
 }
