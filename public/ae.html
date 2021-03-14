@@ -6,9 +6,10 @@
         <meta content="text/html; charset=utf-8" http-equiv=Content-Type>
         <style>
             body {
-                font-family: arial;
+                font-family: sans-serif;
                 margin: 0;
-                padding: none
+                padding: none;
+                background-color: black;
             }
 
             canvas.emscripten {
@@ -16,7 +17,30 @@
                 background-color: #000
             }
 
-            #output {
+            #canvas_container {
+                display: flex;
+            }
+
+            #loading_container {
+                color: white;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+
+            #webgl_unsupported_popup {
+                background-color: cadetblue;
+                color: white;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                padding: 15px;
+                display: none;
+            }
+
+            /* #output {
                 width: 100%;
                 height: 200px;
                 margin: 0 auto;
@@ -30,16 +54,23 @@
                 color: #fff;
                 font-family: 'Lucida Console', Monaco, monospace;
                 outline: 0
-            }
+            } */
         </style>
     </head>
 
     <body>
-        <div class=spinner id=spinner></div>
-        <div class=emscripten id=status>Downloading...</div>
-        <div class=emscripten><progress hidden id=progress max=100 value=0></progress></div>
-        <div class=emscripten_border><canvas class=emscripten id=canvas oncontextmenu=event.preventDefault()
-                tabindex=-1></canvas></div><textarea id=output rows=8></textarea>
+        <div id="loading_container">
+            <div class=spinner id=spinner></div>
+            <div id=status>Downloading...</div>
+            <div class=emscripten><progress hidden id=progress max=100 value=0></progress></div>
+        </div>
+        <div id="webgl_unsupported_popup">
+            Sorry! Your browser doesn't support WebGL 2.0. Please try using Chrome or Firefox.
+        </div>
+        <div id="canvas_container">
+            <canvas class=emscripten id=canvas oncontextmenu=event.preventDefault() tabindex=-1></canvas>
+        </div>
+        <!-- <textarea id=output rows=8></textarea> -->
         <script src="ae.js"></script>
         <script async src=Animation-Experiments.js></script>
     </body>

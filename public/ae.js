@@ -97,4 +97,9 @@ window.addEventListener('resize', resize, false);
 window.addEventListener('load', () => {
     resize();
     window.addEventListener('resize', magicResize, false);
+
+    const gl = document.createElement('canvas').getContext('webgl2');
+    if (!gl) {
+      document.getElementById('webgl_unsupported_popup').style.display = 'block';
+    }
 });
