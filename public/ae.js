@@ -82,21 +82,22 @@ Module.setStatus("Downloading..."),
       });
   });
 
-function resize() {
+function resizeCanvas() {
     var canvas = document.getElementById("canvas");
     canvas.style.width = window.innerWidth + 'px';
     canvas.style.height = window.innerHeight + 'px';
 };
 
-function magicResize() {
+function resizeFramebuffers() {
     _updateWindowDimensions(window.innerWidth, window.innerHeight);
 };
 
-window.addEventListener('resize', resize, false);
+window.addEventListener('resize', resizeCanvas, false);
 
 window.addEventListener('load', () => {
-    resize();
-    window.addEventListener('resize', magicResize, false);
+    resizeCanvas();
+
+    window.addEventListener('resize', resizeFramebuffers, false);
 
     const gl = document.createElement('canvas').getContext('webgl2');
     if (!gl) {
