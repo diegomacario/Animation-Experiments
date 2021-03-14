@@ -187,11 +187,6 @@ void IKMovementState::initializeState()
    // and sink it into the ground a little so that the IK solver has room to work
    determineYPosition();
    mPreviousYPositionOfCharacter = mModelTransform.position.y;
-
-   // Light blue the sky
-   //glClearColor(0.036f, 0.827f, 1.0f, 1.0f);
-   // Dark blue for the sky
-   glClearColor(0.036f, 0.627f, 1.0f, 1.0f);
 }
 
 void IKMovementState::enter()
@@ -741,6 +736,15 @@ void IKMovementState::render()
 #else
    mWindow->clearAndBindMultisampleFramebuffer();
 #endif
+
+   // Dark blue for the sky
+   glClearColor(0.036f, 0.627f, 1.0f, 1.0f);
+   glEnable(GL_SCISSOR_TEST);
+   glClear(GL_COLOR_BUFFER_BIT);
+   glDisable(GL_SCISSOR_TEST);
+
+   // Black for the horizontal/vertical bars
+   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
