@@ -668,10 +668,11 @@ void ModelViewerState::userInterface()
    {
       ImGui::BulletText("Hold the right mouse button and move the mouse\nto rotate the camera around the character.");
       ImGui::BulletText("Use the scroll wheel to zoom in and out.");
-      ImGui::BulletText("Press the P key to pause.");
+      ImGui::BulletText("Press the P key to pause the animation.");
+      ImGui::BulletText("Press the R key to reset the camera.");
    }
 
-   if (ImGui::CollapsingHeader("Controls", nullptr))
+   if (ImGui::CollapsingHeader("Settings", nullptr))
    {
       ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
 

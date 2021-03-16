@@ -700,13 +700,14 @@ void MovementState::userInterface()
    if (ImGui::CollapsingHeader("Instructions", nullptr))
    {
       ImGui::BulletText("Hold the right mouse button and move the mouse\nto rotate the camera around the character.");
+      ImGui::BulletText("Use the scroll wheel to zoom in and out.");
+      ImGui::BulletText("Press the R key to reset the camera.");
       ImGui::BulletText("Use the WASD keys to move.");
       ImGui::BulletText("Hold the Shift key to run.");
       ImGui::BulletText("Press the spacebar to jump.");
-      ImGui::BulletText("Use the scroll wheel to zoom in and out.");
    }
 
-   if (ImGui::CollapsingHeader("Controls", nullptr))
+   if (ImGui::CollapsingHeader("Settings", nullptr))
    {
       ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
 

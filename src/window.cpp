@@ -10,11 +10,21 @@
 #include <emscripten/emscripten.h>
 
 EM_JS(int, getCanvasWidth, (), {
-  return window.innerWidth;
+   return window.innerWidth;
 });
 
 EM_JS(int, getCanvasHeight, (), {
-  return window.innerHeight;
+   return window.innerHeight;
+});
+
+EM_JS(float, getBrowserScrollWheelSensitivity, (), {
+   if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+      return -1.0;
+   }
+   else
+   {
+      return -0.02;
+   }
 });
 #endif
 
@@ -38,6 +48,9 @@ Window::Window(const std::string& title)
    , mCursorYOffset(0.0)
    , mScrollWheelMoved(false)
    , mScrollYOffset(0.0)
+#ifdef __EMSCRIPTEN__
+   , mScrollWheelSensitivity(0.0f)
+#endif
 #ifndef __EMSCRIPTEN__
    , mMultisampleFBO(0)
    , mMultisampleTexture(0)
@@ -91,6 +104,7 @@ bool Window::initialize()
 #ifdef __EMSCRIPTEN__
    width = getCanvasWidth();
    height = getCanvasHeight();
+   mScrollWheelSensitivity = getBrowserScrollWheelSensitivity();
 #else
    width = 1280;
    height = 720;
@@ -382,7 +396,7 @@ void Window::scrollCallback(GLFWwindow* window, double xOffset, double yOffset)
    mScrollYOffset = static_cast<float>(yOffset);
 
 #ifdef __EMSCRIPTEN__
-   mScrollYOffset *= -0.02f;
+   mScrollYOffset *= mScrollWheelSensitivity;
 #endif
 
    mScrollWheelMoved = true;

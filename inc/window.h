@@ -110,6 +110,9 @@ private:
    // Scroll wheel
    bool                           mScrollWheelMoved;
    float                          mScrollYOffset;
+#ifdef __EMSCRIPTEN__
+   float                          mScrollWheelSensitivity;
+#endif
 
    // Anti aliasing support
 #ifndef __EMSCRIPTEN__
