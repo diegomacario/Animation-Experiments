@@ -9,6 +9,11 @@
 #include "RearrangeBones.h"
 #include "MovementState.h"
 
+#ifdef __EMSCRIPTEN__
+extern int runKey;
+extern std::string runInstruction;
+#endif
+
 MovementState::MovementState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
                              const std::shared_ptr<Window>&             window)
    : mFSM(finiteStateMachine)
@@ -218,7 +223,8 @@ void MovementState::processInput(float deltaTime)
    if (mWindow->keyIsPressed(GLFW_KEY_R)) { resetCamera(); }
 
    // Orient the camera
-   if (mWindow->mouseMoved() && mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
+   if (mWindow->mouseMoved() &&
+       (mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT) || mWindow->keyIsPressed(GLFW_KEY_C)))
    {
       mCamera3.processMouseMovement(mWindow->getCursorXOffset(), mWindow->getCursorYOffset());
       mWindow->resetMouseMoved();
@@ -234,11 +240,15 @@ void MovementState::processInput(float deltaTime)
    // --- --- ---
 
    bool movementKeyPressed  = false;
-   bool leftShiftKeyPressed = mWindow->keyIsPressed(GLFW_KEY_LEFT_SHIFT);
+#ifdef __EMSCRIPTEN__
+   bool runKeyPressed = mWindow->keyIsPressed(runKey);
+#else
+   bool runKeyPressed = mWindow->keyIsPressed(GLFW_KEY_LEFT_SHIFT);
+#endif
 
    float movementSpeed = mCharacterWalkingSpeed;
    float rotationSpeed = mCharacterWalkingRotationSpeed;
-   if ((leftShiftKeyPressed && !mJumpingWhileWalking) || mJumpingWhileRunning)
+   if ((runKeyPressed && !mJumpingWhileWalking) || mJumpingWhileRunning)
    {
       movementSpeed = mCharacterRunningSpeed;
       rotationSpeed = mCharacterRunningRotationSpeed;
@@ -338,7 +348,7 @@ void MovementState::processInput(float deltaTime)
    {
       if (!mIsWalking && !mIsRunning)
       {
-         if (leftShiftKeyPressed)
+         if (runKeyPressed)
          {
             mIsRunning = true;
             mCrossFadeController.FadeTo(&mClips["Running"], 0.25f, false);
@@ -351,7 +361,7 @@ void MovementState::processInput(float deltaTime)
       }
       else if (mIsWalking)
       {
-         if (leftShiftKeyPressed)
+         if (runKeyPressed)
          {
             mIsWalking = false;
             mIsRunning = true;
@@ -360,7 +370,7 @@ void MovementState::processInput(float deltaTime)
       }
       else if (mIsRunning)
       {
-         if (!leftShiftKeyPressed)
+         if (!runKeyPressed)
          {
             mIsRunning = false;
             mIsWalking = true;
@@ -697,13 +707,20 @@ void MovementState::userInterface()
 
    ImGui::Combo("State", &mSelectedState, "Model Viewer\0Flat Movement\0Programmed IK Movement\0IK Movement\0");
 
-   if (ImGui::CollapsingHeader("Instructions", nullptr))
+   if (ImGui::CollapsingHeader("Controls", nullptr))
    {
-      ImGui::BulletText("Hold the right mouse button and move the mouse\nto rotate the camera around the character.");
+      ImGui::BulletText("Hold the right mouse button and move the mouse\n"
+                        "to rotate the camera around the character.\n"
+                        "Alternatively, hold the C key and move \n"
+                        "the mouse (this is easier on a touchpad).");
       ImGui::BulletText("Use the scroll wheel to zoom in and out.");
       ImGui::BulletText("Press the R key to reset the camera.");
       ImGui::BulletText("Use the WASD keys to move.");
-      ImGui::BulletText("Hold the Shift key to run.");
+#ifdef __EMSCRIPTEN__
+      ImGui::BulletText(runInstruction.c_str());
+#else
+      ImGui::BulletText("Hold the left Shift key to run.");
+#endif
       ImGui::BulletText("Press the spacebar to jump.");
    }
 

@@ -367,7 +367,8 @@ void IKState::processInput(float deltaTime)
 
 #ifdef USE_THIRD_PERSON_CAMERA
    // Orient the camera
-   if (mWindow->mouseMoved() && mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
+   if (mWindow->mouseMoved() &&
+       (mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT) || mWindow->keyIsPressed(GLFW_KEY_C)))
    {
       mCamera3.processMouseMovement(mWindow->getCursorXOffset(), mWindow->getCursorYOffset());
       mWindow->resetMouseMoved();
@@ -1098,9 +1099,12 @@ void IKState::userInterface()
 
    ImGui::Combo("State", &mSelectedState, "Model Viewer\0Flat Movement\0Programmed IK Movement\0IK Movement\0");
 
-   if (ImGui::CollapsingHeader("Instructions", nullptr))
+   if (ImGui::CollapsingHeader("Controls", nullptr))
    {
-      ImGui::BulletText("Hold the right mouse button and move the mouse\nto rotate the camera around the character.");
+      ImGui::BulletText("Hold the right mouse button and move the mouse\n"
+                        "to rotate the camera around the character.\n"
+                        "Alternatively, hold the C key and move \n"
+                        "the mouse (this is easier on a touchpad).");
       ImGui::BulletText("Use the scroll wheel to zoom in and out.");
       ImGui::BulletText("Press the R key to reset the camera.");
    }
