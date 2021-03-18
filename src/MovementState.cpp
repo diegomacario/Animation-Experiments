@@ -707,6 +707,15 @@ void MovementState::userInterface()
 
    ImGui::Combo("State", &mSelectedState, "Model Viewer\0Flat Movement\0Programmed IK Movement\0IK Movement\0");
 
+   if (ImGui::CollapsingHeader("Description", nullptr))
+   {
+      ImGui::Text("This state illustrates how one can fade from\n"
+                  "one clip to another to create natural\n"
+                  "transitions when a character goes from\n"
+                  "walking to running, from running to jumping,\n"
+                  "from being idle to walking, etc.");
+   }
+
    if (ImGui::CollapsingHeader("Controls", nullptr))
    {
       ImGui::BulletText("Hold the right mouse button and move the mouse\n"

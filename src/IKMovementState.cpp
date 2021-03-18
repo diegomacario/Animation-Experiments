@@ -1005,6 +1005,18 @@ void IKMovementState::userInterface()
 
    ImGui::Combo("State", &mSelectedState, "Model Viewer\0Flat Movement\0Programmed IK Movement\0IK Movement\0");
 
+      if (ImGui::CollapsingHeader("Description", nullptr))
+   {
+      ImGui::Text("This state illustrates how one can fade from one\n"
+                  "clip to another while solving the legs of a character\n"
+                  "as inverse kinematic chains to allow a player to\n"
+                  "control a character on uneven terrain.\n\n"
+                  "The knees are constrained as hinges to prevent\n"
+                  "the legs from behaving unnaturally when moving\n"
+                  "up steep terrain. If you disable the constraints\n"
+                  "you will see some funny results.");
+   }
+
    if (ImGui::CollapsingHeader("Controls", nullptr))
    {
       ImGui::BulletText("Hold the right mouse button and move the mouse\n"

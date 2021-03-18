@@ -665,6 +665,16 @@ void ModelViewerState::userInterface()
 
    ImGui::Combo("State", &mSelectedState, "Model Viewer\0Flat Movement\0Programmed IK Movement\0IK Movement\0");
 
+   if (ImGui::CollapsingHeader("Description", nullptr))
+   {
+      ImGui::Text("This state illustrates the playback of various\n"
+                  "animation clips that have been loaded from\n"
+                  "a glTF file.\n\n"
+                  "You can switch between the different clips\n"
+                  "and change the playback speed to see them\n"
+                  "in slow or fast motion.");
+   }
+
    if (ImGui::CollapsingHeader("Controls", nullptr))
    {
       ImGui::BulletText("Hold the right mouse button and move the mouse\n"

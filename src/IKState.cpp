@@ -1099,6 +1099,18 @@ void IKState::userInterface()
 
    ImGui::Combo("State", &mSelectedState, "Model Viewer\0Flat Movement\0Programmed IK Movement\0IK Movement\0");
 
+   if (ImGui::CollapsingHeader("Description", nullptr))
+   {
+      ImGui::Text("This state illustrates how one can solve the legs\n"
+                  "of a character as inverse kinematic chains to make\n"
+                  "the character look natural while it moves over uneven\n"
+                  "terrain.\n\n"
+                  "The walking animation clip you see here is the same\n"
+                  "from the previous states. It's being modified every\n"
+                  "frame using the FABRIK algorithm to properly place the\n"
+                  "the feet of the character on the terrain.");
+   }
+
    if (ImGui::CollapsingHeader("Controls", nullptr))
    {
       ImGui::BulletText("Hold the right mouse button and move the mouse\n"
