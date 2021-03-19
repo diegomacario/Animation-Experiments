@@ -30,7 +30,6 @@
         }
 
         #webgl_unsupported_popup {
-            /*background-color: cadetblue;*/
             background-image: linear-gradient(to right, red , orange);
             color: white;
             position: absolute;
@@ -39,6 +38,88 @@
             transform: translate(-50%, -50%);
             padding: 15px;
             display: none;
+        }
+
+        #learn_more_button {
+            display: none;
+            user-select: none;
+            font-family: Helvetica, sans-serif;
+            background-color: white;
+            font-weight: bold;
+            font-size: 24px;
+            text-align:center;
+            line-height: 32px;
+            height: 32px;
+            width: 32px;
+            border-radius: 50%;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        #learn_more_button:hover,
+        #learn_more_button:focus {
+            background-color: black;
+            color: white;
+            border-color: white;
+            border-width: 2px;
+            border-style: solid;
+            top: 19px;
+            right: 19px;
+            cursor: pointer;
+        }
+
+/*
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+*/
+
+        .modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 15px;
+            display: none;
+        }
+
+        .modal-content {
+          background-color:black;
+          color:white;
+          border-color: white;
+          border-width: 2px;
+          border-style: solid;
+          margin: 15% auto;
+          padding: 20px;
+          width: 80%;
+        }
+
+        .close {
+          color:white;
+          float: right;
+          font-size: 28px;
+          font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+          color: greenyellow;
+          text-decoration: none;
+          cursor: pointer;
+        }
+
+        a, a:visited {
+          color:greenyellow;
         }
 
         /* #output {
@@ -68,6 +149,34 @@
 
     <div id="webgl_unsupported_popup">
         Woops! Your browser doesn't support WebGL 2.0 - Please try using Chrome or Firefox.
+    </div>
+
+    <div id="learn_more_button">
+        ?
+    </div>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>
+                This project was built one quaternion at a time using C++ and OpenGL.
+                It was then compiled to WebAssembly using <a href=https://emscripten.org target="_blank">Emscripten</a>.<br><br>
+                The open source libraries it uses are:<br>
+
+                <ul>
+                    <li><a href=https://www.glfw.org target="_blank">GLFW</a> to receive inputs.</li>
+                    <li><a href=https://github.com/ocornut/imgui target="_blank">imgui</a> for the user interface.</li>
+                    <li><a href=https://glm.g-truc.net/0.9.9/index.html target="_blank">GLM</a> to do linear algebra.</li>
+                    <li><a href=https://github.com/jkuhlmann/cgltf target="_blank">cgltf</a> to parse glTF files.</li>
+                    <li><a href=https://github.com/nothings/stb target="_blank">stb_image</a> to load textures.</li>
+                </ul>
+
+                The basis for this project was the knowledge and examples from <a href=https://github.com/gszauer/GameAnimationProgramming target="_blank">this</a> amazing book.<br><br>
+                The animated character was created by <a href="http://quaternius.com/" target="_blank">Quaternius</a>.<br><br>
+
+                Thank you for visiting this page!
+            </p>
+        </div>
     </div>
 
     <div id="canvas_container">
