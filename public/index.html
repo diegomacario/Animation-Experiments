@@ -14,7 +14,8 @@
 
         canvas.emscripten {
             border: 0 none;
-            background-color: #000
+            background-color: #000;
+            outline: 0;
         }
 
         #canvas_container {
@@ -105,6 +106,9 @@
         }
 
         .close {
+          position: relative;
+          top: -15px;
+          right: -8px;
           color:white;
           float: right;
           font-size: 28px;
@@ -113,13 +117,14 @@
 
         .close:hover,
         .close:focus {
-          color: greenyellow;
+          color:greenyellow;
           text-decoration: none;
           cursor: pointer;
         }
 
         a, a:visited {
           color:greenyellow;
+          text-decoration: none;
         }
 
         /* #output {
@@ -169,7 +174,7 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <p>
-                This project was built one quaternion at a time using C++ and OpenGL.
+                This project was written one quaternion at a time using C++ and OpenGL.
                 It was then compiled to WebAssembly using <a href=https://emscripten.org target="_blank">Emscripten</a>.<br><br>
                 The open source libraries it uses are:<br>
 
