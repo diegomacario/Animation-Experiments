@@ -561,12 +561,12 @@ void ModelViewerState::configureLights(const std::shared_ptr<Shader>& shader)
 {
    shader->use(true);
    shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
-   shader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   shader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 0.95f, 0.9f));
    shader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
    shader->setUniformFloat("pointLights[0].linearAtt", 0.01f);
    shader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
    shader->setUniformVec3("pointLights[1].worldPos", glm::vec3(0.0f, 2.0f, -10.0f));
-   shader->setUniformVec3("pointLights[1].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   shader->setUniformVec3("pointLights[1].color", glm::vec3(1.0f, 0.95f, 0.9f));
    shader->setUniformFloat("pointLights[1].constantAtt", 1.0f);
    shader->setUniformFloat("pointLights[1].linearAtt", 0.01f);
    shader->setUniformFloat("pointLights[1].quadraticAtt", 0.0f);

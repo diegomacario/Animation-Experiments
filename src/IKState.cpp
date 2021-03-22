@@ -971,35 +971,35 @@ void IKState::configureLights(const std::shared_ptr<Shader>& shader)
 
    // To the right of bridge
    shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(28.0f, 20.0f, 20.0f));
-   shader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   shader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 0.95f, 0.9f));
    shader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
    shader->setUniformFloat("pointLights[0].linearAtt", 0.00001f);
    shader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
 
    // Under bridge
    shader->setUniformVec3("pointLights[1].worldPos", glm::vec3(28.0f, 3.0f, 5.0f));
-   shader->setUniformVec3("pointLights[1].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   shader->setUniformVec3("pointLights[1].color", glm::vec3(1.0f, 0.95f, 0.9f));
    shader->setUniformFloat("pointLights[1].constantAtt", 3.0f);
    shader->setUniformFloat("pointLights[1].linearAtt", 0.00001f);
    shader->setUniformFloat("pointLights[1].quadraticAtt", 0.0f);
 
    // To the left of bridge
    shader->setUniformVec3("pointLights[2].worldPos", glm::vec3(28.0f, 3.0f, -15.0f));
-   shader->setUniformVec3("pointLights[2].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   shader->setUniformVec3("pointLights[2].color", glm::vec3(1.0f, 0.95f, 0.9f));
    shader->setUniformFloat("pointLights[2].constantAtt", 5.0f);
    shader->setUniformFloat("pointLights[2].linearAtt", 0.00001f);
    shader->setUniformFloat("pointLights[2].quadraticAtt", 0.0f);
 
    // Starting point
    shader->setUniformVec3("pointLights[3].worldPos", glm::vec3(-5.0f, 10.0f, 5.0f));
-   shader->setUniformVec3("pointLights[3].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   shader->setUniformVec3("pointLights[3].color", glm::vec3(1.0f, 0.95f, 0.9f));
    shader->setUniformFloat("pointLights[3].constantAtt", 1.0f);
    shader->setUniformFloat("pointLights[3].linearAtt", 0.00001f);
    shader->setUniformFloat("pointLights[3].quadraticAtt", 0.01f);
 
    // Far side
    shader->setUniformVec3("pointLights[4].worldPos", glm::vec3(58.0f, 10.0f, 6.0f));
-   shader->setUniformVec3("pointLights[4].color", glm::vec3(1.0f, 1.0f, 1.0f));
+   shader->setUniformVec3("pointLights[4].color", glm::vec3(1.0f, 0.95f, 0.9f));
    shader->setUniformFloat("pointLights[4].constantAtt", 1.0f);
    shader->setUniformFloat("pointLights[4].linearAtt", 0.00001f);
    shader->setUniformFloat("pointLights[4].quadraticAtt", 0.01f);
