@@ -142,6 +142,12 @@
     <ClCompile Include="..\src\ModelViewerState.cpp">
       <Filter>Animation-Experiments\Source Files\Base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Water.cpp">
+      <Filter>Animation-Experiments\Source Files\Water</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SkeletonViewerClipped.cpp">
+      <Filter>Animation-Experiments\Source Files\Animation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h">
@@ -297,6 +303,12 @@
     <ClInclude Include="..\inc\ModelViewerState.h">
       <Filter>Animation-Experiments\Header Files\Base</Filter>
     </ClInclude>
+    <ClInclude Include="..\inc\Water.h">
+      <Filter>Animation-Experiments\Header Files\Water</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\SkeletonViewerClipped.h">
+      <Filter>Animation-Experiments\Header Files\Animation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Animation-Experiments">
@@ -382,6 +394,12 @@
     </Filter>
     <Filter Include="Animation-Experiments\Source Files\Intersection">
       <UniqueIdentifier>{20a5dc86-88e4-4bc7-aa9e-8c5069027b61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation-Experiments\Header Files\Water">
+      <UniqueIdentifier>{fc488087-4153-4f60-9628-2cd47c8bd1d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation-Experiments\Source Files\Water">
+      <UniqueIdentifier>{0fe92a37-d291-4881-b66d-fa3e23eebc57}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

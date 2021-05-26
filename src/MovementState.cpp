@@ -446,11 +446,10 @@ void MovementState::render()
 
    userInterface();
 
-#ifdef __EMSCRIPTEN__
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-#else
-   mWindow->clearAndBindMultisampleFramebuffer();
+#ifndef __EMSCRIPTEN__
+   mWindow->bindMultisampleFramebuffer();
 #endif
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);

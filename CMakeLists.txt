@@ -39,6 +39,7 @@ set(project_headers
     inc/shader_loader.h
     inc/Skeleton.h
     inc/SkeletonViewer.h
+    inc/SkeletonViewerClipped.h
     inc/state.h
     inc/texture.h
     inc/texture_loader.h
@@ -46,6 +47,7 @@ set(project_headers
     inc/Transform.h
     inc/TransformTrack.h
     inc/Triangle.h
+    inc/Water.h
     inc/window.h)
 
 set(project_sources
@@ -80,12 +82,14 @@ set(project_sources
     src/shader_loader.cpp
     src/Skeleton.cpp
     src/SkeletonViewer.cpp
+    src/SkeletonViewerClipped.cpp
     src/texture.cpp
     src/texture_loader.cpp
     src/Track.cpp
     src/Transform.cpp
     src/TransformTrack.cpp
     src/Triangle.cpp
+    src/Water.cpp
     src/window.cpp
     dependencies/win/src/cgltf/cgltf.c
     dependencies/win/src/imgui/imgui.cpp

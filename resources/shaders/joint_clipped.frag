@@ -1,7 +1,6 @@
 in vec3  fragPos;
 in float clipDistance;
 in vec3  norm;
-in vec2  uv;
 
 struct PointLight
 {
@@ -17,12 +16,6 @@ uniform PointLight pointLights[MAX_NUMBER_OF_POINT_LIGHTS];
 uniform int numPointLightsInScene;
 
 uniform vec3 cameraPos;
-
-uniform sampler2D diffuseTex;
-uniform sampler2D emissiveTex;
-
-uniform float emissiveTextureBrightnessScaleFactor;
-uniform float emissiveTextureUVScaleFactor;
 
 out vec4 fragColor;
 
@@ -55,10 +48,7 @@ vec3 calculateContributionOfPointLight(PointLight light, vec3 viewDir)
    // Diffuse
    vec3  lightDir    = normalize(light.worldPos - fragPos);
    vec3  diff        = max(dot(lightDir, norm), 0.0) * light.color * attenuation;
-   vec3  diffuse     = (diff * (vec3(texture(diffuseTex, uv))));
+   vec3  diffuse     = (diff * vec3(0.0f, 1.0f, 0.0f));
 
-   // Emissive
-   vec3 emissive     = vec3(texture(emissiveTex, uv * emissiveTextureUVScaleFactor)) * emissiveTextureBrightnessScaleFactor;
-
-   return diffuse + emissive;
+   return diffuse + vec3(0.0f, 0.25f, 0.0f);
 }
