@@ -78,7 +78,4 @@ void main()
    fragColor = mix(reflectColor, refractColor, refractiveFactor);
    fragColor = mix(fragColor, vec4(0.0, 0.3, 0.5, 1.0), 0.2) + vec4(specularHighlights, 0.0);
    fragColor.a = clamp(waterDepth / 5.0, 0.0, 1.0);
-
-   fragColor = vec4(vec3(waterDepth / 50.0), 1.0);
-   //fragColor = vec4(vec3(waterDistance / 50.0), 1.0);
 }

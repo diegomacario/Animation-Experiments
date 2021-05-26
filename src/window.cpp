@@ -169,8 +169,6 @@ bool Window::initialize()
    ImGui_ImplOpenGL3_Init("#version 330 core");
 #endif
 
-   std::cout << glGetString(GL_VERSION) << '\n';
-
    return true;
 }
 
