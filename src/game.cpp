@@ -80,7 +80,7 @@ bool Game::initialize(const std::string& title)
                                                               mWindow);
 
    // Initialize the FSM
-   mFSM->initialize(std::move(mStates), "ik_movement");
+   mFSM->initialize(std::move(mStates), "viewer");
 
    return true;
 }
