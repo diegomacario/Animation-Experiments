@@ -148,8 +148,6 @@ void MovementState::initializeState()
 
    // Set the model transform
    mModelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
-
-   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 void MovementState::enter()

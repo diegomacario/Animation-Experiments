@@ -12,6 +12,7 @@
 #include "IKCrossFadeController.h"
 #include "Camera3.h"
 #include "Water.h"
+#include "Sky.h"
 
 class IKMovementState : public State
 {
@@ -132,6 +133,7 @@ private:
    glm::vec3                 mRightAnkleFinalTarget;
 
    Water                     mWater;
+   Sky                       mSky;
 
    // --- --- ---
 

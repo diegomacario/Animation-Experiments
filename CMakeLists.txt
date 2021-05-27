@@ -40,6 +40,7 @@ set(project_headers
     inc/Skeleton.h
     inc/SkeletonViewer.h
     inc/SkeletonViewerClipped.h
+    inc/Sky.h
     inc/state.h
     inc/texture.h
     inc/texture_loader.h
@@ -83,6 +84,7 @@ set(project_sources
     src/Skeleton.cpp
     src/SkeletonViewer.cpp
     src/SkeletonViewerClipped.cpp
+    src/Sky.cpp
     src/texture.cpp
     src/texture_loader.cpp
     src/Track.cpp

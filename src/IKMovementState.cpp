@@ -25,6 +25,7 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    , mWindow(window)
    , mCamera3(8.0f, 15.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 90.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 500.0f, 0.25f)
    , mWater(Transform(glm::vec3(0.0f, 10.0f, 0.0f), Q::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec3(205.0f)))
+   , mSky()
 {
    // Initialize the animated mesh shader
    mAnimatedCharacterMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices_clipped.vert",
@@ -749,15 +750,11 @@ void IKMovementState::render()
 
    mWater.BindReflectionFBO();
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glClearColor(0.036f, 0.627f, 1.0f, 1.0f);
-   glClear(GL_COLOR_BUFFER_BIT);
    renderScene(glm::vec2(1.0f, mWater.GetWaterHeight() + 1.0f), calculateReflectionViewMatrix(), mCamera3.getPerspectiveProjectionMatrix());
    mWater.UnbindCurrentFBO();
 
    mWater.BindRefractionFBO();
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glClearColor(0.036f, 0.627f, 1.0f, 1.0f);
-   glClear(GL_COLOR_BUFFER_BIT);
    renderScene(glm::vec2(-1.0f, mWater.GetWaterHeight() + 1.0f), mCamera3.getViewMatrix(), mCamera3.getPerspectiveProjectionMatrix());
    mWater.UnbindCurrentFBO();
 
@@ -766,15 +763,7 @@ void IKMovementState::render()
 #ifndef __EMSCRIPTEN__
    mWindow->bindMultisampleFramebuffer();
 #endif
-   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   // Dark blue for the sky
-   glClearColor(0.036f, 0.627f, 1.0f, 1.0f);
-   glEnable(GL_SCISSOR_TEST);
-   glClear(GL_COLOR_BUFFER_BIT);
-   glDisable(GL_SCISSOR_TEST);
-   // Black for the horizontal/vertical bars
-   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
    renderScene(glm::vec2(-1.0f, 1000.0f), mCamera3.getViewMatrix(), mCamera3.getPerspectiveProjectionMatrix()); // TODO: Replace hacky way of disabling clipping plane
    glm::vec3 lightPos = glm::vec3(0.0f, 100.0f, 100.0f);
    glm::vec3 lightColor = glm::vec3(0.75f, 0.75f, 0.75f);
@@ -782,6 +771,8 @@ void IKMovementState::render()
 
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+   // To visualize the reflection/refraction textures, uncomment the blocks of code below
 
    //glBindFramebuffer(GL_READ_FRAMEBUFFER, mWater.mReflectionFBO);
    //glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -1031,6 +1022,9 @@ void IKMovementState::renderScene(const glm::vec2& horizontalClippingPlaneYNorma
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 #endif
    glEnable(GL_DEPTH_TEST);
+
+   // Remove translation from the view matrix before rendering the skybox
+   mSky.Render(perspMat* glm::mat4(glm::mat3(viewMat)));
 }
 
 void IKMovementState::userInterface()
