@@ -750,12 +750,12 @@ void IKMovementState::render()
 
    mWater.BindReflectionFBO();
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   renderScene(glm::vec2(1.0f, mWater.GetWaterHeight() + 1.0f), calculateReflectionViewMatrix(), mCamera3.getPerspectiveProjectionMatrix());
+   renderScene(glm::vec2(1.0f, mWater.GetWaterHeight() + 1.0f), calculateReflectionViewMatrix(), mCamera3.getPerspectiveProjectionMatrix(), false);
    mWater.UnbindCurrentFBO();
 
    mWater.BindRefractionFBO();
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   renderScene(glm::vec2(-1.0f, mWater.GetWaterHeight() + 1.0f), mCamera3.getViewMatrix(), mCamera3.getPerspectiveProjectionMatrix());
+   renderScene(glm::vec2(-1.0f, mWater.GetWaterHeight() + 1.0f), mCamera3.getViewMatrix(), mCamera3.getPerspectiveProjectionMatrix(), false);
    mWater.UnbindCurrentFBO();
 
    mWindow->setViewport();
@@ -764,10 +764,7 @@ void IKMovementState::render()
    mWindow->bindMultisampleFramebuffer();
 #endif
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   renderScene(glm::vec2(-1.0f, 1000.0f), mCamera3.getViewMatrix(), mCamera3.getPerspectiveProjectionMatrix()); // TODO: Replace hacky way of disabling clipping plane
-   glm::vec3 lightPos = glm::vec3(0.0f, 100.0f, 100.0f);
-   glm::vec3 lightColor = glm::vec3(0.75f, 0.75f, 0.75f);
-   mWater.Render(mCamera3.getPerspectiveProjectionViewMatrix(), mCamera3.getPosition(), lightPos, lightColor);
+   renderScene(glm::vec2(-1.0f, 1000.0f), mCamera3.getViewMatrix(), mCamera3.getPerspectiveProjectionMatrix(), true); // TODO: Replace hacky way of disabling clipping plane
 
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -895,7 +892,7 @@ void IKMovementState::switchFromCPUToGPU()
    }
 }
 
-void IKMovementState::renderScene(const glm::vec2& horizontalClippingPlaneYNormalAndHeight, const glm::mat4& viewMat, const glm::mat4 perspMat)
+void IKMovementState::renderScene(const glm::vec2& horizontalClippingPlaneYNormalAndHeight, const glm::mat4& viewMat, const glm::mat4 perspMat, bool renderWater)
 {
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
@@ -984,11 +981,23 @@ void IKMovementState::renderScene(const glm::vec2& horizontalClippingPlaneYNorma
       mAnimatedCharacterMeshShader->use(false);
    }
 
+#ifndef __EMSCRIPTEN__
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
+
+   if (renderWater)
+   {
+      glm::vec3 lightPos = glm::vec3(0.0f, 100.0f, 100.0f);
+      glm::vec3 lightColor = glm::vec3(0.75f, 0.75f, 0.75f);
+      mWater.Render(mCamera3.getPerspectiveProjectionViewMatrix(), mCamera3.getPosition(), lightPos, lightColor);
+   }
+
+   // Remove translation from the view matrix before rendering the skybox
+   mSky.Render(perspMat* glm::mat4(glm::mat3(viewMat)));
+
 #ifdef __EMSCRIPTEN__
    glDisable(GL_DEPTH_TEST);
 #else
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
    if (!mPerformDepthTesting)
    {
       glDisable(GL_DEPTH_TEST);
@@ -1022,9 +1031,6 @@ void IKMovementState::renderScene(const glm::vec2& horizontalClippingPlaneYNorma
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 #endif
    glEnable(GL_DEPTH_TEST);
-
-   // Remove translation from the view matrix before rendering the skybox
-   mSky.Render(perspMat* glm::mat4(glm::mat3(viewMat)));
 }
 
 void IKMovementState::userInterface()

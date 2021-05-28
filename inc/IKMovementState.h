@@ -43,7 +43,7 @@ private:
    void switchFromGPUToCPU();
    void switchFromCPUToGPU();
 
-   void renderScene(const glm::vec2& horizontalClippingPlaneYNormalAndHeight, const glm::mat4& viewMat, const glm::mat4 perspMat);
+   void renderScene(const glm::vec2& horizontalClippingPlaneYNormalAndHeight, const glm::mat4& viewMat, const glm::mat4 perspMat, bool renderWater);
 
    void userInterface();
 
