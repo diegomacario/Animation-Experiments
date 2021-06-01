@@ -12,7 +12,6 @@
 #include "IKCrossFadeController.h"
 #include "Camera3.h"
 #include "Water.h"
-#include "Sky.h"
 
 class IKMovementState : public State
 {
@@ -43,7 +42,7 @@ private:
    void switchFromGPUToCPU();
    void switchFromCPUToGPU();
 
-   void renderScene(const glm::vec2& horizontalClippingPlaneYNormalAndHeight, const glm::mat4& viewMat, const glm::mat4 perspMat, bool renderWater);
+   void renderScene(const glm::vec2& horizontalClippingPlaneYNormalAndHeight, const glm::mat4& viewMat, const glm::mat4 perspMat);
 
    void userInterface();
 
@@ -133,7 +132,6 @@ private:
    glm::vec3                 mRightAnkleFinalTarget;
 
    Water                     mWater;
-   Sky                       mSky;
 
    // --- --- ---
 

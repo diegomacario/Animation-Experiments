@@ -69,6 +69,7 @@ void Water::UnbindCurrentFBO()
 
 void Water::Render(const glm::mat4& projectionView, const glm::vec3& cameraPosition, const glm::vec3& lightPosition, const glm::vec3& lightColor)
 {
+   glEnable(GL_DEPTH_TEST);
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -80,28 +81,25 @@ void Water::Render(const glm::mat4& projectionView, const glm::vec3& cameraPosit
    mWaterShader->setUniformVec3("lightPosition", lightPosition);
    mWaterShader->setUniformVec3("lightColor", lightColor);
 
-   // Bind textures
    glActiveTexture(GL_TEXTURE0);
    glBindTexture(GL_TEXTURE_2D, mReflectionColorTexture);
-   mWaterShader->setUniformInt("reflectionTexture", 0);
+   glUniform1i(mWaterShader->getUniformLocation("reflectionTexture"), 0);
 
    glActiveTexture(GL_TEXTURE1);
    glBindTexture(GL_TEXTURE_2D, mRefractionColorTexture);
-   mWaterShader->setUniformInt("refractionTexture", 1);
+   glUniform1i(mWaterShader->getUniformLocation("refractionTexture"), 1);
 
    mDuDvMap->bind(2, mWaterShader->getUniformLocation("dudvMap"));
    mNormalMap->bind(3, mWaterShader->getUniformLocation("normalMap"));
 
    glActiveTexture(GL_TEXTURE4);
    glBindTexture(GL_TEXTURE_2D, mRefractionDepthTexture);
-   mWaterShader->setUniformInt("depthMap", 4);
+   glUniform1i(mWaterShader->getUniformLocation("depthMap"), 4);
 
-   // Render
    glBindVertexArray(mWaterVAO);
    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
    glBindVertexArray(0);
 
-   // Unbind textures
    glActiveTexture(GL_TEXTURE0);
    glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -110,6 +108,8 @@ void Water::Render(const glm::mat4& projectionView, const glm::vec3& cameraPosit
 
    glActiveTexture(GL_TEXTURE4);
    glBindTexture(GL_TEXTURE_2D, 0);
+
+   glActiveTexture(GL_TEXTURE0);
 
    mDuDvMap->unbind(2);
    mNormalMap->unbind(3);

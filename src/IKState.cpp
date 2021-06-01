@@ -260,6 +260,8 @@ void IKState::initializeState()
          break;
       }
    }
+
+   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 void IKState::enter()

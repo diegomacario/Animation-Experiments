@@ -553,6 +553,7 @@ void Window::updateBufferAndViewportSizes(int widthOfFramebufferInPix, int heigh
       heightOfViewportInPix           = static_cast<int>(requiredHeight);
    }
 
+   glScissor(lowerLeftCornerOfViewportXInPix, lowerLeftCornerOfViewportYInPix, widthOfViewportInPix, heightOfViewportInPix);
    glViewport(lowerLeftCornerOfViewportXInPix, lowerLeftCornerOfViewportYInPix, widthOfViewportInPix, heightOfViewportInPix);
 
    mLowerLeftCornerOfViewportXInPix = lowerLeftCornerOfViewportXInPix;

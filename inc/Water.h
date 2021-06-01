@@ -1,6 +1,8 @@
 #ifndef WATER_H
 #define WATER_H
 
+#include <memory>
+
 #include "Transform.h"
 #include "shader.h"
 
@@ -22,7 +24,7 @@ public:
    float GetWaterHeight() { return mModelTransform.position.y; }
    void  UpdateMoveFactor(float deltaTime);
 
-private:
+public: // TODO: Make private
 
    void ConfigureVAO();
    void ConfigureReflectionFBO();
