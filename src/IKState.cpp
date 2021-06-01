@@ -801,10 +801,11 @@ void IKState::render()
 
    userInterface();
 
-#ifndef __EMSCRIPTEN__
-   mWindow->bindMultisampleFramebuffer();
-#endif
+#ifdef __EMSCRIPTEN__
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#else
+   mWindow->clearAndBindMultisampleFramebuffer();
+#endif
 
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);

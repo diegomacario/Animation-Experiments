@@ -1,7 +1,6 @@
-in vec3  fragPos;
-in float clipDistance;
-in vec3  norm;
-in vec2  uv;
+in vec3 fragPos;
+in vec3 norm;
+in vec2 uv;
 
 struct PointLight
 {
@@ -30,11 +29,6 @@ vec3 calculateContributionOfPointLight(PointLight light, vec3 viewDir);
 
 void main()
 {
-   if (clipDistance < 0.0)
-   {
-      discard;
-   }
-
    vec3 viewDir = normalize(cameraPos - fragPos);
 
    vec3 color = vec3(0.0);

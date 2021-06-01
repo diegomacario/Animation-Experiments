@@ -116,7 +116,7 @@ int Shader::getAttributeLocation(const std::string& attributeName) const
 
    if (it == mAttributes.end())
    {
-      std::cout << "Error - Shader::getAttributeLocation - The following attribute does not exist: " << attributeName << "\n";
+      std::cout << "Error - Shader::getAttributeLocation - The following uniform does not exist: " << attributeName << "\n";
       return -1;
    }
 

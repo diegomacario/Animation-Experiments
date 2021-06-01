@@ -6,12 +6,11 @@
 #include "window.h"
 #include "texture.h"
 #include "AnimatedMesh.h"
-#include "SkeletonViewerClipped.h"
+#include "SkeletonViewer.h"
 #include "Clip.h"
 #include "IKLeg.h"
 #include "IKCrossFadeController.h"
 #include "Camera3.h"
-#include "Water.h"
 
 class IKMovementState : public State
 {
@@ -42,8 +41,6 @@ private:
    void switchFromGPUToCPU();
    void switchFromCPUToGPU();
 
-   void renderScene(const glm::vec2& horizontalClippingPlaneYNormalAndHeight, const glm::mat4& viewMat, const glm::mat4 perspMat);
-
    void userInterface();
 
    void resetScene();
@@ -69,7 +66,7 @@ private:
 
    Skeleton                  mSkeleton;
    std::vector<AnimatedMesh> mAnimatedMeshes;
-   SkeletonViewerClipped     mSkeletonViewer;
+   SkeletonViewer            mSkeletonViewer;
    SkinningMode              mCurrentSkinningMode;
    int                       mSelectedState;
    int                       mSelectedSkinningMode;
@@ -131,15 +128,11 @@ private:
    glm::vec3                 mLeftAnkleFinalTarget;
    glm::vec3                 mRightAnkleFinalTarget;
 
-   Water                     mWater;
-
    // --- --- ---
 
    void configurePinTracks();
 
    void determineYPosition();
-
-   glm::mat4 calculateReflectionViewMatrix();
 };
 
 #endif

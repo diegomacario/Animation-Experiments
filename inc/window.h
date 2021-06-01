@@ -64,7 +64,7 @@ public:
 #ifndef __EMSCRIPTEN__
    bool         configureAntiAliasingSupport();
    bool         createMultisampleFramebuffer();
-   void         bindMultisampleFramebuffer();
+   void         clearAndBindMultisampleFramebuffer();
    void         generateAntiAliasedImage();
    void         resizeFramebuffers();
    void         setNumberOfSamples(unsigned int numOfSamples);
@@ -73,12 +73,6 @@ public:
 #ifdef __EMSCRIPTEN__
    void         updateWindowDimensions(int width, int height);
 #endif
-
-   int          getLowerLeftCornerOfViewportXInPix() { return mLowerLeftCornerOfViewportXInPix; };
-   int          getLowerLeftCornerOfViewportYInPix() { return mLowerLeftCornerOfViewportYInPix; };
-   int          getWidthOfViewportInPix() { return mWidthOfViewportInPix; };
-   int          getHeightOfViewportInPix() { return mHeightOfViewportInPix; };
-   void         setViewport();
 
 private:
 
@@ -127,11 +121,6 @@ private:
    unsigned int                   mMultisampleRBO;
    unsigned int                   mNumOfSamples;
 #endif
-
-   int                            mLowerLeftCornerOfViewportXInPix;
-   int                            mLowerLeftCornerOfViewportYInPix;
-   int                            mWidthOfViewportInPix;
-   int                            mHeightOfViewportInPix;
 };
 
 #endif

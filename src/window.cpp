@@ -317,11 +317,6 @@ float Window::getScrollYOffset() const
    return mScrollYOffset;
 }
 
-void Window::setViewport()
-{
-   glViewport(mLowerLeftCornerOfViewportXInPix, mLowerLeftCornerOfViewportYInPix, mWidthOfViewportInPix, mHeightOfViewportInPix);
-}
-
 void Window::setInputCallbacks()
 {
    glfwSetWindowUserPointer(mWindow, this);
@@ -455,9 +450,10 @@ bool Window::createMultisampleFramebuffer()
    return true;
 }
 
-void Window::bindMultisampleFramebuffer()
+void Window::clearAndBindMultisampleFramebuffer()
 {
    glBindFramebuffer(GL_FRAMEBUFFER, mMultisampleFBO);
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void Window::generateAntiAliasedImage()
@@ -555,9 +551,4 @@ void Window::updateBufferAndViewportSizes(int widthOfFramebufferInPix, int heigh
 
    glScissor(lowerLeftCornerOfViewportXInPix, lowerLeftCornerOfViewportYInPix, widthOfViewportInPix, heightOfViewportInPix);
    glViewport(lowerLeftCornerOfViewportXInPix, lowerLeftCornerOfViewportYInPix, widthOfViewportInPix, heightOfViewportInPix);
-
-   mLowerLeftCornerOfViewportXInPix = lowerLeftCornerOfViewportXInPix;
-   mLowerLeftCornerOfViewportYInPix = lowerLeftCornerOfViewportYInPix;
-   mWidthOfViewportInPix = widthOfViewportInPix;
-   mHeightOfViewportInPix = heightOfViewportInPix;
 }
