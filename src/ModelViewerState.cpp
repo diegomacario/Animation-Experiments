@@ -155,8 +155,6 @@ void ModelViewerState::initializeState()
 
    // Set the model transform
    mAnimationData.modelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
-
-   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 void ModelViewerState::enter()
@@ -399,11 +397,10 @@ void ModelViewerState::render()
 
    userInterface();
 
-#ifdef __EMSCRIPTEN__
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-#else
-   mWindow->clearAndBindMultisampleFramebuffer();
+#ifndef __EMSCRIPTEN__
+   mWindow->bindMultisampleFramebuffer();
 #endif
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);

@@ -24,21 +24,23 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    : mFSM(finiteStateMachine)
    , mWindow(window)
    , mCamera3(8.0f, 15.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 3.0f, 0.0f), 0.0f, 90.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 500.0f, 0.25f)
+   , mWater(Transform(glm::vec3(0.0f, 10.0f, 0.0f), Q::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec3(205.0f)))
+   , mSky()
 {
    // Initialize the animated mesh shader
-   mAnimatedCharacterMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
+   mAnimatedCharacterMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices_clipped.vert",
                                                                                                 "resources/shaders/diffuse_and_scaled_emissive_illumination_same_tex.frag");
    // Sunset color for the skin
    configureLights(mAnimatedCharacterMeshShader, glm::vec3(1.0f, 0.252f, 0.039f));
 
    // Initialize the animated mesh shader
-   mStaticCharacterMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh.vert",
+   mStaticCharacterMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh_clipped.vert",
                                                                                               "resources/shaders/diffuse_and_scaled_emissive_illumination_same_tex.frag");
    // Sunset color for the skin
    configureLights(mStaticCharacterMeshShader, glm::vec3(1.0f, 0.252f, 0.039f));
 
    // Initialize the static mesh shader
-   mStaticMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh.vert",
+   mStaticMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh_clipped.vert",
                                                                                      "resources/shaders/diffuse_and_scaled_emissive_illumination_with_scaled_uvs.frag");
    // Neutral color for the terrain
    configureLights(mStaticMeshShader, glm::vec3(0.5f, 0.5f, 0.5f));
@@ -101,7 +103,7 @@ IKMovementState::IKMovementState(const std::shared_ptr<FiniteStateMachine>& fini
    }
 
    // Load the ground
-   data = LoadGLTFFile("resources/models/ground/terrain.gltf");
+   data = LoadGLTFFile("resources/models/ground/water_terrain.gltf");
    mGroundMeshes = LoadStaticMeshes(data);
    FreeGLTFFile(data);
 
@@ -192,6 +194,9 @@ void IKMovementState::initializeState()
    // and sink it into the ground a little so that the IK solver has room to work
    determineYPosition();
    mPreviousYPositionOfCharacter = mModelTransform.position.y;
+
+   // The line below isn't supported in OpenGL ES 2.0
+   //glEnable(GL_CLIP_DISTANCE0);
 }
 
 void IKMovementState::enter()
@@ -731,6 +736,8 @@ void IKMovementState::update(float deltaTime)
 
    // Update the skeleton viewer
    mSkeletonViewer.UpdateBones(currPose, mPosePalette);
+
+   mWater.UpdateMoveFactor(deltaTime);
 }
 
 void IKMovementState::render()
@@ -741,146 +748,36 @@ void IKMovementState::render()
 
    userInterface();
 
-#ifdef __EMSCRIPTEN__
+   mWater.BindReflectionFBO();
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-#else
-   mWindow->clearAndBindMultisampleFramebuffer();
-#endif
+   renderScene(glm::vec2(1.0f, mWater.GetWaterHeight() + 1.0f), calculateReflectionViewMatrix(), mCamera3.getPerspectiveProjectionMatrix(), false);
+   mWater.UnbindCurrentFBO();
 
-   // Dark blue for the sky
-   glClearColor(0.036f, 0.627f, 1.0f, 1.0f);
-   glEnable(GL_SCISSOR_TEST);
-   glClear(GL_COLOR_BUFFER_BIT);
-   glDisable(GL_SCISSOR_TEST);
+   mWater.BindRefractionFBO();
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   renderScene(glm::vec2(-1.0f, mWater.GetWaterHeight() + 1.0f), mCamera3.getViewMatrix(), mCamera3.getPerspectiveProjectionMatrix(), false);
+   mWater.UnbindCurrentFBO();
 
-   // Black for the horizontal/vertical bars
-   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-   // Enable depth testing for 3D objects
-   glEnable(GL_DEPTH_TEST);
+   mWindow->setViewport();
 
 #ifndef __EMSCRIPTEN__
-   if (mWireframeModeForTerrain)
-   {
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-   }
+   mWindow->bindMultisampleFramebuffer();
 #endif
-
-   mStaticMeshShader->use(true);
-   mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
-   mStaticMeshShader->setUniformMat4("view", mCamera3.getViewMatrix());
-   mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
-   mStaticMeshShader->setUniformFloat("emissiveTextureBrightnessScaleFactor", mSelectedEmissiveTextureBrightnessScaleFactor);
-   mStaticMeshShader->setUniformFloat("emissiveTextureUVScaleFactor", mSelectedEmissiveTextureUVScaleFactor);
-   mGroundDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
-   mGroundEmissiveTexture->bind(1, mStaticMeshShader->getUniformLocation("emissiveTex"));
-
-   // Loop over the ground meshes and render each one
-   for (unsigned int i = 0,
-      size = static_cast<unsigned int>(mGroundMeshes.size());
-      i < size;
-      ++i)
-   {
-      mGroundMeshes[i].Render();
-   }
-
-   mGroundDiffuseTexture->unbind(0);
-   mGroundEmissiveTexture->unbind(1);
-   mStaticMeshShader->use(false);
-
-#ifndef __EMSCRIPTEN__
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-   if (mWireframeModeForCharacter)
-   {
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-   }
-#endif
-
-   // Render the animated meshes
-   if (mCurrentSkinningMode == SkinningMode::CPU && mDisplayMesh)
-   {
-      mStaticCharacterMeshShader->use(true);
-      mStaticCharacterMeshShader->setUniformMat4("model",      transformToMat4(mModelTransform));
-      mStaticCharacterMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
-      mStaticCharacterMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
-      mDiffuseTexture->bind(0, mStaticCharacterMeshShader->getUniformLocation("diffuseTex"));
-
-      // Loop over the meshes and render each one
-      for (unsigned int i = 0,
-           size = static_cast<unsigned int>(mAnimatedMeshes.size());
-           i < size;
-           ++i)
-      {
-         mAnimatedMeshes[i].Render();
-      }
-
-      mDiffuseTexture->unbind(0);
-      mStaticCharacterMeshShader->use(false);
-   }
-   else if (mCurrentSkinningMode == SkinningMode::GPU && mDisplayMesh)
-   {
-      mAnimatedCharacterMeshShader->use(true);
-      mAnimatedCharacterMeshShader->setUniformMat4("model",            transformToMat4(mModelTransform));
-      mAnimatedCharacterMeshShader->setUniformMat4("view",             mCamera3.getViewMatrix());
-      mAnimatedCharacterMeshShader->setUniformMat4("projection",       mCamera3.getPerspectiveProjectionMatrix());
-      mAnimatedCharacterMeshShader->setUniformMat4Array("animated[0]", mSkinMatrices);
-      mDiffuseTexture->bind(0, mAnimatedCharacterMeshShader->getUniformLocation("diffuseTex"));
-
-      // Loop over the meshes and render each one
-      for (unsigned int i = 0,
-           size = static_cast<unsigned int>(mAnimatedMeshes.size());
-           i < size;
-           ++i)
-      {
-         mAnimatedMeshes[i].Render();
-      }
-
-      mDiffuseTexture->unbind(0);
-      mAnimatedCharacterMeshShader->use(false);
-   }
-
-#ifdef __EMSCRIPTEN__
-   glDisable(GL_DEPTH_TEST);
-#else
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-   if (!mPerformDepthTesting)
-   {
-      glDisable(GL_DEPTH_TEST);
-   }
-#endif
-
-   glLineWidth(2.0f);
-
-   // Render the bones
-   if (mDisplayBones)
-   {
-      mSkeletonViewer.RenderBones(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix());
-   }
-
-   glLineWidth(1.0f);
-
-#ifndef __EMSCRIPTEN__
-   if (mWireframeModeForJoints)
-   {
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-   }
-#endif
-
-   // Render the joints
-   if (mDisplayJoints)
-   {
-      mSkeletonViewer.RenderJoints(mModelTransform, mCamera3.getPerspectiveProjectionViewMatrix(), mPosePalette);
-   }
-
-#ifndef __EMSCRIPTEN__
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-#endif
-   glEnable(GL_DEPTH_TEST);
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   renderScene(glm::vec2(-1.0f, 1000.0f), mCamera3.getViewMatrix(), mCamera3.getPerspectiveProjectionMatrix(), true); // TODO: Replace hacky way of disabling clipping plane
 
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+   // To visualize the reflection/refraction textures, uncomment the blocks of code below
+
+   //glBindFramebuffer(GL_READ_FRAMEBUFFER, mWater.mReflectionFBO);
+   //glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+   //glBlitFramebuffer(0, 0, 1280, 720, 0, 0, 1280, 720, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+   //glBindFramebuffer(GL_READ_FRAMEBUFFER, mWater.mRefractionFBO);
+   //glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+   //glBlitFramebuffer(0, 0, 1280, 720, 0, 0, 1280, 720, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 #ifndef __EMSCRIPTEN__
    mWindow->generateAntiAliasedImage();
@@ -993,6 +890,147 @@ void IKMovementState::switchFromCPUToGPU()
    {
       mAnimatedMeshes[i].LoadBuffers();
    }
+}
+
+void IKMovementState::renderScene(const glm::vec2& horizontalClippingPlaneYNormalAndHeight, const glm::mat4& viewMat, const glm::mat4 perspMat, bool renderWater)
+{
+   // Enable depth testing for 3D objects
+   glEnable(GL_DEPTH_TEST);
+
+#ifndef __EMSCRIPTEN__
+   if (mWireframeModeForTerrain)
+   {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   }
+#endif
+
+   mStaticMeshShader->use(true);
+   mStaticMeshShader->setUniformMat4("model", glm::mat4(1.0f));
+   mStaticMeshShader->setUniformMat4("view", viewMat);
+   mStaticMeshShader->setUniformMat4("projection", perspMat);
+   mStaticMeshShader->setUniformVec2("horizontalClippingPlaneYNormalAndHeight", horizontalClippingPlaneYNormalAndHeight);
+   mStaticMeshShader->setUniformFloat("emissiveTextureBrightnessScaleFactor", mSelectedEmissiveTextureBrightnessScaleFactor);
+   mStaticMeshShader->setUniformFloat("emissiveTextureUVScaleFactor", mSelectedEmissiveTextureUVScaleFactor);
+   mGroundDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
+   mGroundEmissiveTexture->bind(1, mStaticMeshShader->getUniformLocation("emissiveTex"));
+
+   // Loop over the ground meshes and render each one
+   for (unsigned int i = 0,
+      size = static_cast<unsigned int>(mGroundMeshes.size());
+      i < size;
+      ++i)
+   {
+      mGroundMeshes[i].Render();
+   }
+
+   mGroundDiffuseTexture->unbind(0);
+   mGroundEmissiveTexture->unbind(1);
+   mStaticMeshShader->use(false);
+
+#ifndef __EMSCRIPTEN__
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+   if (mWireframeModeForCharacter)
+   {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   }
+#endif
+
+   // Render the animated meshes
+   if (mCurrentSkinningMode == SkinningMode::CPU && mDisplayMesh)
+   {
+      mStaticCharacterMeshShader->use(true);
+      mStaticCharacterMeshShader->setUniformMat4("model",      transformToMat4(mModelTransform));
+      mStaticCharacterMeshShader->setUniformMat4("view",       viewMat);
+      mStaticCharacterMeshShader->setUniformMat4("projection", perspMat);
+      mStaticCharacterMeshShader->setUniformVec2("horizontalClippingPlaneYNormalAndHeight", horizontalClippingPlaneYNormalAndHeight);
+      mDiffuseTexture->bind(0, mStaticCharacterMeshShader->getUniformLocation("diffuseTex"));
+
+      // Loop over the meshes and render each one
+      for (unsigned int i = 0,
+           size = static_cast<unsigned int>(mAnimatedMeshes.size());
+           i < size;
+           ++i)
+      {
+         mAnimatedMeshes[i].Render();
+      }
+
+      mDiffuseTexture->unbind(0);
+      mStaticCharacterMeshShader->use(false);
+   }
+   else if (mCurrentSkinningMode == SkinningMode::GPU && mDisplayMesh)
+   {
+      mAnimatedCharacterMeshShader->use(true);
+      mAnimatedCharacterMeshShader->setUniformMat4("model",            transformToMat4(mModelTransform));
+      mAnimatedCharacterMeshShader->setUniformMat4("view",             viewMat);
+      mAnimatedCharacterMeshShader->setUniformMat4("projection",       perspMat);
+      mAnimatedCharacterMeshShader->setUniformVec2("horizontalClippingPlaneYNormalAndHeight", horizontalClippingPlaneYNormalAndHeight);
+      mAnimatedCharacterMeshShader->setUniformMat4Array("animated[0]", mSkinMatrices);
+      mDiffuseTexture->bind(0, mAnimatedCharacterMeshShader->getUniformLocation("diffuseTex"));
+
+      // Loop over the meshes and render each one
+      for (unsigned int i = 0,
+           size = static_cast<unsigned int>(mAnimatedMeshes.size());
+           i < size;
+           ++i)
+      {
+         mAnimatedMeshes[i].Render();
+      }
+
+      mDiffuseTexture->unbind(0);
+      mAnimatedCharacterMeshShader->use(false);
+   }
+
+#ifndef __EMSCRIPTEN__
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
+
+   if (renderWater)
+   {
+      glm::vec3 lightPos = glm::vec3(0.0f, 100.0f, 100.0f);
+      glm::vec3 lightColor = glm::vec3(0.75f, 0.75f, 0.75f);
+      mWater.Render(mCamera3.getPerspectiveProjectionViewMatrix(), mCamera3.getPosition(), lightPos, lightColor);
+   }
+
+   // Remove translation from the view matrix before rendering the skybox
+   mSky.Render(perspMat* glm::mat4(glm::mat3(viewMat)));
+
+#ifdef __EMSCRIPTEN__
+   glDisable(GL_DEPTH_TEST);
+#else
+   if (!mPerformDepthTesting)
+   {
+      glDisable(GL_DEPTH_TEST);
+   }
+#endif
+
+   glLineWidth(2.0f);
+
+   // Render the bones
+   if (mDisplayBones)
+   {
+      mSkeletonViewer.RenderBones(mModelTransform, perspMat * viewMat, horizontalClippingPlaneYNormalAndHeight);
+   }
+
+   glLineWidth(1.0f);
+
+#ifndef __EMSCRIPTEN__
+   if (mWireframeModeForJoints)
+   {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   }
+#endif
+
+   // Render the joints
+   if (mDisplayJoints)
+   {
+      mSkeletonViewer.RenderJoints(mModelTransform, perspMat * viewMat, mPosePalette, horizontalClippingPlaneYNormalAndHeight);
+   }
+
+#ifndef __EMSCRIPTEN__
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
+   glEnable(GL_DEPTH_TEST);
 }
 
 void IKMovementState::userInterface()
@@ -1299,4 +1337,28 @@ void IKMovementState::determineYPosition()
          break;
       }
    }
+}
+
+glm::mat4 IKMovementState::calculateReflectionViewMatrix()
+{
+   glm::vec3 cameraPos = mCamera3.getPosition();
+
+   // Put the camera below the water 
+   float reflectionHeightAdjustment = (cameraPos.y - mWater.GetWaterHeight()) * 2.0f;
+   cameraPos.y -= reflectionHeightAdjustment;
+
+   // Invert the pitch of the camera
+   Q::quat cameraOrientation = mCamera3.getOrientation();
+   Q::quat cameraOrientationWithInvertedPitch = Q::normalized(Q::angleAxis(glm::radians(mCamera3.getPitch() * 2.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * cameraOrientation);
+
+   // Calculate the view matrix
+   glm::mat4 viewMatrix = Q::quatToMat4(Q::conjugate(cameraOrientationWithInvertedPitch));
+   // Dot product of X axis with negated position
+   viewMatrix[3][0] = -(viewMatrix[0][0] * cameraPos.x + viewMatrix[1][0] * cameraPos.y + viewMatrix[2][0] * cameraPos.z);
+   // Dot product of Y axis with negated position
+   viewMatrix[3][1] = -(viewMatrix[0][1] * cameraPos.x + viewMatrix[1][1] * cameraPos.y + viewMatrix[2][1] * cameraPos.z);
+   // Dot product of Z axis with negated position
+   viewMatrix[3][2] = -(viewMatrix[0][2] * cameraPos.x + viewMatrix[1][2] * cameraPos.y + viewMatrix[2][2] * cameraPos.z);
+
+   return viewMatrix;
 }

@@ -2,6 +2,8 @@ var statusElement = document.getElementById("status"),
   progressElement = document.getElementById("progress"),
   spinnerElement = document.getElementById("spinner"),
   Module = {
+    noImageDecoding: true,
+    noAudioDecoding: true,
     preRun: [],
     postRun: [],
     print: (function () {

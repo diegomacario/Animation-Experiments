@@ -4,6 +4,7 @@
 #include <memory>
 #include <unordered_map>
 #include <iostream>
+#include <string>
 
 template<typename TResource>
 class ResourceManager

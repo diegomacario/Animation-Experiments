@@ -109,6 +109,18 @@ glm::vec3 Camera3::getPosition()
    return mCameraPosition;
 }
 
+Q::quat Camera3::getOrientation()
+{
+   updatePositionAndOrientationOfCamera();
+
+   return mCameraGlobalOrientation;
+}
+
+float Camera3::getPitch()
+{
+   return mCameraPitch;
+}
+
 glm::mat4 Camera3::getViewMatrix()
 {
    updatePositionAndOrientationOfCamera();
@@ -159,7 +171,7 @@ void Camera3::reposition(float            distanceBetweenPlayerAndCamera,
 
 void Camera3::processMouseMovement(float xOffset, float yOffset)
 {
-   // When the user holds the left mouse button down and...
+   // When the user holds the right mouse button down and...
    // drags the cursor right, we want the camera to move left  (to rotate CWISE around the Y axis of the world)
    // drags the cursor left,  we want the camera to move right (to rotate CCWISE around the Y axis of the world)
    // drags the cursor up,    we want the camera to move down  (to rotate CWISE around the X axis of the camera)

@@ -33,6 +33,8 @@ public:
    Camera3& operator=(Camera3&& rhs) noexcept;
 
    glm::vec3 getPosition();
+   Q::quat   getOrientation();
+   float     getPitch();
 
    glm::mat4 getViewMatrix();
    glm::mat4 getPerspectiveProjectionMatrix();
