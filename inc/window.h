@@ -114,7 +114,7 @@ private:
    float                          mCursorYOffset;
 
    // Scroll wheel
-   bool                           mScrollWheelMoved;
+   mutable bool                   mScrollWheelMoved;
    float                          mScrollYOffset;
 #ifdef __EMSCRIPTEN__
    float                          mScrollWheelSensitivity;

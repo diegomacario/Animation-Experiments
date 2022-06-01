@@ -261,7 +261,7 @@ void ModelViewerState::processInput(float deltaTime)
 #ifdef USE_THIRD_PERSON_CAMERA
    // Orient the camera
    if (mWindow->mouseMoved() &&
-       (mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT) || mWindow->keyIsPressed(GLFW_KEY_C)))
+       (mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT) || mWindow->keyIsPressed(GLFW_KEY_C)))
    {
       mCamera3.processMouseMovement(mWindow->getCursorXOffset(), mWindow->getCursorYOffset());
       mWindow->resetMouseMoved();
@@ -674,7 +674,7 @@ void ModelViewerState::userInterface()
 
    if (ImGui::CollapsingHeader("Controls", nullptr))
    {
-      ImGui::BulletText("Hold the right mouse button and move the mouse\n"
+      ImGui::BulletText("Hold the left mouse button and move the mouse\n"
                         "to rotate the camera around the character.\n"
                         "Alternatively, hold the C key and move \n"
                         "the mouse (this is easier on a touchpad).");

@@ -8,6 +8,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
 
 EM_JS(int, getCanvasWidth, (), {
    return window.innerWidth;
@@ -15,6 +16,10 @@ EM_JS(int, getCanvasWidth, (), {
 
 EM_JS(int, getCanvasHeight, (), {
    return window.innerHeight;
+});
+
+EM_JS(float, getDevicePixelRatio, (), {
+   return window.devicePixelRatio;
 });
 
 EM_JS(float, getBrowserScrollWheelSensitivity, (), {
@@ -102,8 +107,8 @@ bool Window::initialize()
 
    int width, height;
 #ifdef __EMSCRIPTEN__
-   width = getCanvasWidth();
-   height = getCanvasHeight();
+   width = getCanvasWidth() * getDevicePixelRatio();
+   height = getCanvasHeight() * getDevicePixelRatio();
    mScrollWheelSensitivity = getBrowserScrollWheelSensitivity();
 #else
    width = 1280;
@@ -157,9 +162,15 @@ bool Window::initialize()
    ImGui::CreateContext();
    ImGuiIO& io = ImGui::GetIO(); (void)io;
    io.IniFilename = nullptr;
+#ifdef __EMSCRIPTEN__
+   io.Fonts->AddFontFromFileTTF("resources/fonts/Cousine-Regular.ttf", 12 * getDevicePixelRatio());
+#endif
 
    // Setup Dear ImGui style
    ImGui::StyleColorsDark();
+#ifdef __EMSCRIPTEN__
+   ImGui::GetStyle().ScaleAllSizes(getDevicePixelRatio());
+#endif
 
    // Setup Platform/Renderer bindings
    ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
@@ -264,6 +275,13 @@ void Window::setKeyAsProcessed(int key)
 
 bool Window::mouseMoved() const
 {
+   ImGuiIO& io = ImGui::GetIO();
+   if (io.WantCaptureMouse)
+   {
+      // The cursor is hovering over an imgui window, so we tell the game that the mouse didn't move
+      return false;
+   }
+
    return mMouseMoved;
 }
 
@@ -294,16 +312,26 @@ void Window::enableCursor(bool enable)
 
 bool Window::isMouseButtonPressed(int button)
 {
-   if (glfwGetMouseButton(mWindow, button) == GLFW_PRESS)
+   ImGuiIO& io = ImGui::GetIO();
+   if (io.WantCaptureMouse)
    {
-      return true;
+      // The cursor is hovering over an imgui window, so we tell the game that no mouse buttons were pressed
+      return false;
    }
 
-   return false;
+   return (glfwGetMouseButton(mWindow, button) == GLFW_PRESS);
 }
 
 bool Window::scrollWheelMoved() const
 {
+   ImGuiIO& io = ImGui::GetIO();
+   if (io.WantCaptureMouse)
+   {
+      // The cursor is hovering over an imgui window, so we tell the game that the scroll wheel didn't move
+      mScrollWheelMoved = false;
+      return false;
+   }
+
    return mScrollWheelMoved;
 }
 
@@ -559,4 +587,8 @@ void Window::updateBufferAndViewportSizes(int widthOfFramebufferInPix, int heigh
    mLowerLeftCornerOfViewportYInPix = lowerLeftCornerOfViewportYInPix;
    mWidthOfViewportInPix = widthOfViewportInPix;
    mHeightOfViewportInPix = heightOfViewportInPix;
+
+#ifdef __EMSCRIPTEN__
+   emscripten_set_element_css_size("canvas", getCanvasWidth(), getCanvasHeight());
+#endif
 }
