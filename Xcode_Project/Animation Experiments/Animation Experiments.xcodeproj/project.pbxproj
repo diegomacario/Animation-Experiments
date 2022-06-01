@@ -53,6 +53,13 @@
 		04B904782847A63700FF56D3 /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
+				04B9047A2847DD3500FF56D3 /* Animation */,
+				04B9047B2847DD4300FF56D3 /* Base */,
+				04B9047C2847DD5100FF56D3 /* Environment */,
+				04B9047D2847DD5B00FF56D3 /* GLTF */,
+				04B9047E2847DD6300FF56D3 /* IK */,
+				04B9047F2847DD7000FF56D3 /* Intersection */,
+				04B904802847DD7A00FF56D3 /* Math */,
 			);
 			name = "Source Files";
 			sourceTree = "<group>";
@@ -60,8 +67,129 @@
 		04B904792847A64200FF56D3 /* Header Files */ = {
 			isa = PBXGroup;
 			children = (
+				04B904812847DF9900FF56D3 /* Animation */,
+				04B904822847DFA300FF56D3 /* Base */,
+				04B904832847DFD900FF56D3 /* Environment */,
+				04B904842847DFE700FF56D3 /* GLTF */,
+				04B904852847DFEE00FF56D3 /* IK */,
+				04B904862847DFF500FF56D3 /* Intersection */,
+				04B904872847DFFD00FF56D3 /* Math */,
 			);
 			name = "Header Files";
+			sourceTree = "<group>";
+		};
+		04B9047A2847DD3500FF56D3 /* Animation */ = {
+			isa = PBXGroup;
+			children = (
+				04B904882847E06900FF56D3 /* Blending */,
+			);
+			name = Animation;
+			sourceTree = "<group>";
+		};
+		04B9047B2847DD4300FF56D3 /* Base */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Base;
+			sourceTree = "<group>";
+		};
+		04B9047C2847DD5100FF56D3 /* Environment */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Environment;
+			sourceTree = "<group>";
+		};
+		04B9047D2847DD5B00FF56D3 /* GLTF */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = GLTF;
+			sourceTree = "<group>";
+		};
+		04B9047E2847DD6300FF56D3 /* IK */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = IK;
+			sourceTree = "<group>";
+		};
+		04B9047F2847DD7000FF56D3 /* Intersection */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Intersection;
+			sourceTree = "<group>";
+		};
+		04B904802847DD7A00FF56D3 /* Math */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Math;
+			sourceTree = "<group>";
+		};
+		04B904812847DF9900FF56D3 /* Animation */ = {
+			isa = PBXGroup;
+			children = (
+				04B904892847E0B700FF56D3 /* Blending */,
+			);
+			name = Animation;
+			sourceTree = "<group>";
+		};
+		04B904822847DFA300FF56D3 /* Base */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Base;
+			sourceTree = "<group>";
+		};
+		04B904832847DFD900FF56D3 /* Environment */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Environment;
+			sourceTree = "<group>";
+		};
+		04B904842847DFE700FF56D3 /* GLTF */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = GLTF;
+			sourceTree = "<group>";
+		};
+		04B904852847DFEE00FF56D3 /* IK */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = IK;
+			sourceTree = "<group>";
+		};
+		04B904862847DFF500FF56D3 /* Intersection */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Intersection;
+			sourceTree = "<group>";
+		};
+		04B904872847DFFD00FF56D3 /* Math */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Math;
+			sourceTree = "<group>";
+		};
+		04B904882847E06900FF56D3 /* Blending */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Blending;
+			sourceTree = "<group>";
+		};
+		04B904892847E0B700FF56D3 /* Blending */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Blending;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
