@@ -21,8 +21,6 @@ uniform sampler2D diffuseTex;
 
 out vec4 fragColor;
 
-vec3 calculateContributionOfPointLight(PointLight light, vec3 viewDir);
-
 void main()
 {
    vec3 viewDir = normalize(cameraPos - fragPos);
@@ -30,22 +28,17 @@ void main()
    vec3 color = vec3(0.0);
    for(int i = 0; i < numPointLightsInScene; i++)
    {
-      color += calculateContributionOfPointLight(pointLights[i], viewDir);
+      // Attenuation
+      float distance    = length(pointLights[i].worldPos - fragPos);
+      float attenuation = 1.0 / (pointLights[i].constantAtt + (pointLights[i].linearAtt * distance) + (pointLights[i].quadraticAtt * distance * distance));
+
+      // Diffuse
+      vec3  lightDir    = normalize(pointLights[i].worldPos - fragPos);
+      vec3  diff        = max(dot(lightDir, norm), 0.0) * pointLights[i].color * attenuation;
+      vec3  diffuse     = (diff * vec3(texture(diffuseTex, uv)));
+
+      color += diffuse;
    }
 
    fragColor = vec4(color, 1.0);
-}
-
-vec3 calculateContributionOfPointLight(PointLight light, vec3 viewDir)
-{
-   // Attenuation
-   float distance    = length(light.worldPos - fragPos);
-   float attenuation = 1.0 / (light.constantAtt + (light.linearAtt * distance) + (light.quadraticAtt * distance * distance));
-
-   // Diffuse
-   vec3  lightDir    = normalize(light.worldPos - fragPos);
-   vec3  diff        = max(dot(lightDir, norm), 0.0) * light.color * attenuation;
-   vec3  diffuse     = (diff * vec3(texture(diffuseTex, uv)));
-
-   return diffuse;
 }

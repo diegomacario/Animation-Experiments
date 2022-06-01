@@ -19,16 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\dependencies\win\inc\cgltf\cgltf.h" />
-    <ClInclude Include="..\dependencies\win\inc\imgui\imconfig.h" />
-    <ClInclude Include="..\dependencies\win\inc\imgui\imgui.h" />
-    <ClInclude Include="..\dependencies\win\inc\imgui\imgui_impl_glfw.h" />
-    <ClInclude Include="..\dependencies\win\inc\imgui\imgui_impl_opengl3.h" />
-    <ClInclude Include="..\dependencies\win\inc\imgui\imgui_internal.h" />
-    <ClInclude Include="..\dependencies\win\inc\imgui\imstb_rectpack.h" />
-    <ClInclude Include="..\dependencies\win\inc\imgui\imstb_textedit.h" />
-    <ClInclude Include="..\dependencies\win\inc\imgui\imstb_truetype.h" />
-    <ClInclude Include="..\dependencies\win\inc\stb_image\stb_image.h" />
+    <ClInclude Include="..\dependencies\cgltf\cgltf\cgltf.h" />
+    <ClInclude Include="..\dependencies\imgui\imgui\imconfig.h" />
+    <ClInclude Include="..\dependencies\imgui\imgui\imgui.h" />
+    <ClInclude Include="..\dependencies\imgui\imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="..\dependencies\imgui\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="..\dependencies\imgui\imgui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="..\dependencies\imgui\imgui\imgui_internal.h" />
+    <ClInclude Include="..\dependencies\imgui\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\dependencies\imgui\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\dependencies\imgui\imgui\imstb_truetype.h" />
+    <ClInclude Include="..\dependencies\stb_image\stb_image\stb_image.h" />
     <ClInclude Include="..\inc\AnimatedMesh.h" />
     <ClInclude Include="..\inc\Blending.h" />
     <ClInclude Include="..\inc\camera.h" />
@@ -75,15 +76,16 @@
     <ClInclude Include="..\inc\window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\dependencies\win\src\cgltf\cgltf.c" />
-    <ClCompile Include="..\dependencies\win\src\glad\glad.c" />
-    <ClCompile Include="..\dependencies\win\src\imgui\imgui.cpp" />
-    <ClCompile Include="..\dependencies\win\src\imgui\imgui_demo.cpp" />
-    <ClCompile Include="..\dependencies\win\src\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\dependencies\win\src\imgui\imgui_impl_glfw.cpp" />
-    <ClCompile Include="..\dependencies\win\src\imgui\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="..\dependencies\win\src\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="..\dependencies\win\src\stb_image\stb_image.cpp" />
+    <ClCompile Include="..\dependencies\cgltf\cgltf\cgltf.c" />
+    <ClCompile Include="..\dependencies\glad\glad\glad.c" />
+    <ClCompile Include="..\dependencies\imgui\imgui\imgui.cpp" />
+    <ClCompile Include="..\dependencies\imgui\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\dependencies\imgui\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\dependencies\imgui\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\dependencies\imgui\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\dependencies\imgui\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\dependencies\imgui\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\dependencies\stb_image\stb_image\stb_image.cpp" />
     <ClCompile Include="..\src\AnimatedMesh.cpp" />
     <ClCompile Include="..\src\Blending.cpp" />
     <ClCompile Include="..\src\camera.cpp" />
@@ -130,7 +132,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{35C217EB-B659-4C23-AF00-17883368029F}</ProjectGuid>
     <RootNamespace>Animation-Experiments</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -149,13 +151,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -182,9 +184,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)\..\inc;$(ProjectDir)\..\dependencies\win\inc\desktop;$(ProjectDir)\..\dependencies\win\inc\desktop_and_web;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)\..\dependencies\win\lib\debug;$(LibraryPath)</LibraryPath>
-    <SourcePath>$(ProjectDir)\..\src;$(ProjectDir)\..\dependencies\win\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(ProjectDir)\..\inc;$(ProjectDir)\..\dependencies\glad;$(ProjectDir)\..\dependencies\KHR;$(ProjectDir)\..\dependencies\glm;$(ProjectDir)\..\dependencies\cgltf;$(ProjectDir)\..\dependencies\imgui;$(ProjectDir)\..\dependencies\GLFW;$(ProjectDir)\..\dependencies\stb_image;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)\..\dependencies\GLFW\GLFW\lib\win\debug;$(LibraryPath)</LibraryPath>
+    <SourcePath>$(ProjectDir)\..\src;$(SourcePath)</SourcePath>
     <LocalDebuggerEnvironment>PATH=%PATH%;$(ProjectDir)..\dependencies\win\dll\debug$(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\</LocalDebuggerWorkingDirectory>
@@ -194,9 +196,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)\..\inc;$(ProjectDir)\..\dependencies\win\inc\desktop;$(ProjectDir)\..\dependencies\win\inc\desktop_and_web;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)\..\dependencies\win\lib\release;$(LibraryPath)</LibraryPath>
-    <SourcePath>$(ProjectDir)\..\src;$(ProjectDir)\..\dependencies\win\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(ProjectDir)\..\inc;$(ProjectDir)\..\dependencies\glad;$(ProjectDir)\..\dependencies\KHR;$(ProjectDir)\..\dependencies\glm;$(ProjectDir)\..\dependencies\cgltf;$(ProjectDir)\..\dependencies\imgui;$(ProjectDir)\..\dependencies\GLFW;$(ProjectDir)\..\dependencies\stb_image;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)\..\dependencies\GLFW\GLFW\lib\win\release;$(LibraryPath)</LibraryPath>
+    <SourcePath>$(ProjectDir)\..\src;$(SourcePath)</SourcePath>
     <LocalDebuggerEnvironment>PATH=%PATH%;$(ProjectDir)..\dependencies\win\dll\release$(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\</LocalDebuggerWorkingDirectory>
