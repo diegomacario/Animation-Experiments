@@ -6,6 +6,14 @@
 # ImGui-specific files
 imgui.ini
 
+# Apple-specific files
+*.DS_Store
+
+## Xcode-specific files
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
 # User-specific files
 *.rsuser
 *.suo
