@@ -11,10 +11,15 @@
 #include "TrackVisualizer.h"
 
 TrackVisualizer::TrackVisualizer()
-   : mXPosOfOriginOfGraph(0.1f)
-   , mYPosOfOriginOfGraph(0.1f)
-   , mWidthOfGraph(99.5f)
-   , mHeightOfGraph(99.5f)
+   : mWidthOfGraphSpace(100.0f)
+   , mHeightOfGraphSpace(100.0f)
+   , mNumGraphs(0)
+   , mNumTiles(0)
+   , mTileWidth(0.0f)
+   , mTileHeight(0.0f)
+   , mTileHorizontalOffset(0.0f)
+   , mTileVerticalOffset(0.0f)
+   , mSlopeLineScalingFactor(1.0f)
    , mReferenceLinesVAO(0)
    , mReferenceLinesVBO(0)
    , mTrackLinesVAO(0)
@@ -23,7 +28,7 @@ TrackVisualizer::TrackVisualizer()
    , mKeyframePointsVBO(0)
    , mSlopeLinesVAO(0)
    , mSlopeLinesVBO(0)
-   , mTrack()
+   , mTracks()
    , mReferenceLines()
    , mTrackLines()
    , mKeyframePoints()
@@ -62,7 +67,28 @@ TrackVisualizer::~TrackVisualizer()
 
 void TrackVisualizer::setTrack(const ScalarTrack& track)
 {
-   mTrack = track;
+   mTracks.push_back(track);
+   mTracks.push_back(track);
+   mTracks.push_back(track);
+   mTracks.push_back(track);
+   mTracks.push_back(track);
+   mTracks.push_back(track);
+   mTracks.push_back(track);
+   mTracks.push_back(track);
+   mTracks.push_back(track);
+
+   mNumGraphs = static_cast<unsigned int>(mTracks.size());
+   mNumTiles = static_cast<unsigned int>(glm::sqrt(mNumGraphs));
+   while (mNumGraphs > (mNumTiles * mNumTiles))
+   {
+      ++mNumTiles;
+   }
+
+   mTileWidth = (mWidthOfGraphSpace * (1280.0f / 720.0f)) / mNumTiles;
+   mTileHeight = mHeightOfGraphSpace / mNumTiles;
+   mTileHorizontalOffset = mTileWidth * 0.1f * (720.0f / 1280.0f);
+   mTileVerticalOffset = mTileHeight * 0.1f;
+   mSlopeLineScalingFactor = mTileWidth * 0.05f;
 
    initializeReferenceLines();
    initializeTrackLines();
@@ -137,9 +163,9 @@ void TrackVisualizer::render()
    glm::mat4 view   = glm::lookAt(eye, center, up);
 
    float left   = 0.0f;
-   float right  = 100.0f * (1280.0f / 720.0f);
+   float right  = mWidthOfGraphSpace * (1280.0f / 720.0f);
    float bottom = 0.0f;
-   float top    = 100.0f;
+   float top    = mWidthOfGraphSpace;
    float near   = 0.001f;
    float far    = 10.0f;
    glm::mat4 projection = glm::ortho(left, right, bottom, top, near, far);
@@ -176,71 +202,117 @@ void TrackVisualizer::render()
 
 void TrackVisualizer::initializeReferenceLines()
 {
-   // Y axis
-   mReferenceLines.push_back(glm::vec3(mXPosOfOriginOfGraph, mYPosOfOriginOfGraph, 0.0f));
-   mReferenceLines.push_back(glm::vec3(mXPosOfOriginOfGraph, mYPosOfOriginOfGraph + mHeightOfGraph, 0.0f));
+   for (int j = 0; j < mNumTiles; ++j)
+   {
+      float yPosOfOriginOfGraph = (mTileHeight * j) + (mTileVerticalOffset / 2.0f);
 
-   // X axis
-   mReferenceLines.push_back(glm::vec3(mXPosOfOriginOfGraph, mYPosOfOriginOfGraph, 0.0f));
-   mReferenceLines.push_back(glm::vec3(mXPosOfOriginOfGraph + mWidthOfGraph, mYPosOfOriginOfGraph, 0.0f));
+      for (int i = 0; i < mNumTiles; ++i)
+      {
+         float xPosOfOriginOfGraph = (mTileWidth * i) + (mTileHorizontalOffset / 2.0f);
+
+         // Y axis
+         mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph, 0.0f));
+         mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph + mTileHeight - mTileVerticalOffset, 0.0f));
+
+         // X axis
+         mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph, 0.0f));
+         mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph + mTileWidth - mTileHorizontalOffset, yPosOfOriginOfGraph, 0.0f));
+      }
+   }
 }
 
 void TrackVisualizer::initializeTrackLines()
 {
-   // sampleIndex goes from 0 to 149
-   for (unsigned int sampleIndex = 1; sampleIndex < 150; ++sampleIndex)
+   int trackIndex = 0;
+   for (int j = 0; j < mNumTiles; ++j)
    {
-      float currSampleIndexNormalized = static_cast<float>(sampleIndex - 1) / 149.0f;
-      float nextSampleIndexNormalized = static_cast<float>(sampleIndex) / 149.0f;
+      float yPosOfOriginOfGraph = (mTileHeight * j) + (mTileVerticalOffset / 2.0f);
 
-      float currX = mXPosOfOriginOfGraph + (currSampleIndexNormalized * mWidthOfGraph);
-      float nextX = mXPosOfOriginOfGraph + (nextSampleIndexNormalized * mWidthOfGraph);
+      for (int i = 0; i < mNumTiles; ++i)
+      {
+         if (trackIndex >= mNumGraphs)
+         {
+            break;
+         }
 
-      float currY = mTrack.Sample(currSampleIndexNormalized, false);
-      float nextY = mTrack.Sample(nextSampleIndexNormalized, false);
+         float xPosOfOriginOfGraph = (mTileWidth * i) + (mTileHorizontalOffset / 2.0f);
 
-      currY = mYPosOfOriginOfGraph + (currY * mHeightOfGraph);
-      nextY = mYPosOfOriginOfGraph + (nextY * mHeightOfGraph);
+         // sampleIndex goes from 0 to 149
+         for (unsigned int sampleIndex = 1; sampleIndex < 150; ++sampleIndex)
+         {
+            float currSampleIndexNormalized = static_cast<float>(sampleIndex - 1) / 149.0f;
+            float nextSampleIndexNormalized = static_cast<float>(sampleIndex) / 149.0f;
 
-      mTrackLines.push_back(glm::vec3(currX, currY, 0.1f));
-      mTrackLines.push_back(glm::vec3(nextX, nextY, 0.1f));
+            float currX = xPosOfOriginOfGraph + (currSampleIndexNormalized * (mTileWidth - mTileHorizontalOffset));
+            float nextX = xPosOfOriginOfGraph + (nextSampleIndexNormalized * (mTileWidth - mTileHorizontalOffset));
+
+            float currY = mTracks[trackIndex].Sample(currSampleIndexNormalized, false);
+            float nextY = mTracks[trackIndex].Sample(nextSampleIndexNormalized, false);
+
+            currY = yPosOfOriginOfGraph + (currY * (mTileHeight - mTileVerticalOffset));
+            nextY = yPosOfOriginOfGraph + (nextY * (mTileHeight - mTileVerticalOffset));
+
+            mTrackLines.push_back(glm::vec3(currX, currY, 0.1f));
+            mTrackLines.push_back(glm::vec3(nextX, nextY, 0.1f));
+         }
+
+         ++trackIndex;
+      }
    }
 }
 
 void TrackVisualizer::initializeKeyframePointsAndSlopeLines()
 {
-   unsigned int numFrames = mTrack.GetNumberOfFrames();
-   for (unsigned int frameIndex = 0; frameIndex < numFrames; ++frameIndex)
+   int trackIndex = 0;
+   for (int j = 0; j < mNumTiles; ++j)
    {
-      float currTime = mTrack.GetFrame(frameIndex).mTime;
-      float currY = mYPosOfOriginOfGraph + (mTrack.Sample(currTime, false) * mHeightOfGraph);
-      float currX = mXPosOfOriginOfGraph + (currTime * mWidthOfGraph);
-      mKeyframePoints.push_back(glm::vec3(currX, currY, 0.9f));
+      float yPosOfOriginOfGraph = (mTileHeight * j) + (mTileVerticalOffset / 2.0f);
 
-      if (frameIndex > 0)
+      for (int i = 0; i < mNumTiles; ++i)
       {
-         float prevY = mYPosOfOriginOfGraph + (mTrack.Sample(currTime - 0.0005f, false) * mHeightOfGraph);
-         float prevX = mXPosOfOriginOfGraph + ((currTime - 0.0005f) * mWidthOfGraph);
+         if (trackIndex >= mNumGraphs)
+         {
+            break;
+         }
 
-         glm::vec3 thisVec = glm::vec3(currX, currY, 0.6f);
-         glm::vec3 prevVec = glm::vec3(prevX, prevY, 0.6f);
-         glm::vec3 handleVec = thisVec + normalizeWithZeroLengthCheck(prevVec - thisVec) * 0.75f;
+         float xPosOfOriginOfGraph = (mTileWidth * i) + (mTileHorizontalOffset / 2.0f);
 
-         mSlopeLines.push_back(thisVec);
-         mSlopeLines.push_back(handleVec);
-      }
+         unsigned int numFrames = mTracks[trackIndex].GetNumberOfFrames();
+         for (unsigned int frameIndex = 0; frameIndex < numFrames; ++frameIndex)
+         {
+            float currTime = mTracks[trackIndex].GetFrame(frameIndex).mTime;
+            float currY = yPosOfOriginOfGraph + (mTracks[trackIndex].Sample(currTime, false) * (mTileHeight - mTileVerticalOffset));
+            float currX = xPosOfOriginOfGraph + (currTime * ((mTileWidth - mTileHorizontalOffset)));
+            mKeyframePoints.push_back(glm::vec3(currX, currY, 0.9f));
 
-      if ((frameIndex < (numFrames - 1)) && (mTrack.GetInterpolation() != Interpolation::Constant))
-      {
-         float nextY = mYPosOfOriginOfGraph + mTrack.Sample(currTime + 0.0005f, false) * mHeightOfGraph;
-         float nextX = mXPosOfOriginOfGraph + (currTime + 0.0005f) * mWidthOfGraph;
+            if (frameIndex > 0)
+            {
+               float prevY = yPosOfOriginOfGraph + (mTracks[trackIndex].Sample(currTime - 0.0005f, false) * (mTileHeight - mTileVerticalOffset));
+               float prevX = xPosOfOriginOfGraph + ((currTime - 0.0005f) * ((mTileWidth - mTileHorizontalOffset)));
 
-         glm::vec3 thisVec = glm::vec3(currX, currY, 0.6f);
-         glm::vec3 nextVec = glm::vec3(nextX, nextY, 0.6f);
-         glm::vec3 handleVec = thisVec + normalizeWithZeroLengthCheck(nextVec - thisVec) * 0.75f;
+               glm::vec3 thisVec = glm::vec3(currX, currY, 0.6f);
+               glm::vec3 prevVec = glm::vec3(prevX, prevY, 0.6f);
+               glm::vec3 handleVec = thisVec + normalizeWithZeroLengthCheck(prevVec - thisVec) * mSlopeLineScalingFactor;
 
-         mSlopeLines.push_back(thisVec);
-         mSlopeLines.push_back(handleVec);
+               mSlopeLines.push_back(thisVec);
+               mSlopeLines.push_back(handleVec);
+            }
+
+            if ((frameIndex < (numFrames - 1)) && (mTracks[trackIndex].GetInterpolation() != Interpolation::Constant))
+            {
+               float nextY = yPosOfOriginOfGraph + mTracks[trackIndex].Sample(currTime + 0.0005f, false) * (mTileHeight - mTileVerticalOffset);
+               float nextX = xPosOfOriginOfGraph + (currTime + 0.0005f) * ((mTileWidth - mTileHorizontalOffset));
+
+               glm::vec3 thisVec = glm::vec3(currX, currY, 0.6f);
+               glm::vec3 nextVec = glm::vec3(nextX, nextY, 0.6f);
+               glm::vec3 handleVec = thisVec + normalizeWithZeroLengthCheck(nextVec - thisVec) * mSlopeLineScalingFactor;
+
+               mSlopeLines.push_back(thisVec);
+               mSlopeLines.push_back(handleVec);
+            }
+         }
+
+         ++trackIndex;
       }
    }
 }
