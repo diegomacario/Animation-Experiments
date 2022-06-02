@@ -3,7 +3,13 @@ cmake_minimum_required(VERSION 3.11.1 FATAL_ERROR)
 project(Animation-Experiments)
 
 include_directories("${CMAKE_SOURCE_DIR}/inc"
-                    "${CMAKE_SOURCE_DIR}/dependencies/win/inc/desktop_and_web")
+                    "${CMAKE_SOURCE_DIR}/dependencies/cgltf"
+                    "${CMAKE_SOURCE_DIR}/dependencies/glad"
+                    "${CMAKE_SOURCE_DIR}/dependencies/GLFW"
+                    "${CMAKE_SOURCE_DIR}/dependencies/glm"
+                    "${CMAKE_SOURCE_DIR}/dependencies/imgui"
+                    "${CMAKE_SOURCE_DIR}/dependencies/KHR"
+                    "${CMAKE_SOURCE_DIR}/dependencies/stb_image")
 
 set(project_headers
     inc/AnimatedMesh.h
@@ -93,14 +99,15 @@ set(project_sources
     src/Triangle.cpp
     src/Water.cpp
     src/window.cpp
-    dependencies/win/src/cgltf/cgltf.c
-    dependencies/win/src/imgui/imgui.cpp
-    dependencies/win/src/imgui/imgui_demo.cpp
-    dependencies/win/src/imgui/imgui_draw.cpp
-    dependencies/win/src/imgui/imgui_impl_glfw.cpp
-    dependencies/win/src/imgui/imgui_impl_opengl3.cpp
-    dependencies/win/src/imgui/imgui_widgets.cpp
-    dependencies/win/src/stb_image/stb_image.cpp)
+    dependencies/cgltf/cgltf/cgltf.c
+    dependencies/imgui/imgui/imgui.cpp
+    dependencies/imgui/imgui/imgui_demo.cpp
+    dependencies/imgui/imgui/imgui_draw.cpp
+    dependencies/imgui/imgui/imgui_impl_glfw.cpp
+    dependencies/imgui/imgui/imgui_impl_opengl3.cpp
+    dependencies/imgui/imgui/imgui_tables.cpp
+    dependencies/imgui/imgui/imgui_widgets.cpp
+    dependencies/stb_image/stb_image/stb_image.cpp)
 
 # This path must be relative to the location of the build folder
 set(project_resources "../resources@resources")

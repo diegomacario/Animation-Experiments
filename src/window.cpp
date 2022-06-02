@@ -105,14 +105,15 @@ bool Window::initialize()
    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-   int width, height;
+   float devicePixelRatio = 1.0f;
+   int width = 1280;
+   int height = 720;
+
 #ifdef __EMSCRIPTEN__
-   width = getCanvasWidth() * getDevicePixelRatio();
-   height = getCanvasHeight() * getDevicePixelRatio();
+   devicePixelRatio = getDevicePixelRatio();
+   width = getCanvasWidth() * devicePixelRatio;
+   height = getCanvasHeight() * devicePixelRatio;
    mScrollWheelSensitivity = getBrowserScrollWheelSensitivity();
-#else
-   width = 1280;
-   height = 720;
 #endif
 
    mWindow = glfwCreateWindow(width, height, mTitle.c_str(), nullptr, nullptr);
@@ -156,6 +157,13 @@ bool Window::initialize()
 
    updateBufferAndViewportSizes(mWidthOfFramebufferInPix, mHeightOfFramebufferInPix);
 
+#ifndef __EMSCRIPTEN__
+   // TODO: The ImGui window is properly scaled in the browser, but in the desktop it looks huge
+   //       We need to figure out how to scale things properly in the desktop
+   //       Once that's done, the calls to AddFontFromFileTTF and ScaleAllSizes should be done in the desktop too
+   //devicePixelRatio = static_cast<float>(mWidthOfFramebufferInPix) / static_cast<float>(mWidthOfWindowInPix);
+#endif
+
    // Initialize ImGui
    // Setup Dear ImGui context
    IMGUI_CHECKVERSION();
@@ -163,13 +171,13 @@ bool Window::initialize()
    ImGuiIO& io = ImGui::GetIO(); (void)io;
    io.IniFilename = nullptr;
 #ifdef __EMSCRIPTEN__
-   io.Fonts->AddFontFromFileTTF("resources/fonts/Cousine-Regular.ttf", 12 * getDevicePixelRatio());
+   io.Fonts->AddFontFromFileTTF("resources/fonts/Cousine-Regular.ttf", 12 * devicePixelRatio);
 #endif
 
    // Setup Dear ImGui style
    ImGui::StyleColorsDark();
 #ifdef __EMSCRIPTEN__
-   ImGui::GetStyle().ScaleAllSizes(getDevicePixelRatio());
+   ImGui::GetStyle().ScaleAllSizes(devicePixelRatio);
 #endif
 
    // Setup Platform/Renderer bindings

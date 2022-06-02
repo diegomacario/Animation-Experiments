@@ -10,6 +10,7 @@
 		043A2D7B2847F178001E6F77 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 043A2D7A2847F178001E6F77 /* IOKit.framework */; };
 		043A2D7D2847F182001E6F77 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 043A2D7C2847F182001E6F77 /* Cocoa.framework */; };
 		043A2D7F2847F1B0001E6F77 /* imgui_tables.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 043A2D7E2847F1B0001E6F77 /* imgui_tables.cpp */; };
+		043A2D812848E0C7001E6F77 /* lglfw3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 043A2D802848E0C7001E6F77 /* lglfw3.a */; };
 		04B9048F2847E16D00FF56D3 /* CrossFadeControllerSingle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B9048A2847E16D00FF56D3 /* CrossFadeControllerSingle.cpp */; };
 		04B904902847E16D00FF56D3 /* CrossFadeControllerMultiple.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B9048B2847E16D00FF56D3 /* CrossFadeControllerMultiple.cpp */; };
 		04B904912847E16D00FF56D3 /* CrossFadeTarget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B9048C2847E16D00FF56D3 /* CrossFadeTarget.cpp */; };
@@ -55,7 +56,6 @@
 		04B9050F2847EC1C00FF56D3 /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = 04B9050E2847EC1C00FF56D3 /* glad.c */; };
 		04B905112847EC3100FF56D3 /* cgltf.c in Sources */ = {isa = PBXBuildFile; fileRef = 04B905102847EC3100FF56D3 /* cgltf.c */; };
 		04B905232847ED1500FF56D3 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04B9051F2847ECEC00FF56D3 /* OpenGL.framework */; };
-		04B905252847ED3D00FF56D3 /* lglfw3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 04B905242847ED3C00FF56D3 /* lglfw3.a */; };
 		04B9052C2847F04E00FF56D3 /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B905262847F04E00FF56D3 /* imgui_demo.cpp */; };
 		04B9052D2847F04E00FF56D3 /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B905272847F04E00FF56D3 /* imgui.cpp */; };
 		04B9052E2847F04E00FF56D3 /* imgui_impl_glfw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B905282847F04E00FF56D3 /* imgui_impl_glfw.cpp */; };
@@ -80,6 +80,7 @@
 		043A2D7A2847F178001E6F77 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		043A2D7C2847F182001E6F77 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		043A2D7E2847F1B0001E6F77 /* imgui_tables.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imgui_tables.cpp; path = ../../dependencies/imgui/imgui/imgui_tables.cpp; sourceTree = "<group>"; };
+		043A2D802848E0C7001E6F77 /* lglfw3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = lglfw3.a; path = ../../dependencies/GLFW/GLFW/lib/mac/lglfw3.a; sourceTree = "<group>"; };
 		04B9046E2847A50E00FF56D3 /* Animation Experiments */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Animation Experiments"; sourceTree = BUILT_PRODUCTS_DIR; };
 		04B9048A2847E16D00FF56D3 /* CrossFadeControllerSingle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CrossFadeControllerSingle.cpp; path = ../../src/CrossFadeControllerSingle.cpp; sourceTree = "<group>"; };
 		04B9048B2847E16D00FF56D3 /* CrossFadeControllerMultiple.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CrossFadeControllerMultiple.cpp; path = ../../src/CrossFadeControllerMultiple.cpp; sourceTree = "<group>"; };
@@ -185,9 +186,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				043A2D812848E0C7001E6F77 /* lglfw3.a in Frameworks */,
 				043A2D7D2847F182001E6F77 /* Cocoa.framework in Frameworks */,
 				043A2D7B2847F178001E6F77 /* IOKit.framework in Frameworks */,
-				04B905252847ED3D00FF56D3 /* lglfw3.a in Frameworks */,
 				04B905232847ED1500FF56D3 /* OpenGL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -485,6 +486,7 @@
 		04B9051E2847ECEC00FF56D3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				043A2D802848E0C7001E6F77 /* lglfw3.a */,
 				043A2D7C2847F182001E6F77 /* Cocoa.framework */,
 				043A2D7A2847F178001E6F77 /* IOKit.framework */,
 				04B905242847ED3C00FF56D3 /* lglfw3.a */,
@@ -727,13 +729,13 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"/Users/maca/Personal/Repos/Animation-Experiments/dependencies/cgltf",
-					"/Users/maca/Personal/Repos/Animation-Experiments/dependencies/glad",
-					"/Users/maca/Personal/Repos/Animation-Experiments/dependencies/GLFW",
-					"/Users/maca/Personal/Repos/Animation-Experiments/dependencies/glm",
-					"/Users/maca/Personal/Repos/Animation-Experiments/dependencies/imgui",
-					"/Users/maca/Personal/Repos/Animation-Experiments/dependencies/stb_image",
-					"/Users/maca/Personal/Repos/Animation-Experiments/dependencies/KHR",
+					../../dependencies/cgltf,
+					../../dependencies/glad,
+					../../dependencies/GLFW,
+					../../dependencies/glm,
+					../../dependencies/imgui,
+					../../dependencies/stb_image,
+					../../dependencies/KHR,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -745,13 +747,13 @@
 				CODE_SIGN_STYLE = Automatic;
 				GCC_PREPROCESSOR_DEFINITIONS = USE_THIRD_PERSON_CAMERA;
 				HEADER_SEARCH_PATHS = (
-					"/Users/maca/Personal/Repos/Animation-Experiments/dependencies/cgltf",
-					"/Users/maca/Personal/Repos/Animation-Experiments/dependencies/glad",
-					"/Users/maca/Personal/Repos/Animation-Experiments/dependencies/GLFW",
-					"/Users/maca/Personal/Repos/Animation-Experiments/dependencies/glm",
-					"/Users/maca/Personal/Repos/Animation-Experiments/dependencies/imgui",
-					"/Users/maca/Personal/Repos/Animation-Experiments/dependencies/stb_image",
-					"/Users/maca/Personal/Repos/Animation-Experiments/dependencies/KHR",
+					../../dependencies/cgltf,
+					../../dependencies/glad,
+					../../dependencies/GLFW,
+					../../dependencies/glm,
+					../../dependencies/imgui,
+					../../dependencies/stb_image,
+					../../dependencies/KHR,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
