@@ -367,6 +367,11 @@ void Window::setInputCallbacks()
       static_cast<Window*>(glfwGetWindowUserPointer(window))->framebufferSizeCallback(window, width, height);
    };
 
+   auto windowPosCallback = [](GLFWwindow* window, int xPos, int yPos)
+   {
+      static_cast<Window*>(glfwGetWindowUserPointer(window))->windowPosCallback(window, xPos, yPos);
+   };
+
    auto keyCallback = [](GLFWwindow* window, int key, int scancode, int action, int mods)
    {
       static_cast<Window*>(glfwGetWindowUserPointer(window))->keyCallback(window, key, scancode, action, mods);
@@ -383,6 +388,7 @@ void Window::setInputCallbacks()
    };
 
    glfwSetFramebufferSizeCallback(mWindow, framebufferSizeCallback);
+   glfwSetWindowPosCallback(mWindow, windowPosCallback);
    glfwSetKeyCallback(mWindow, keyCallback);
    glfwSetCursorPosCallback(mWindow, cursorPosCallback);
    glfwSetScrollCallback(mWindow, scrollCallback);
@@ -391,6 +397,11 @@ void Window::setInputCallbacks()
 void Window::framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
    updateBufferAndViewportSizes(width, height);
+}
+
+void Window::windowPosCallback(GLFWwindow* window, int xPos, int yPos)
+{
+   updateBufferAndViewportSizes(mWidthOfFramebufferInPix, mHeightOfFramebufferInPix);
 }
 
 void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -554,7 +565,7 @@ void Window::updateBufferAndViewportSizes(int widthOfFramebufferInPix, int heigh
 
    float aspectRatioOfScene  = 1280.0f / 720.0f;
 
-   int lowerLeftCornerOfViewportXInPix, lowerLeftCornerOfViewportYInPix, widthOfViewportInPix, heightOfViewportInPix;
+   int lowerLeftCornerOfViewportXInPix = 0, lowerLeftCornerOfViewportYInPix = 0, widthOfViewportInPix = 0, heightOfViewportInPix = 0;
 
    // Let's say we want to use the width of the window for the viewport
    // What height would we need to keep the aspect ratio of the scene?

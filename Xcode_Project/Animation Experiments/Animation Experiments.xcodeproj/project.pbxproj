@@ -11,6 +11,7 @@
 		043A2D7D2847F182001E6F77 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 043A2D7C2847F182001E6F77 /* Cocoa.framework */; };
 		043A2D7F2847F1B0001E6F77 /* imgui_tables.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 043A2D7E2847F1B0001E6F77 /* imgui_tables.cpp */; };
 		043A2D812848E0C7001E6F77 /* lglfw3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 043A2D802848E0C7001E6F77 /* lglfw3.a */; };
+		043A2D832849040C001E6F77 /* TrackVisualizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 043A2D822849040C001E6F77 /* TrackVisualizer.cpp */; };
 		04B9048F2847E16D00FF56D3 /* CrossFadeControllerSingle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B9048A2847E16D00FF56D3 /* CrossFadeControllerSingle.cpp */; };
 		04B904902847E16D00FF56D3 /* CrossFadeControllerMultiple.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B9048B2847E16D00FF56D3 /* CrossFadeControllerMultiple.cpp */; };
 		04B904912847E16D00FF56D3 /* CrossFadeTarget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B9048C2847E16D00FF56D3 /* CrossFadeTarget.cpp */; };
@@ -81,6 +82,8 @@
 		043A2D7C2847F182001E6F77 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		043A2D7E2847F1B0001E6F77 /* imgui_tables.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imgui_tables.cpp; path = ../../dependencies/imgui/imgui/imgui_tables.cpp; sourceTree = "<group>"; };
 		043A2D802848E0C7001E6F77 /* lglfw3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = lglfw3.a; path = ../../dependencies/GLFW/GLFW/lib/mac/lglfw3.a; sourceTree = "<group>"; };
+		043A2D822849040C001E6F77 /* TrackVisualizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TrackVisualizer.cpp; path = ../../src/TrackVisualizer.cpp; sourceTree = "<group>"; };
+		043A2D842849041F001E6F77 /* TrackVisualizer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TrackVisualizer.h; path = ../../inc/TrackVisualizer.h; sourceTree = "<group>"; };
 		04B9046E2847A50E00FF56D3 /* Animation Experiments */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Animation Experiments"; sourceTree = BUILT_PRODUCTS_DIR; };
 		04B9048A2847E16D00FF56D3 /* CrossFadeControllerSingle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CrossFadeControllerSingle.cpp; path = ../../src/CrossFadeControllerSingle.cpp; sourceTree = "<group>"; };
 		04B9048B2847E16D00FF56D3 /* CrossFadeControllerMultiple.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CrossFadeControllerMultiple.cpp; path = ../../src/CrossFadeControllerMultiple.cpp; sourceTree = "<group>"; };
@@ -265,6 +268,7 @@
 		04B9047B2847DD4300FF56D3 /* Base */ = {
 			isa = PBXGroup;
 			children = (
+				043A2D822849040C001E6F77 /* TrackVisualizer.cpp */,
 				04B904B02847E22700FF56D3 /* AnimatedMesh.cpp */,
 				04B904A72847E22700FF56D3 /* camera.cpp */,
 				04B904A42847E22700FF56D3 /* Camera3.cpp */,
@@ -353,6 +357,7 @@
 		04B904822847DFA300FF56D3 /* Base */ = {
 			isa = PBXGroup;
 			children = (
+				043A2D842849041F001E6F77 /* TrackVisualizer.h */,
 				04B904F62847E7E000FF56D3 /* AnimatedMesh.h */,
 				04B904F02847E7E000FF56D3 /* camera.h */,
 				04B904EF2847E7E000FF56D3 /* Camera3.h */,
@@ -596,6 +601,7 @@
 				04B904B42847E22700FF56D3 /* texture_loader.cpp in Sources */,
 				04B904B82847E22700FF56D3 /* ModelViewerState.cpp in Sources */,
 				04B9049C2847E1C800FF56D3 /* SkeletonViewer.cpp in Sources */,
+				043A2D832849040C001E6F77 /* TrackVisualizer.cpp in Sources */,
 				04B904D52847E29400FF56D3 /* Ray.cpp in Sources */,
 				04B904BE2847E22700FF56D3 /* finite_state_machine.cpp in Sources */,
 				04B904A32847E1C800FF56D3 /* Track.cpp in Sources */,

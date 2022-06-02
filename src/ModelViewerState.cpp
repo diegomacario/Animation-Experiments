@@ -9,6 +9,16 @@
 #include "RearrangeBones.h"
 #include "ModelViewerState.h"
 
+ScalarFrame makeFrame(float time, float inSlope, float value, float outSlope)
+{
+   ScalarFrame frame;
+   frame.mTime        = time;
+   frame.mInSlope[0]  = inSlope;
+   frame.mValue[0]    = value;
+   frame.mOutSlope[0] = outSlope;
+   return frame;
+}
+
 #ifdef USE_THIRD_PERSON_CAMERA
 ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
                                    const std::shared_ptr<Window>&             window)
@@ -119,6 +129,15 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
 
    // Initialize the bones of the skeleton viewer
    mSkeletonViewer.InitializeBones(mAnimationData.animatedPose);
+
+   // Initialize the track visualizer
+   ScalarTrack scalarTrack;
+   scalarTrack.SetInterpolation(Interpolation::Cubic);
+   scalarTrack.SetNumberOfFrames(2);
+   scalarTrack.SetFrame(0, makeFrame(0.0f, 0.0f, 0.0f, 0.0f));
+   scalarTrack.SetFrame(1, makeFrame(1.0f, 0.0f, 1.0f, 0.0f));
+
+   mTrackVisualizer.setTrack(scalarTrack);
 }
 
 void ModelViewerState::initializeState()
@@ -425,7 +444,7 @@ void ModelViewerState::render()
       i < size;
       ++i)
    {
-      mGroundMeshes[i].Render();
+      //mGroundMeshes[i].Render();
    }
 
    mGroundTexture->unbind(0);
@@ -537,6 +556,9 @@ void ModelViewerState::render()
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 #endif
    glEnable(GL_DEPTH_TEST);
+
+   // Render the track
+   mTrackVisualizer.render();
 
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
