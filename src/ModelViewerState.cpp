@@ -427,6 +427,11 @@ void ModelViewerState::render()
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
 
+   // Render the tracks
+   mTrackVisualizer.render();
+
+   glClear(GL_DEPTH_BUFFER_BIT);
+
    mGroundShader->use(true);
 
    glm::mat4 modelMatrix(1.0f);
@@ -559,9 +564,6 @@ void ModelViewerState::render()
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 #endif
    glEnable(GL_DEPTH_TEST);
-
-   // Render the track
-   mTrackVisualizer.render();
 
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

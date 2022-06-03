@@ -22,8 +22,8 @@ TrackVisualizer::TrackVisualizer()
    , mSlopeLineScalingFactor(1.0f)
    , mReferenceLinesVAO(0)
    , mReferenceLinesVBO(0)
-   , mTrackLinesVAO(0)
-   , mTrackLinesVBO(0)
+   , mTrackLinesVAOs{0, 0, 0, 0}
+   , mTrackLinesVBOs{0, 0, 0, 0}
    , mKeyframePointsVAO(0)
    , mKeyframePointsVBO(0)
    , mSlopeLinesVAO(0)
@@ -33,12 +33,13 @@ TrackVisualizer::TrackVisualizer()
    , mTrackLines()
    , mKeyframePoints()
    , mSlopeLines()
+   , mTrackLinesColorPalette{glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.65f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)}
 {
    glGenVertexArrays(1, &mReferenceLinesVAO);
    glGenBuffers(1, &mReferenceLinesVBO);
 
-   glGenVertexArrays(1, &mTrackLinesVAO);
-   glGenBuffers(1, &mTrackLinesVBO);
+   glGenVertexArrays(4, mTrackLinesVAOs);
+   glGenBuffers(4, mTrackLinesVBOs);
 
    glGenVertexArrays(1, &mKeyframePointsVAO);
    glGenBuffers(1, &mKeyframePointsVBO);
@@ -55,8 +56,8 @@ TrackVisualizer::~TrackVisualizer()
    glDeleteVertexArrays(1, &mReferenceLinesVAO);
    glDeleteBuffers(1, &mReferenceLinesVBO);
 
-   glDeleteVertexArrays(1, &mTrackLinesVAO);
-   glDeleteBuffers(1, &mTrackLinesVBO);
+   glDeleteVertexArrays(4, mTrackLinesVAOs);
+   glDeleteBuffers(4, mTrackLinesVBOs);
 
    glDeleteVertexArrays(1, &mKeyframePointsVAO);
    glDeleteBuffers(1, &mKeyframePointsVBO);
@@ -97,11 +98,14 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
    glBindBuffer(GL_ARRAY_BUFFER, 0);
    glBindVertexArray(0);
 
-   glBindVertexArray(mTrackLinesVAO);
-   glBindBuffer(GL_ARRAY_BUFFER, mTrackLinesVBO);
-   glBufferData(GL_ARRAY_BUFFER, mTrackLines.size() * sizeof(glm::vec3), &mTrackLines[0], GL_STATIC_DRAW);
-   glBindBuffer(GL_ARRAY_BUFFER, 0);
-   glBindVertexArray(0);
+   for (int i = 0; i < 4; ++i)
+   {
+      glBindVertexArray(mTrackLinesVAOs[i]);
+      glBindBuffer(GL_ARRAY_BUFFER, mTrackLinesVBOs[i]);
+      glBufferData(GL_ARRAY_BUFFER, mTrackLines[i].size() * sizeof(glm::vec3), &(mTrackLines[i][0]), GL_STATIC_DRAW);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      glBindVertexArray(0);
+   }
 
    glBindVertexArray(mKeyframePointsVAO);
    glBindBuffer(GL_ARRAY_BUFFER, mKeyframePointsVBO);
@@ -126,12 +130,15 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
    glBindBuffer(GL_ARRAY_BUFFER, 0);
    glBindVertexArray(0);
 
-   glBindVertexArray(mTrackLinesVAO);
-   glBindBuffer(GL_ARRAY_BUFFER, mTrackLinesVBO);
-   glEnableVertexAttribArray(posAttribLocation);
-   glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-   glBindBuffer(GL_ARRAY_BUFFER, 0);
-   glBindVertexArray(0);
+   for (int i = 0; i < 4; ++i)
+   {
+      glBindVertexArray(mTrackLinesVAOs[i]);
+      glBindBuffer(GL_ARRAY_BUFFER, mTrackLinesVBOs[i]);
+      glEnableVertexAttribArray(posAttribLocation);
+      glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      glBindVertexArray(0);
+   }
 
    glBindVertexArray(mKeyframePointsVAO);
    glBindBuffer(GL_ARRAY_BUFFER, mKeyframePointsVBO);
@@ -171,10 +178,13 @@ void TrackVisualizer::render()
    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(mReferenceLines.size()));
    glBindVertexArray(0);
 
-   mTrackShader->setUniformVec3("color", glm::vec3(0.0f, 1.0f, 0.0f));
-   glBindVertexArray(mTrackLinesVAO);
-   glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(mTrackLines.size()));
-   glBindVertexArray(0);
+   for (int i = 0; i < 4; ++i)
+   {
+      mTrackShader->setUniformVec3("color", mTrackLinesColorPalette[i]);
+      glBindVertexArray(mTrackLinesVAOs[i]);
+      glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(mTrackLines[i].size()));
+      glBindVertexArray(0);
+   }
 
 #ifndef __EMSCRIPTEN__
    glPointSize(5.0f);
@@ -197,21 +207,30 @@ void TrackVisualizer::render()
 
 void TrackVisualizer::initializeReferenceLines()
 {
+   int trackIndex = 0;
    for (int j = 0; j < mNumTiles; ++j)
    {
       float yPosOfOriginOfGraph = (mTileHeight * j) + (mTileVerticalOffset / 2.0f);
 
       for (int i = 0; i < mNumTiles; ++i)
       {
+         if (trackIndex >= mNumGraphs)
+         {
+            // Uncomment this line if you don't want to see reference lines for empty graphs
+            //break;
+         }
+
          float xPosOfOriginOfGraph = (mTileWidth * i) + (mTileHorizontalOffset / 2.0f);
 
          // Y axis
-         mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph, 0.0f));
-         mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph + mTileHeight - mTileVerticalOffset, 0.0f));
+         mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph, 0.1f));
+         mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph + mTileHeight - mTileVerticalOffset, 0.1f));
 
          // X axis
-         mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph, 0.0f));
-         mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph + mTileWidth - mTileHorizontalOffset, yPosOfOriginOfGraph, 0.0f));
+         mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph, 0.1f));
+         mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph + mTileWidth - mTileHorizontalOffset, yPosOfOriginOfGraph, 0.1f));
+
+         ++trackIndex;
       }
    }
 }
@@ -247,7 +266,7 @@ void TrackVisualizer::initializeTrackLines()
             if (sample.x > maxSamples.x) maxSamples.x = sample.x;
             if (sample.y > maxSamples.y) maxSamples.y = sample.y;
             if (sample.z > maxSamples.z) maxSamples.z = sample.z;
-            if (sample.w < maxSamples.w) maxSamples.w = sample.w;
+            if (sample.w > maxSamples.w) maxSamples.w = sample.w;
          }
 
          for (unsigned int sampleIndex = 1; sampleIndex < 150; ++sampleIndex)
@@ -271,17 +290,17 @@ void TrackVisualizer::initializeTrackLines()
                nextSampleNormalized[k] = yPosOfOriginOfGraph + (((nextSample[k] - minSamples[k]) / (maxSamples[k] - minSamples[k])) * (mTileHeight - mTileVerticalOffset));
             }
 
-            mTrackLines.push_back(glm::vec3(currX, currSampleNormalized.x, 0.1f));
-            mTrackLines.push_back(glm::vec3(nextX, nextSampleNormalized.x, 0.1f));
+            mTrackLines[0].push_back(glm::vec3(currX, currSampleNormalized.x, 0.0f));
+            mTrackLines[0].push_back(glm::vec3(nextX, nextSampleNormalized.x, 0.0f));
 
-            mTrackLines.push_back(glm::vec3(currX, currSampleNormalized.y, 0.1f));
-            mTrackLines.push_back(glm::vec3(nextX, nextSampleNormalized.y, 0.1f));
+            mTrackLines[1].push_back(glm::vec3(currX, currSampleNormalized.y, 0.0f));
+            mTrackLines[1].push_back(glm::vec3(nextX, nextSampleNormalized.y, 0.0f));
 
-            mTrackLines.push_back(glm::vec3(currX, currSampleNormalized.z, 0.1f));
-            mTrackLines.push_back(glm::vec3(nextX, nextSampleNormalized.z, 0.1f));
+            mTrackLines[2].push_back(glm::vec3(currX, currSampleNormalized.z, 0.0f));
+            mTrackLines[2].push_back(glm::vec3(nextX, nextSampleNormalized.z, 0.0f));
 
-            mTrackLines.push_back(glm::vec3(currX, currSampleNormalized.w, 0.1f));
-            mTrackLines.push_back(glm::vec3(nextX, nextSampleNormalized.w, 0.1f));
+            mTrackLines[3].push_back(glm::vec3(currX, currSampleNormalized.w, 0.0f));
+            mTrackLines[3].push_back(glm::vec3(nextX, nextSampleNormalized.w, 0.0f));
          }
 
          ++trackIndex;

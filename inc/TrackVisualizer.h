@@ -36,8 +36,8 @@ private:
    unsigned int                     mReferenceLinesVAO;
    unsigned int                     mReferenceLinesVBO;
 
-   unsigned int                     mTrackLinesVAO;
-   unsigned int                     mTrackLinesVBO;
+   unsigned int                     mTrackLinesVAOs[4];
+   unsigned int                     mTrackLinesVBOs[4];
 
    unsigned int                     mKeyframePointsVAO;
    unsigned int                     mKeyframePointsVBO;
@@ -49,9 +49,11 @@ private:
 
    std::vector<FastQuaternionTrack> mTracks;
    std::vector<glm::vec3>           mReferenceLines;
-   std::vector<glm::vec3>           mTrackLines;
+   std::vector<glm::vec3>           mTrackLines[4];
    std::vector<glm::vec3>           mKeyframePoints;
    std::vector<glm::vec3>           mSlopeLines;
+
+   glm::vec3                        mTrackLinesColorPalette[4];
 };
 
 #endif
