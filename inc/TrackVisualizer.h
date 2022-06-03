@@ -31,6 +31,8 @@ private:
    float                            mTileHeight;
    float                            mTileHorizontalOffset;
    float                            mTileVerticalOffset;
+   float                            mGraphWidth;
+   float                            mGraphHeight;
    float                            mSlopeLineScalingFactor;
 
    unsigned int                     mReferenceLinesVAO;
