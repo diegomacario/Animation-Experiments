@@ -14,6 +14,7 @@ TrackVisualizer::TrackVisualizer()
    : mWidthOfGraphSpace(100.0f)
    , mHeightOfGraphSpace(100.0f)
    , mNumGraphs(0)
+   , mNumCurves(0)
    , mNumTiles(0)
    , mTileWidth(0.0f)
    , mTileHeight(0.0f)
@@ -24,8 +25,8 @@ TrackVisualizer::TrackVisualizer()
    , mSlopeLineScalingFactor(1.0f)
    , mReferenceLinesVAO(0)
    , mReferenceLinesVBO(0)
-   , mTrackLinesVAOs{0, 0, 0, 0}
-   , mTrackLinesVBOs{0, 0, 0, 0}
+   , mTrackLinesVAOs()
+   , mTrackLinesVBOs()
    , mKeyframePointsVAO(0)
    , mKeyframePointsVBO(0)
    , mSlopeLinesVAO(0)
@@ -37,18 +38,6 @@ TrackVisualizer::TrackVisualizer()
    , mSlopeLines()
    , mTrackLinesColorPalette{glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.65f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)}
 {
-   glGenVertexArrays(1, &mReferenceLinesVAO);
-   glGenBuffers(1, &mReferenceLinesVBO);
-
-   glGenVertexArrays(4, mTrackLinesVAOs);
-   glGenBuffers(4, mTrackLinesVBOs);
-
-   glGenVertexArrays(1, &mKeyframePointsVAO);
-   glGenBuffers(1, &mKeyframePointsVBO);
-
-   glGenVertexArrays(1, &mSlopeLinesVAO);
-   glGenBuffers(1, &mSlopeLinesVBO);
-
    mTrackShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/graph.vert",
                                                                                 "resources/shaders/graph.frag");
 }
@@ -58,8 +47,15 @@ TrackVisualizer::~TrackVisualizer()
    glDeleteVertexArrays(1, &mReferenceLinesVAO);
    glDeleteBuffers(1, &mReferenceLinesVBO);
 
-   glDeleteVertexArrays(4, mTrackLinesVAOs);
-   glDeleteBuffers(4, mTrackLinesVBOs);
+   if (mTrackLinesVAOs.size() > 0)
+   {
+      glDeleteVertexArrays(static_cast<GLsizei>(mTrackLinesVAOs.size()), &(mTrackLinesVAOs[0]));
+   }
+
+   if (mTrackLinesVBOs.size() > 0)
+   {
+      glDeleteBuffers(static_cast<GLsizei>(mTrackLinesVBOs.size()), &(mTrackLinesVBOs[0]));
+   }
 
    glDeleteVertexArrays(1, &mKeyframePointsVAO);
    glDeleteBuffers(1, &mKeyframePointsVBO);
@@ -76,7 +72,8 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
    }
 
    mNumGraphs = static_cast<unsigned int>(mTracks.size());
-   mNumTiles = static_cast<unsigned int>(glm::sqrt(mNumGraphs));
+   mNumCurves = mNumGraphs * 4;
+   mNumTiles  = static_cast<unsigned int>(glm::sqrt(mNumGraphs));
    while (mNumGraphs > (mNumTiles * mNumTiles))
    {
       ++mNumTiles;
@@ -90,9 +87,27 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
    mGraphHeight = mTileHeight - mTileVerticalOffset;
    mSlopeLineScalingFactor = mTileWidth * 0.05f;
 
+   mTrackLines.resize(mNumCurves);
+
    initializeReferenceLines();
    initializeTrackLines();
    initializeKeyframePointsAndSlopeLines();
+
+   // Create buffers
+
+   glGenVertexArrays(1, &mReferenceLinesVAO);
+   glGenBuffers(1, &mReferenceLinesVBO);
+
+   mTrackLinesVAOs.resize(mNumCurves);
+   mTrackLinesVBOs.resize(mNumCurves);
+   glGenVertexArrays(mNumCurves, &(mTrackLinesVAOs[0]));
+   glGenBuffers(mNumCurves, &(mTrackLinesVBOs[0]));
+
+   glGenVertexArrays(1, &mKeyframePointsVAO);
+   glGenBuffers(1, &mKeyframePointsVBO);
+
+   glGenVertexArrays(1, &mSlopeLinesVAO);
+   glGenBuffers(1, &mSlopeLinesVBO);
 
    // Load buffers
 
@@ -102,7 +117,7 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
    glBindBuffer(GL_ARRAY_BUFFER, 0);
    glBindVertexArray(0);
 
-   for (int i = 0; i < 4; ++i)
+   for (int i = 0; i < mNumCurves; ++i)
    {
       glBindVertexArray(mTrackLinesVAOs[i]);
       glBindBuffer(GL_ARRAY_BUFFER, mTrackLinesVBOs[i]);
@@ -134,7 +149,7 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
    glBindBuffer(GL_ARRAY_BUFFER, 0);
    glBindVertexArray(0);
 
-   for (int i = 0; i < 4; ++i)
+   for (int i = 0; i < mNumCurves; ++i)
    {
       glBindVertexArray(mTrackLinesVAOs[i]);
       glBindBuffer(GL_ARRAY_BUFFER, mTrackLinesVBOs[i]);
@@ -157,6 +172,29 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
    glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
    glBindBuffer(GL_ARRAY_BUFFER, 0);
    glBindVertexArray(0);
+}
+
+void TrackVisualizer::update(float playbackTime)
+{
+//   for (int i = 0; i < mNumGraphs; ++i)
+//   {
+//      float trackDuration = mTracks[i].GetEndTime() - mTracks[i].GetStartTime();
+//      unsigned int sampleIndex = static_cast<unsigned int>((playbackTime / trackDuration) * 149.0f);
+//      for (int j = 0; j < 4; ++j)
+//      {
+//         std::vector<glm::vec3> currTrackLines = mTrackLines[j];
+//         std::cout << currTrackLines.size();
+//         std::vector<glm::vec3> tail(currTrackLines.begin() + sampleIndex + 1, currTrackLines.end());
+//         currTrackLines.erase(currTrackLines.begin(), currTrackLines.begin() + sampleIndex);
+//         currTrackLines.insert(currTrackLines.end(), tail.begin(), tail.end());
+//         mTrackLines[j] = currTrackLines;
+//         std::cout << " " << currTrackLines.size() << '\n';
+//      }
+
+      // Make the sample with that index the first one
+      // Move all the ones that were in front of it to the back
+      // Update buffers
+//   }
 }
 
 void TrackVisualizer::render()
@@ -182,9 +220,9 @@ void TrackVisualizer::render()
    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(mReferenceLines.size()));
    glBindVertexArray(0);
 
-   for (int i = 0; i < 4; ++i)
+   for (int i = 0; i < mNumCurves; ++i)
    {
-      mTrackShader->setUniformVec3("color", mTrackLinesColorPalette[i]);
+      mTrackShader->setUniformVec3("color", mTrackLinesColorPalette[i % 4]);
       glBindVertexArray(mTrackLinesVAOs[i]);
       glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(mTrackLines[i].size()));
       glBindVertexArray(0);
@@ -242,6 +280,7 @@ void TrackVisualizer::initializeReferenceLines()
 void TrackVisualizer::initializeTrackLines()
 {
    int trackIndex = 0;
+   int curveIndex = 0;
    for (int j = 0; j < mNumTiles; ++j)
    {
       float yPosOfOriginOfGraph = (mTileHeight * j) + (mTileVerticalOffset / 2.0f);
@@ -296,20 +335,21 @@ void TrackVisualizer::initializeTrackLines()
                nextSampleNormalized[k] = yPosOfOriginOfGraph + (((nextSample[k] - minSamples[k]) / (maxSamples[k] - minSamples[k])) * mGraphHeight);
             }
 
-            mTrackLines[0].push_back(glm::vec3(currX, currSampleNormalized.x, 0.0f));
-            mTrackLines[0].push_back(glm::vec3(nextX, nextSampleNormalized.x, 0.0f));
+            mTrackLines[curveIndex].push_back(glm::vec3(currX, currSampleNormalized.x, 0.0f));
+            mTrackLines[curveIndex].push_back(glm::vec3(nextX, nextSampleNormalized.x, 0.0f));
 
-            mTrackLines[1].push_back(glm::vec3(currX, currSampleNormalized.y, 0.0f));
-            mTrackLines[1].push_back(glm::vec3(nextX, nextSampleNormalized.y, 0.0f));
+            mTrackLines[curveIndex + 1].push_back(glm::vec3(currX, currSampleNormalized.y, 0.0f));
+            mTrackLines[curveIndex + 1].push_back(glm::vec3(nextX, nextSampleNormalized.y, 0.0f));
 
-            mTrackLines[2].push_back(glm::vec3(currX, currSampleNormalized.z, 0.0f));
-            mTrackLines[2].push_back(glm::vec3(nextX, nextSampleNormalized.z, 0.0f));
+            mTrackLines[curveIndex + 2].push_back(glm::vec3(currX, currSampleNormalized.z, 0.0f));
+            mTrackLines[curveIndex + 2].push_back(glm::vec3(nextX, nextSampleNormalized.z, 0.0f));
 
-            mTrackLines[3].push_back(glm::vec3(currX, currSampleNormalized.w, 0.0f));
-            mTrackLines[3].push_back(glm::vec3(nextX, nextSampleNormalized.w, 0.0f));
+            mTrackLines[curveIndex + 3].push_back(glm::vec3(currX, currSampleNormalized.w, 0.0f));
+            mTrackLines[curveIndex + 3].push_back(glm::vec3(nextX, nextSampleNormalized.w, 0.0f));
          }
 
-         ++trackIndex;
+         trackIndex += 1;
+         curveIndex += 4;
       }
    }
 }

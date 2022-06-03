@@ -15,6 +15,8 @@ public:
 
    void setTracks(std::vector<FastTransformTrack>& tracks);
 
+   void update(float playbackTime);
+
    void render();
 
 private:
@@ -23,39 +25,40 @@ private:
    void initializeTrackLines();
    void initializeKeyframePointsAndSlopeLines();
 
-   float                            mWidthOfGraphSpace;
-   float                            mHeightOfGraphSpace;
-   unsigned int                     mNumGraphs;
-   unsigned int                     mNumTiles;
-   float                            mTileWidth;
-   float                            mTileHeight;
-   float                            mTileHorizontalOffset;
-   float                            mTileVerticalOffset;
-   float                            mGraphWidth;
-   float                            mGraphHeight;
-   float                            mSlopeLineScalingFactor;
+   float                               mWidthOfGraphSpace;
+   float                               mHeightOfGraphSpace;
+   unsigned int                        mNumGraphs;
+   unsigned int                        mNumCurves;
+   unsigned int                        mNumTiles;
+   float                               mTileWidth;
+   float                               mTileHeight;
+   float                               mTileHorizontalOffset;
+   float                               mTileVerticalOffset;
+   float                               mGraphWidth;
+   float                               mGraphHeight;
+   float                               mSlopeLineScalingFactor;
 
-   unsigned int                     mReferenceLinesVAO;
-   unsigned int                     mReferenceLinesVBO;
+   unsigned int                        mReferenceLinesVAO;
+   unsigned int                        mReferenceLinesVBO;
 
-   unsigned int                     mTrackLinesVAOs[4];
-   unsigned int                     mTrackLinesVBOs[4];
+   std::vector<unsigned int>           mTrackLinesVAOs;
+   std::vector<unsigned int>           mTrackLinesVBOs;
 
-   unsigned int                     mKeyframePointsVAO;
-   unsigned int                     mKeyframePointsVBO;
+   unsigned int                        mKeyframePointsVAO;
+   unsigned int                        mKeyframePointsVBO;
 
-   unsigned int                     mSlopeLinesVAO;
-   unsigned int                     mSlopeLinesVBO;
+   unsigned int                        mSlopeLinesVAO;
+   unsigned int                        mSlopeLinesVBO;
 
-   std::shared_ptr<Shader>          mTrackShader;
+   std::shared_ptr<Shader>             mTrackShader;
 
-   std::vector<FastQuaternionTrack> mTracks;
-   std::vector<glm::vec3>           mReferenceLines;
-   std::vector<glm::vec3>           mTrackLines[4];
-   std::vector<glm::vec3>           mKeyframePoints;
-   std::vector<glm::vec3>           mSlopeLines;
+   std::vector<FastQuaternionTrack>    mTracks;
+   std::vector<glm::vec3>              mReferenceLines;
+   std::vector<std::vector<glm::vec3>> mTrackLines;
+   std::vector<glm::vec3>              mKeyframePoints;
+   std::vector<glm::vec3>              mSlopeLines;
 
-   glm::vec3                        mTrackLinesColorPalette[4];
+   glm::vec3                           mTrackLinesColorPalette[4];
 };
 
 #endif
