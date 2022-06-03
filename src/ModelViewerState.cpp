@@ -163,6 +163,8 @@ void ModelViewerState::initializeState()
    // Set the initial playback speed
    mSelectedPlaybackSpeed = 1.0f;
    // Set the initial rendering options
+   mDisplayGround = false;
+   mDisplayGraphs = true;
    mDisplayMesh = true;
    mDisplayBones = false;
    mDisplayJoints = false;
@@ -427,36 +429,42 @@ void ModelViewerState::render()
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
 
-   // Render the tracks
-   mTrackVisualizer.render();
+   // Render the graphs
+   if (mDisplayGraphs)
+   {
+      mTrackVisualizer.render();
+   }
 
    glClear(GL_DEPTH_BUFFER_BIT);
 
-   mGroundShader->use(true);
-
-   glm::mat4 modelMatrix(1.0f);
-   modelMatrix = glm::scale(modelMatrix, glm::vec3(0.10f));
-   mGroundShader->setUniformMat4("model",      modelMatrix);
-#ifdef USE_THIRD_PERSON_CAMERA
-   mGroundShader->setUniformMat4("view",       mCamera3.getViewMatrix());
-   mGroundShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
-#else
-   mGroundShader->setUniformMat4("view",       mCamera->getViewMatrix());
-   mGroundShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
-#endif
-   mGroundTexture->bind(0, mGroundShader->getUniformLocation("diffuseTex"));
-
-   // Loop over the ground meshes and render each one
-   for (unsigned int i = 0,
-      size = static_cast<unsigned int>(mGroundMeshes.size());
-      i < size;
-      ++i)
+   if (mDisplayGround)
    {
-      //mGroundMeshes[i].Render();
-   }
+      mGroundShader->use(true);
 
-   mGroundTexture->unbind(0);
-   mGroundShader->use(false);
+      glm::mat4 modelMatrix(1.0f);
+      modelMatrix = glm::scale(modelMatrix, glm::vec3(0.10f));
+      mGroundShader->setUniformMat4("model",      modelMatrix);
+#ifdef USE_THIRD_PERSON_CAMERA
+      mGroundShader->setUniformMat4("view",       mCamera3.getViewMatrix());
+      mGroundShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
+#else
+      mGroundShader->setUniformMat4("view",       mCamera->getViewMatrix());
+      mGroundShader->setUniformMat4("projection", mCamera->getPerspectiveProjectionMatrix());
+#endif
+      mGroundTexture->bind(0, mGroundShader->getUniformLocation("diffuseTex"));
+
+      // Loop over the ground meshes and render each one
+      for (unsigned int i = 0,
+         size = static_cast<unsigned int>(mGroundMeshes.size());
+         i < size;
+         ++i)
+      {
+         mGroundMeshes[i].Render();
+      }
+
+      mGroundTexture->unbind(0);
+      mGroundShader->use(false);
+   }
 
 #ifndef __EMSCRIPTEN__
    if (mWireframeModeForCharacter)
@@ -730,6 +738,10 @@ void ModelViewerState::userInterface()
 
       ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
       ImGui::Text("Playback Time");
+
+      ImGui::Checkbox("Display Ground", &mDisplayGround);
+
+      ImGui::Checkbox("Display Graphs", &mDisplayGraphs);
 
       ImGui::Checkbox("Display Skin", &mDisplayMesh);
 

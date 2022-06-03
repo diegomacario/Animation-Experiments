@@ -542,9 +542,10 @@ void Window::setNumberOfSamples(unsigned int numOfSamples)
 #ifdef __EMSCRIPTEN__
 void Window::updateWindowDimensions(int width, int height)
 {
-   mWidthOfWindowInPix  = width;
-   mHeightOfWindowInPix = height;
-   glfwSetWindowSize(mWindow, width, height);
+   float devicePixelRatio = getDevicePixelRatio();
+   mWidthOfWindowInPix    = width * devicePixelRatio;
+   mHeightOfWindowInPix   = height * devicePixelRatio;
+   glfwSetWindowSize(mWindow, mWidthOfWindowInPix, mHeightOfWindowInPix);
 }
 #endif
 

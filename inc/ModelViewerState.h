@@ -109,6 +109,8 @@ private:
    int                       mSelectedClip;
    int                       mSelectedSkinningMode;
    float                     mSelectedPlaybackSpeed;
+   bool                      mDisplayGround;
+   bool                      mDisplayGraphs;
    bool                      mDisplayMesh;
    bool                      mDisplayBones;
    bool                      mDisplayJoints;
