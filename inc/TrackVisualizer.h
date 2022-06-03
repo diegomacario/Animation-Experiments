@@ -23,7 +23,6 @@ private:
 
    void initializeReferenceLines();
    void initializeTrackLines();
-   void initializeKeyframePointsAndSlopeLines();
 
    float                               mWidthOfGraphSpace;
    float                               mHeightOfGraphSpace;
@@ -36,7 +35,6 @@ private:
    float                               mTileVerticalOffset;
    float                               mGraphWidth;
    float                               mGraphHeight;
-   float                               mSlopeLineScalingFactor;
 
    unsigned int                        mReferenceLinesVAO;
    unsigned int                        mReferenceLinesVBO;
@@ -44,19 +42,11 @@ private:
    std::vector<unsigned int>           mTrackLinesVAOs;
    std::vector<unsigned int>           mTrackLinesVBOs;
 
-   unsigned int                        mKeyframePointsVAO;
-   unsigned int                        mKeyframePointsVBO;
-
-   unsigned int                        mSlopeLinesVAO;
-   unsigned int                        mSlopeLinesVBO;
-
    std::shared_ptr<Shader>             mTrackShader;
 
    std::vector<FastQuaternionTrack>    mTracks;
    std::vector<glm::vec3>              mReferenceLines;
    std::vector<std::vector<glm::vec3>> mTrackLines;
-   std::vector<glm::vec3>              mKeyframePoints;
-   std::vector<glm::vec3>              mSlopeLines;
 
    glm::vec3                           mTrackLinesColorPalette[4];
 };

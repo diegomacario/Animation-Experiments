@@ -22,20 +22,13 @@ TrackVisualizer::TrackVisualizer()
    , mTileVerticalOffset(0.0f)
    , mGraphWidth(0.0f)
    , mGraphHeight(0.0f)
-   , mSlopeLineScalingFactor(1.0f)
    , mReferenceLinesVAO(0)
    , mReferenceLinesVBO(0)
    , mTrackLinesVAOs()
    , mTrackLinesVBOs()
-   , mKeyframePointsVAO(0)
-   , mKeyframePointsVBO(0)
-   , mSlopeLinesVAO(0)
-   , mSlopeLinesVBO(0)
    , mTracks()
    , mReferenceLines()
    , mTrackLines()
-   , mKeyframePoints()
-   , mSlopeLines()
    , mTrackLinesColorPalette{glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.65f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)}
 {
    mTrackShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/graph.vert",
@@ -56,12 +49,6 @@ TrackVisualizer::~TrackVisualizer()
    {
       glDeleteBuffers(static_cast<GLsizei>(mTrackLinesVBOs.size()), &(mTrackLinesVBOs[0]));
    }
-
-   glDeleteVertexArrays(1, &mKeyframePointsVAO);
-   glDeleteBuffers(1, &mKeyframePointsVBO);
-
-   glDeleteVertexArrays(1, &mSlopeLinesVAO);
-   glDeleteBuffers(1, &mSlopeLinesVBO);
 }
 
 void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
@@ -85,13 +72,11 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
    mTileVerticalOffset = mTileHeight * 0.1f;
    mGraphWidth = mTileWidth - mTileHorizontalOffset;
    mGraphHeight = mTileHeight - mTileVerticalOffset;
-   mSlopeLineScalingFactor = mTileWidth * 0.05f;
 
    mTrackLines.resize(mNumCurves);
 
    initializeReferenceLines();
    initializeTrackLines();
-   initializeKeyframePointsAndSlopeLines();
 
    // Create buffers
 
@@ -102,12 +87,6 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
    mTrackLinesVBOs.resize(mNumCurves);
    glGenVertexArrays(mNumCurves, &(mTrackLinesVAOs[0]));
    glGenBuffers(mNumCurves, &(mTrackLinesVBOs[0]));
-
-   glGenVertexArrays(1, &mKeyframePointsVAO);
-   glGenBuffers(1, &mKeyframePointsVBO);
-
-   glGenVertexArrays(1, &mSlopeLinesVAO);
-   glGenBuffers(1, &mSlopeLinesVBO);
 
    // Load buffers
 
@@ -125,18 +104,6 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindVertexArray(0);
    }
-
-   glBindVertexArray(mKeyframePointsVAO);
-   glBindBuffer(GL_ARRAY_BUFFER, mKeyframePointsVBO);
-   glBufferData(GL_ARRAY_BUFFER, mKeyframePoints.size() * sizeof(glm::vec3), &mKeyframePoints[0], GL_STATIC_DRAW);
-   glBindBuffer(GL_ARRAY_BUFFER, 0);
-   glBindVertexArray(0);
-
-   glBindVertexArray(mSlopeLinesVAO);
-   glBindBuffer(GL_ARRAY_BUFFER, mSlopeLinesVBO);
-   glBufferData(GL_ARRAY_BUFFER, mSlopeLines.size() * sizeof(glm::vec3), &mSlopeLines[0], GL_STATIC_DRAW);
-   glBindBuffer(GL_ARRAY_BUFFER, 0);
-   glBindVertexArray(0);
 
    // Configure VAOs
 
@@ -158,20 +125,6 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindVertexArray(0);
    }
-
-   glBindVertexArray(mKeyframePointsVAO);
-   glBindBuffer(GL_ARRAY_BUFFER, mKeyframePointsVBO);
-   glEnableVertexAttribArray(posAttribLocation);
-   glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-   glBindBuffer(GL_ARRAY_BUFFER, 0);
-   glBindVertexArray(0);
-
-   glBindVertexArray(mSlopeLinesVAO);
-   glBindBuffer(GL_ARRAY_BUFFER, mSlopeLinesVBO);
-   glEnableVertexAttribArray(posAttribLocation);
-   glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-   glBindBuffer(GL_ARRAY_BUFFER, 0);
-   glBindVertexArray(0);
 }
 
 void TrackVisualizer::update(float playbackTime)
@@ -227,22 +180,6 @@ void TrackVisualizer::render()
       glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(mTrackLines[i].size()));
       glBindVertexArray(0);
    }
-
-#ifndef __EMSCRIPTEN__
-   glPointSize(5.0f);
-#endif
-   mTrackShader->setUniformVec3("color", glm::vec3(0.0f, 0.0f, 1.0f));
-   glBindVertexArray(mKeyframePointsVAO);
-   //glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(mKeyframePoints.size()));
-   glBindVertexArray(0);
-#ifndef __EMSCRIPTEN__
-   glPointSize(1.0f);
-#endif
-
-   mTrackShader->setUniformVec3("color", glm::vec3(1.0f, 0.0f, 0.0f));
-   glBindVertexArray(mSlopeLinesVAO);
-   //glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(mSlopeLines.size()));
-   glBindVertexArray(0);
 
    mTrackShader->use(false);
 }
@@ -350,62 +287,6 @@ void TrackVisualizer::initializeTrackLines()
 
          trackIndex += 1;
          curveIndex += 4;
-      }
-   }
-}
-
-void TrackVisualizer::initializeKeyframePointsAndSlopeLines()
-{
-   int trackIndex = 0;
-   for (int j = 0; j < mNumTiles; ++j)
-   {
-      float yPosOfOriginOfGraph = (mTileHeight * j) + (mTileVerticalOffset / 2.0f);
-
-      for (int i = 0; i < mNumTiles; ++i)
-      {
-         if (trackIndex >= mNumGraphs)
-         {
-            break;
-         }
-
-         float xPosOfOriginOfGraph = (mTileWidth * i) + (mTileHorizontalOffset / 2.0f);
-
-         unsigned int numFrames = mTracks[trackIndex].GetNumberOfFrames();
-         for (unsigned int frameIndex = 0; frameIndex < numFrames; ++frameIndex)
-         {
-            float currTime = mTracks[trackIndex].GetFrame(frameIndex).mTime;
-            float currY = yPosOfOriginOfGraph + (mTracks[trackIndex].Sample(currTime, false).x * mGraphHeight); // TODO: Only using X right now
-            float currX = xPosOfOriginOfGraph + (currTime * mGraphWidth);
-            mKeyframePoints.push_back(glm::vec3(currX, currY, 0.9f));
-
-            if (frameIndex > 0)
-            {
-               float prevY = yPosOfOriginOfGraph + (mTracks[trackIndex].Sample(currTime - 0.0005f, false).x * mGraphHeight); // TODO: Only using X right now
-               float prevX = xPosOfOriginOfGraph + ((currTime - 0.0005f) * mGraphWidth);
-
-               glm::vec3 thisVec = glm::vec3(currX, currY, 0.6f);
-               glm::vec3 prevVec = glm::vec3(prevX, prevY, 0.6f);
-               glm::vec3 handleVec = thisVec + normalizeWithZeroLengthCheck(prevVec - thisVec) * mSlopeLineScalingFactor;
-
-               mSlopeLines.push_back(thisVec);
-               mSlopeLines.push_back(handleVec);
-            }
-
-            if ((frameIndex < (numFrames - 1)) && (mTracks[trackIndex].GetInterpolation() != Interpolation::Constant))
-            {
-               float nextY = yPosOfOriginOfGraph + mTracks[trackIndex].Sample(currTime + 0.0005f, false).x * mGraphHeight; // TODO: Only using X right now
-               float nextX = xPosOfOriginOfGraph + (currTime + 0.0005f) * mGraphWidth;
-
-               glm::vec3 thisVec = glm::vec3(currX, currY, 0.6f);
-               glm::vec3 nextVec = glm::vec3(nextX, nextY, 0.6f);
-               glm::vec3 handleVec = thisVec + normalizeWithZeroLengthCheck(nextVec - thisVec) * mSlopeLineScalingFactor;
-
-               mSlopeLines.push_back(thisVec);
-               mSlopeLines.push_back(handleVec);
-            }
-         }
-
-         ++trackIndex;
       }
    }
 }
