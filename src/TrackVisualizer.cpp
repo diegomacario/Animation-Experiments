@@ -65,17 +65,12 @@ TrackVisualizer::~TrackVisualizer()
    glDeleteBuffers(1, &mSlopeLinesVBO);
 }
 
-void TrackVisualizer::setTrack(const ScalarTrack& track)
+void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
 {
-   mTracks.push_back(track);
-   mTracks.push_back(track);
-   mTracks.push_back(track);
-   mTracks.push_back(track);
-   mTracks.push_back(track);
-   mTracks.push_back(track);
-   mTracks.push_back(track);
-   mTracks.push_back(track);
-   mTracks.push_back(track);
+   for (int i = 0; i < tracks.size(); ++i)
+   {
+      mTracks.push_back(tracks[i].GetRotationTrack());
+   }
 
    mNumGraphs = static_cast<unsigned int>(mTracks.size());
    mNumTiles = static_cast<unsigned int>(glm::sqrt(mNumGraphs));
@@ -186,7 +181,7 @@ void TrackVisualizer::render()
 #endif
    mTrackShader->setUniformVec3("color", glm::vec3(0.0f, 0.0f, 1.0f));
    glBindVertexArray(mKeyframePointsVAO);
-   glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(mKeyframePoints.size()));
+   //glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(mKeyframePoints.size()));
    glBindVertexArray(0);
 #ifndef __EMSCRIPTEN__
    glPointSize(1.0f);
@@ -194,7 +189,7 @@ void TrackVisualizer::render()
 
    mTrackShader->setUniformVec3("color", glm::vec3(1.0f, 0.0f, 0.0f));
    glBindVertexArray(mSlopeLinesVAO);
-   glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(mSlopeLines.size()));
+   //glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(mSlopeLines.size()));
    glBindVertexArray(0);
 
    mTrackShader->use(false);
@@ -237,7 +232,24 @@ void TrackVisualizer::initializeTrackLines()
 
          float xPosOfOriginOfGraph = (mTileWidth * i) + (mTileHorizontalOffset / 2.0f);
 
-         // sampleIndex goes from 0 to 149
+         glm::vec4 minSamples = glm::vec4(std::numeric_limits<float>::max());
+         glm::vec4 maxSamples = glm::vec4(std::numeric_limits<float>::lowest());
+         for (unsigned int sampleIndex = 0; sampleIndex < 150; ++sampleIndex)
+         {
+            float sampleIndexNormalized = static_cast<float>(sampleIndex) / 149.0f;
+
+            Q::quat sample = mTracks[trackIndex].Sample(sampleIndexNormalized, false);
+
+            if (sample.x < minSamples.x) minSamples.x = sample.x;
+            if (sample.y < minSamples.y) minSamples.y = sample.y;
+            if (sample.z < minSamples.z) minSamples.z = sample.z;
+            if (sample.w < minSamples.w) minSamples.w = sample.w;
+            if (sample.x > maxSamples.x) maxSamples.x = sample.x;
+            if (sample.y > maxSamples.y) maxSamples.y = sample.y;
+            if (sample.z > maxSamples.z) maxSamples.z = sample.z;
+            if (sample.w < maxSamples.w) maxSamples.w = sample.w;
+         }
+
          for (unsigned int sampleIndex = 1; sampleIndex < 150; ++sampleIndex)
          {
             float currSampleIndexNormalized = static_cast<float>(sampleIndex - 1) / 149.0f;
@@ -246,14 +258,30 @@ void TrackVisualizer::initializeTrackLines()
             float currX = xPosOfOriginOfGraph + (currSampleIndexNormalized * (mTileWidth - mTileHorizontalOffset));
             float nextX = xPosOfOriginOfGraph + (nextSampleIndexNormalized * (mTileWidth - mTileHorizontalOffset));
 
-            float currY = mTracks[trackIndex].Sample(currSampleIndexNormalized, false);
-            float nextY = mTracks[trackIndex].Sample(nextSampleIndexNormalized, false);
+            Q::quat currSampleQuat = mTracks[trackIndex].Sample(currSampleIndexNormalized, false);
+            Q::quat nextSampleQuat = mTracks[trackIndex].Sample(nextSampleIndexNormalized, false);
 
-            currY = yPosOfOriginOfGraph + (currY * (mTileHeight - mTileVerticalOffset));
-            nextY = yPosOfOriginOfGraph + (nextY * (mTileHeight - mTileVerticalOffset));
+            glm::vec4 currSample = glm::vec4(currSampleQuat.x, currSampleQuat.y, currSampleQuat.z, currSampleQuat.w);
+            glm::vec4 nextSample = glm::vec4(nextSampleQuat.x, nextSampleQuat.y, nextSampleQuat.z, nextSampleQuat.w);
 
-            mTrackLines.push_back(glm::vec3(currX, currY, 0.1f));
-            mTrackLines.push_back(glm::vec3(nextX, nextY, 0.1f));
+            glm::vec4 currSampleNormalized, nextSampleNormalized;
+            for (int k = 0; k < 4; ++k)
+            {
+               currSampleNormalized[k] = yPosOfOriginOfGraph + (((currSample[k] - minSamples[k]) / (maxSamples[k] - minSamples[k])) * (mTileHeight - mTileVerticalOffset));
+               nextSampleNormalized[k] = yPosOfOriginOfGraph + (((nextSample[k] - minSamples[k]) / (maxSamples[k] - minSamples[k])) * (mTileHeight - mTileVerticalOffset));
+            }
+
+            mTrackLines.push_back(glm::vec3(currX, currSampleNormalized.x, 0.1f));
+            mTrackLines.push_back(glm::vec3(nextX, nextSampleNormalized.x, 0.1f));
+
+            mTrackLines.push_back(glm::vec3(currX, currSampleNormalized.y, 0.1f));
+            mTrackLines.push_back(glm::vec3(nextX, nextSampleNormalized.y, 0.1f));
+
+            mTrackLines.push_back(glm::vec3(currX, currSampleNormalized.z, 0.1f));
+            mTrackLines.push_back(glm::vec3(nextX, nextSampleNormalized.z, 0.1f));
+
+            mTrackLines.push_back(glm::vec3(currX, currSampleNormalized.w, 0.1f));
+            mTrackLines.push_back(glm::vec3(nextX, nextSampleNormalized.w, 0.1f));
          }
 
          ++trackIndex;
@@ -281,13 +309,13 @@ void TrackVisualizer::initializeKeyframePointsAndSlopeLines()
          for (unsigned int frameIndex = 0; frameIndex < numFrames; ++frameIndex)
          {
             float currTime = mTracks[trackIndex].GetFrame(frameIndex).mTime;
-            float currY = yPosOfOriginOfGraph + (mTracks[trackIndex].Sample(currTime, false) * (mTileHeight - mTileVerticalOffset));
+            float currY = yPosOfOriginOfGraph + (mTracks[trackIndex].Sample(currTime, false).x * (mTileHeight - mTileVerticalOffset)); // TODO: Only using X right now
             float currX = xPosOfOriginOfGraph + (currTime * ((mTileWidth - mTileHorizontalOffset)));
             mKeyframePoints.push_back(glm::vec3(currX, currY, 0.9f));
 
             if (frameIndex > 0)
             {
-               float prevY = yPosOfOriginOfGraph + (mTracks[trackIndex].Sample(currTime - 0.0005f, false) * (mTileHeight - mTileVerticalOffset));
+               float prevY = yPosOfOriginOfGraph + (mTracks[trackIndex].Sample(currTime - 0.0005f, false).x * (mTileHeight - mTileVerticalOffset)); // TODO: Only using X right now
                float prevX = xPosOfOriginOfGraph + ((currTime - 0.0005f) * ((mTileWidth - mTileHorizontalOffset)));
 
                glm::vec3 thisVec = glm::vec3(currX, currY, 0.6f);
@@ -300,7 +328,7 @@ void TrackVisualizer::initializeKeyframePointsAndSlopeLines()
 
             if ((frameIndex < (numFrames - 1)) && (mTracks[trackIndex].GetInterpolation() != Interpolation::Constant))
             {
-               float nextY = yPosOfOriginOfGraph + mTracks[trackIndex].Sample(currTime + 0.0005f, false) * (mTileHeight - mTileVerticalOffset);
+               float nextY = yPosOfOriginOfGraph + mTracks[trackIndex].Sample(currTime + 0.0005f, false).x * (mTileHeight - mTileVerticalOffset); // TODO: Only using X right now
                float nextX = xPosOfOriginOfGraph + (currTime + 0.0005f) * ((mTileWidth - mTileHorizontalOffset));
 
                glm::vec3 thisVec = glm::vec3(currX, currY, 0.6f);

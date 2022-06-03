@@ -131,13 +131,15 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
    mSkeletonViewer.InitializeBones(mAnimationData.animatedPose);
 
    // Initialize the track visualizer
-   ScalarTrack scalarTrack;
-   scalarTrack.SetInterpolation(Interpolation::Cubic);
-   scalarTrack.SetNumberOfFrames(2);
-   scalarTrack.SetFrame(0, makeFrame(0.0f, 0.0f, 0.0f, 0.0f));
-   scalarTrack.SetFrame(1, makeFrame(1.0f, 0.0f, 1.0f, 0.0f));
-
-   mTrackVisualizer.setTrack(scalarTrack);
+   unsigned int numClips = static_cast<unsigned int>(mClips.size());
+   for (unsigned int clipIndex = 0; clipIndex < numClips; ++clipIndex)
+   {
+      if (mClips[clipIndex].GetName() == "Walking")
+      {
+         mTrackVisualizer.setTracks(mClips[clipIndex].GetTransformTracks());
+         break;
+      }
+   }
 }
 
 void ModelViewerState::initializeState()
@@ -152,6 +154,7 @@ void ModelViewerState::initializeState()
       {
          mSelectedClip = clipIndex;
          mAnimationData.currentClipIndex = clipIndex;
+         break;
       }
    }
 

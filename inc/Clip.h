@@ -15,31 +15,33 @@ public:
 
    TClip();
 
-   unsigned int GetNumberOfTransformTracks() const;
+   unsigned int        GetNumberOfTransformTracks() const;
 
-   unsigned int GetJointIDOfTransformTrack(unsigned int transfTrackIndex) const;
-   void         SetJointIDOfTransformTrack(unsigned int transfTrackIndex, unsigned int jointID);
+   unsigned int        GetJointIDOfTransformTrack(unsigned int transfTrackIndex) const;
+   void                SetJointIDOfTransformTrack(unsigned int transfTrackIndex, unsigned int jointID);
 
-   TRACK&       GetTransformTrackOfJoint(unsigned int jointID);
-   void         SetTransformTrackOfJoint(unsigned int jointID, const TRACK& transfTrack);
+   TRACK&              GetTransformTrackOfJoint(unsigned int jointID);
+   void                SetTransformTrackOfJoint(unsigned int jointID, const TRACK& transfTrack);
 
-   std::string  GetName() const;
-   void         SetName(const std::string& name);
+   std::vector<TRACK>& GetTransformTracks() { return mTransformTracks; }
 
-   float        GetStartTime() const;
-   float        GetEndTime() const;
-   float        GetDuration() const;
-   void         RecalculateDuration();
-   bool         IsTimePastEnd(float time);
+   std::string         GetName() const;
+   void                SetName(const std::string& name);
 
-   bool         GetLooping() const;
-   void         SetLooping(bool looping);
+   float               GetStartTime() const;
+   float               GetEndTime() const;
+   float               GetDuration() const;
+   void                RecalculateDuration();
+   bool                IsTimePastEnd(float time);
 
-   float        Sample(Pose& ioPose, float time) const;
+   bool                GetLooping() const;
+   void                SetLooping(bool looping);
+
+   float               Sample(Pose& ioPose, float time) const;
 
 private:
 
-   float        AdjustTimeToBeWithinClip(float time) const;
+   float               AdjustTimeToBeWithinClip(float time) const;
 
    std::vector<TRACK> mTransformTracks;
    std::string        mName;

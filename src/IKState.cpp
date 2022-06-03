@@ -215,6 +215,7 @@ void IKState::initializeState()
       {
          mSelectedClip = clipIndex;
          mAnimationData.currentClipIndex = clipIndex;
+         break;
       }
    }
 

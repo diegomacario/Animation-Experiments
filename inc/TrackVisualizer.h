@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "Track.h"
+#include "TransformTrack.h"
 #include "shader.h"
 
 class TrackVisualizer
@@ -13,7 +13,7 @@ public:
    TrackVisualizer();
    ~TrackVisualizer();
 
-   void setTrack(const ScalarTrack& track);
+   void setTracks(std::vector<FastTransformTrack>& tracks);
 
    void render();
 
@@ -23,35 +23,35 @@ private:
    void initializeTrackLines();
    void initializeKeyframePointsAndSlopeLines();
 
-   float                    mWidthOfGraphSpace;
-   float                    mHeightOfGraphSpace;
-   unsigned int             mNumGraphs;
-   unsigned int             mNumTiles;
-   float                    mTileWidth;
-   float                    mTileHeight;
-   float                    mTileHorizontalOffset;
-   float                    mTileVerticalOffset;
-   float                    mSlopeLineScalingFactor;
+   float                            mWidthOfGraphSpace;
+   float                            mHeightOfGraphSpace;
+   unsigned int                     mNumGraphs;
+   unsigned int                     mNumTiles;
+   float                            mTileWidth;
+   float                            mTileHeight;
+   float                            mTileHorizontalOffset;
+   float                            mTileVerticalOffset;
+   float                            mSlopeLineScalingFactor;
 
-   unsigned int             mReferenceLinesVAO;
-   unsigned int             mReferenceLinesVBO;
+   unsigned int                     mReferenceLinesVAO;
+   unsigned int                     mReferenceLinesVBO;
 
-   unsigned int             mTrackLinesVAO;
-   unsigned int             mTrackLinesVBO;
+   unsigned int                     mTrackLinesVAO;
+   unsigned int                     mTrackLinesVBO;
 
-   unsigned int             mKeyframePointsVAO;
-   unsigned int             mKeyframePointsVBO;
+   unsigned int                     mKeyframePointsVAO;
+   unsigned int                     mKeyframePointsVBO;
 
-   unsigned int             mSlopeLinesVAO;
-   unsigned int             mSlopeLinesVBO;
+   unsigned int                     mSlopeLinesVAO;
+   unsigned int                     mSlopeLinesVBO;
 
-   std::shared_ptr<Shader>  mTrackShader;
+   std::shared_ptr<Shader>          mTrackShader;
 
-   std::vector<ScalarTrack> mTracks;
-   std::vector<glm::vec3>   mReferenceLines;
-   std::vector<glm::vec3>   mTrackLines;
-   std::vector<glm::vec3>   mKeyframePoints;
-   std::vector<glm::vec3>   mSlopeLines;
+   std::vector<FastQuaternionTrack> mTracks;
+   std::vector<glm::vec3>           mReferenceLines;
+   std::vector<glm::vec3>           mTrackLines;
+   std::vector<glm::vec3>           mKeyframePoints;
+   std::vector<glm::vec3>           mSlopeLines;
 };
 
 #endif
