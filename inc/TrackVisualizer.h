@@ -15,7 +15,7 @@ public:
 
    void setTracks(std::vector<FastTransformTrack>& tracks);
 
-   void update(float playbackTime);
+   void update();
 
    void render();
 

@@ -127,27 +127,55 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
    }
 }
 
-void TrackVisualizer::update(float playbackTime)
+void TrackVisualizer::update()
 {
-//   for (int i = 0; i < mNumGraphs; ++i)
-//   {
-//      float trackDuration = mTracks[i].GetEndTime() - mTracks[i].GetStartTime();
-//      unsigned int sampleIndex = static_cast<unsigned int>((playbackTime / trackDuration) * 149.0f);
-//      for (int j = 0; j < 4; ++j)
-//      {
-//         std::vector<glm::vec3> currTrackLines = mTrackLines[j];
-//         std::cout << currTrackLines.size();
-//         std::vector<glm::vec3> tail(currTrackLines.begin() + sampleIndex + 1, currTrackLines.end());
-//         currTrackLines.erase(currTrackLines.begin(), currTrackLines.begin() + sampleIndex);
-//         currTrackLines.insert(currTrackLines.end(), tail.begin(), tail.end());
-//         mTrackLines[j] = currTrackLines;
-//         std::cout << " " << currTrackLines.size() << '\n';
-//      }
+   unsigned int trackIndex = 0;
+   unsigned int curveIndex = 0;
+   for (int j = 0; j < mNumTiles; ++j)
+   {
+      for (int i = 0; i < mNumTiles; ++i)
+      {
+         if (trackIndex >= mNumGraphs)
+         {
+            break;
+         }
 
-      // Make the sample with that index the first one
-      // Move all the ones that were in front of it to the back
-      // Update buffers
-//   }
+         float xPosOfOriginOfGraph = (mTileWidth * i) + (mTileHorizontalOffset / 2.0f);
+
+         float trackDuration = mTracks[trackIndex].GetEndTime() - mTracks[trackIndex].GetStartTime();
+         unsigned int sampleIndex = static_cast<unsigned int>((0.009f / trackDuration) * 149.0f) * 2;
+
+         for (int k = 0; k < 4; ++k)
+         {
+            std::vector<glm::vec3> curve = mTrackLines[curveIndex + k];
+            float xOffset = curve[sampleIndex].x - xPosOfOriginOfGraph;
+            std::vector<glm::vec3> front(curve.begin(), curve.begin() + sampleIndex);
+            curve.erase(curve.begin(), curve.begin() + sampleIndex);
+            for (unsigned int l = 0; l < curve.size(); ++l)
+            {
+               curve[l] = curve[l] - glm::vec3(xOffset, 0.0f, 0.0f);
+            }
+
+            float xOffsetOfLastSample = curve[curve.size() - 1].x - xPosOfOriginOfGraph;
+            for (unsigned int l = 0; l < front.size(); ++l)
+            {
+               front[l] = front[l] + glm::vec3(xOffsetOfLastSample, 0.0f, 0.0f);
+            }
+
+            curve.insert(curve.end(), front.begin(), front.end());
+            mTrackLines[curveIndex + k] = curve;
+
+            glBindVertexArray(mTrackLinesVAOs[curveIndex + k]);
+            glBindBuffer(GL_ARRAY_BUFFER, mTrackLinesVBOs[curveIndex + k]);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, mTrackLines[curveIndex + k].size() * sizeof(glm::vec3), &(mTrackLines[curveIndex + k][0]));
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glBindVertexArray(0);
+         }
+
+         ++trackIndex;
+         curveIndex += 4;
+      }
+   }
 }
 
 void TrackVisualizer::render()
@@ -216,8 +244,8 @@ void TrackVisualizer::initializeReferenceLines()
 
 void TrackVisualizer::initializeTrackLines()
 {
-   int trackIndex = 0;
-   int curveIndex = 0;
+   unsigned int trackIndex = 0;
+   unsigned int curveIndex = 0;
    for (int j = 0; j < mNumTiles; ++j)
    {
       float yPosOfOriginOfGraph = (mTileHeight * j) + (mTileVerticalOffset / 2.0f);
@@ -285,7 +313,7 @@ void TrackVisualizer::initializeTrackLines()
             mTrackLines[curveIndex + 3].push_back(glm::vec3(nextX, nextSampleNormalized.w, 0.0f));
          }
 
-         trackIndex += 1;
+         ++trackIndex;
          curveIndex += 4;
       }
    }

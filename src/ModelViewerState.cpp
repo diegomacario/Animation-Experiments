@@ -413,7 +413,7 @@ void ModelViewerState::update(float deltaTime)
    mSkeletonViewer.UpdateBones(mAnimationData.animatedPose, mAnimationData.animatedPosePalette);
 
    // Update the track visualizer
-   mTrackVisualizer.update(mAnimationData.playbackTime);
+   mTrackVisualizer.update();
 }
 
 void ModelViewerState::render()
