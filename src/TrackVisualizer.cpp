@@ -100,7 +100,7 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
    {
       glBindVertexArray(mTrackLinesVAOs[i]);
       glBindBuffer(GL_ARRAY_BUFFER, mTrackLinesVBOs[i]);
-      glBufferData(GL_ARRAY_BUFFER, mTrackLines[i].size() * sizeof(glm::vec3), &(mTrackLines[i][0]), GL_STATIC_DRAW);
+      glBufferData(GL_ARRAY_BUFFER, mTrackLines[i].size() * sizeof(glm::vec3), &(mTrackLines[i][0]), GL_DYNAMIC_DRAW);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindVertexArray(0);
    }
@@ -127,7 +127,7 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
    }
 }
 
-void TrackVisualizer::update()
+void TrackVisualizer::update(float deltaTime)
 {
    unsigned int trackIndex = 0;
    unsigned int curveIndex = 0;
@@ -142,29 +142,53 @@ void TrackVisualizer::update()
 
          float xPosOfOriginOfGraph = (mTileWidth * i) + (mTileHorizontalOffset / 2.0f);
 
-         float trackDuration = mTracks[trackIndex].GetEndTime() - mTracks[trackIndex].GetStartTime();
-         unsigned int sampleIndex = static_cast<unsigned int>((0.009f / trackDuration) * 149.0f) * 2;
-
          for (int k = 0; k < 4; ++k)
          {
-            std::vector<glm::vec3> curve = mTrackLines[curveIndex + k];
-            float xOffset = curve[sampleIndex].x - xPosOfOriginOfGraph;
-            std::vector<glm::vec3> front(curve.begin(), curve.begin() + sampleIndex);
-            curve.erase(curve.begin(), curve.begin() + sampleIndex);
-            for (unsigned int l = 0; l < curve.size(); ++l)
+            std::vector<glm::vec3>& curve = mTrackLines[curveIndex + k];
+            float xOffset = deltaTime * 4.0f;
+            unsigned int indexOfFirstSampleAfterReferenceLine = 0;
+            bool foundFirstSampleAfterReferenceLine = false;
+            // Move the entire curve to the left by xOffset
+            for (int l = 0; l < curve.size(); ++l)
             {
-               curve[l] = curve[l] - glm::vec3(xOffset, 0.0f, 0.0f);
+               curve[l].x = curve[l].x - xOffset;
+               if (!foundFirstSampleAfterReferenceLine && (curve[l].x > xPosOfOriginOfGraph))
+               {
+                  // Store the index of the first sample that's after the vertical reference line
+                  indexOfFirstSampleAfterReferenceLine = l;
+                  foundFirstSampleAfterReferenceLine = true;
+               }
             }
 
-            float xOffsetOfLastSample = curve[curve.size() - 1].x - xPosOfOriginOfGraph;
-            for (unsigned int l = 0; l < front.size(); ++l)
+            // If the first sample that's after the vertical reference line is sample 0, then we don't have to shift any samples to the right,
+            // so we break here
+            if (indexOfFirstSampleAfterReferenceLine == 0)
             {
-               front[l] = front[l] + glm::vec3(xOffsetOfLastSample, 0.0f, 0.0f);
+               break;
             }
 
-            curve.insert(curve.end(), front.begin(), front.end());
-            mTrackLines[curveIndex + k] = curve;
+            // If the first sample that's after the vertical reference line is odd, then we use to the next one, since odd samples are always the
+            // end points of all the little line segments
+            if (indexOfFirstSampleAfterReferenceLine % 2 != 0)
+            {
+               ++indexOfFirstSampleAfterReferenceLine;
+            }
 
+            // Extract all the samples that are to the left of the vertical reference line into a separate vector
+            std::vector<glm::vec3> frontOfCurve(curve.begin(), curve.begin() + indexOfFirstSampleAfterReferenceLine);
+            curve.erase(curve.begin(), curve.begin() + indexOfFirstSampleAfterReferenceLine);
+
+            // Shift all the samples that are to the left of the vertical reference line to the tail of the curve
+            float xOffsetOfLastSample = curve[curve.size() - 1].x - frontOfCurve[0].x;
+            for (int l = 0; l < frontOfCurve.size(); ++l)
+            {
+               frontOfCurve[l].x = frontOfCurve[l].x + xOffsetOfLastSample;
+            }
+
+            // Add the tail to the curve
+            curve.insert(curve.end(), frontOfCurve.begin(), frontOfCurve.end());
+
+            // Upload the updated curve to the GPU
             glBindVertexArray(mTrackLinesVAOs[curveIndex + k]);
             glBindBuffer(GL_ARRAY_BUFFER, mTrackLinesVBOs[curveIndex + k]);
             glBufferSubData(GL_ARRAY_BUFFER, 0, mTrackLines[curveIndex + k].size() * sizeof(glm::vec3), &(mTrackLines[curveIndex + k][0]));
@@ -263,9 +287,9 @@ void TrackVisualizer::initializeTrackLines()
 
          glm::vec4 minSamples = glm::vec4(std::numeric_limits<float>::max());
          glm::vec4 maxSamples = glm::vec4(std::numeric_limits<float>::lowest());
-         for (unsigned int sampleIndex = 0; sampleIndex < 150; ++sampleIndex)
+         for (int sampleIndex = 0; sampleIndex < 600; ++sampleIndex)
          {
-            float sampleIndexNormalized = static_cast<float>(sampleIndex) / 149.0f;
+            float sampleIndexNormalized = static_cast<float>(sampleIndex) / 599.0f;
 
             Q::quat sample = mTracks[trackIndex].Sample(sampleIndexNormalized * trackDuration, false);
 
@@ -279,10 +303,10 @@ void TrackVisualizer::initializeTrackLines()
             if (sample.w > maxSamples.w) maxSamples.w = sample.w;
          }
 
-         for (unsigned int sampleIndex = 1; sampleIndex < 150; ++sampleIndex)
+         for (int sampleIndex = 1; sampleIndex < 600; ++sampleIndex)
          {
-            float currSampleIndexNormalized = static_cast<float>(sampleIndex - 1) / 149.0f;
-            float nextSampleIndexNormalized = static_cast<float>(sampleIndex) / 149.0f;
+            float currSampleIndexNormalized = static_cast<float>(sampleIndex - 1) / 599.0f;
+            float nextSampleIndexNormalized = static_cast<float>(sampleIndex) / 599.0f;
 
             float currX = xPosOfOriginOfGraph + (currSampleIndexNormalized * mGraphWidth);
             float nextX = xPosOfOriginOfGraph + (nextSampleIndexNormalized * mGraphWidth);
