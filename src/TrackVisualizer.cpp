@@ -127,8 +127,10 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
    }
 }
 
-void TrackVisualizer::update(float deltaTime)
+void TrackVisualizer::update(float deltaTime, float playbackSpeed)
 {
+   float speedFactor = (playbackSpeed == 0.0f) ? 0.0f : 1.0f + (4.0f * playbackSpeed);
+   float xOffset = deltaTime * speedFactor;
    unsigned int trackIndex = 0;
    unsigned int curveIndex = 0;
    for (int j = 0; j < mNumTiles; ++j)
@@ -145,7 +147,6 @@ void TrackVisualizer::update(float deltaTime)
          for (int k = 0; k < 4; ++k)
          {
             std::vector<glm::vec3>& curve = mTrackLines[curveIndex + k];
-            float xOffset = deltaTime * 4.0f;
             unsigned int indexOfFirstSampleAfterReferenceLine = 0;
             bool foundFirstSampleAfterReferenceLine = false;
             // Move the entire curve to the left by xOffset
@@ -161,10 +162,10 @@ void TrackVisualizer::update(float deltaTime)
             }
 
             // If the first sample that's after the vertical reference line is sample 0, then we don't have to shift any samples to the right,
-            // so we break here
+            // so we continue here
             if (indexOfFirstSampleAfterReferenceLine == 0)
             {
-               break;
+               continue;
             }
 
             // If the first sample that's after the vertical reference line is odd, then we use to the next one, since odd samples are always the
