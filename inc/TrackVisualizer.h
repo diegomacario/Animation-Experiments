@@ -22,7 +22,10 @@ public:
 private:
 
    void initializeReferenceLines();
+
    void initializeTrackLines();
+
+   void deleteBuffers();
 
    float                               mWidthOfGraphSpace;
    float                               mHeightOfGraphSpace;
@@ -49,6 +52,8 @@ private:
    std::vector<std::vector<glm::vec3>> mTrackLines;
 
    glm::vec3                           mTrackLinesColorPalette[4];
+
+   bool                                mInitialized;
 };
 
 #endif
