@@ -24,10 +24,13 @@ TrackVisualizer::TrackVisualizer()
    , mGraphHeight(0.0f)
    , mReferenceLinesVAO(0)
    , mReferenceLinesVBO(0)
+   , mEmptyLinesVAO(0)
+   , mEmptyLinesVBO(0)
    , mTrackLinesVAOs()
    , mTrackLinesVBOs()
    , mTracks()
    , mReferenceLines()
+   , mEmptyLines()
    , mTrackLines()
    , mTrackLinesColorPalette{glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.65f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)}
    , mInitialized(false)
@@ -48,10 +51,13 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
       // Reset
       mTracks.clear();
       mReferenceLines.clear();
+      mEmptyLines.clear();
       mTrackLines.clear();
       deleteBuffers();
       mReferenceLinesVAO = 0;
       mReferenceLinesVBO = 0;
+      mEmptyLinesVAO = 0;
+      mEmptyLinesVBO = 0;
       mTrackLinesVAOs.clear();
       mTrackLinesVBOs.clear();
    }
@@ -69,11 +75,11 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
       ++mNumTiles;
    }
 
-   mTileWidth = (mWidthOfGraphSpace * (1280.0f / 720.0f)) / mNumTiles;
+   mTileWidth  = (mWidthOfGraphSpace * (1280.0f / 720.0f)) / mNumTiles;
    mTileHeight = mHeightOfGraphSpace / mNumTiles;
    mTileHorizontalOffset = mTileWidth * 0.1f * (720.0f / 1280.0f);
-   mTileVerticalOffset = mTileHeight * 0.1f;
-   mGraphWidth = mTileWidth - mTileHorizontalOffset;
+   mTileVerticalOffset   = mTileHeight * 0.1f;
+   mGraphWidth  = mTileWidth - mTileHorizontalOffset;
    mGraphHeight = mTileHeight - mTileVerticalOffset;
 
    initializeReferenceLines();
@@ -83,6 +89,9 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
 
    glGenVertexArrays(1, &mReferenceLinesVAO);
    glGenBuffers(1, &mReferenceLinesVBO);
+
+   glGenVertexArrays(1, &mEmptyLinesVAO);
+   glGenBuffers(1, &mEmptyLinesVBO);
 
    mTrackLinesVAOs.resize(mNumCurves);
    mTrackLinesVBOs.resize(mNumCurves);
@@ -94,6 +103,12 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
    glBindVertexArray(mReferenceLinesVAO);
    glBindBuffer(GL_ARRAY_BUFFER, mReferenceLinesVBO);
    glBufferData(GL_ARRAY_BUFFER, mReferenceLines.size() * sizeof(glm::vec3), &mReferenceLines[0], GL_STATIC_DRAW);
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
+   glBindVertexArray(0);
+
+   glBindVertexArray(mEmptyLinesVAO);
+   glBindBuffer(GL_ARRAY_BUFFER, mEmptyLinesVBO);
+   glBufferData(GL_ARRAY_BUFFER, mEmptyLines.size() * sizeof(glm::vec3), &mEmptyLines[0], GL_STATIC_DRAW);
    glBindBuffer(GL_ARRAY_BUFFER, 0);
    glBindVertexArray(0);
 
@@ -112,6 +127,13 @@ void TrackVisualizer::setTracks(std::vector<FastTransformTrack>& tracks)
 
    glBindVertexArray(mReferenceLinesVAO);
    glBindBuffer(GL_ARRAY_BUFFER, mReferenceLinesVBO);
+   glEnableVertexAttribArray(posAttribLocation);
+   glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
+   glBindVertexArray(0);
+
+   glBindVertexArray(mEmptyLinesVAO);
+   glBindBuffer(GL_ARRAY_BUFFER, mEmptyLinesVBO);
    glEnableVertexAttribArray(posAttribLocation);
    glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
    glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -229,6 +251,11 @@ void TrackVisualizer::render()
    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(mReferenceLines.size()));
    glBindVertexArray(0);
 
+   //mTrackShader->setUniformVec3("color", glm::vec3(0.0f, 1.0f, 0.0f));
+   //glBindVertexArray(mEmptyLinesVAO);
+   //glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(mEmptyLines.size()));
+   //glBindVertexArray(0);
+
    for (int i = 0; i < mNumCurves; ++i)
    {
       mTrackShader->setUniformVec3("color", mTrackLinesColorPalette[i % 4]);
@@ -249,21 +276,39 @@ void TrackVisualizer::initializeReferenceLines()
 
       for (int i = 0; i < mNumTiles; ++i)
       {
+         float xPosOfOriginOfGraph = (mTileWidth * i) + (mTileHorizontalOffset / 2.0f);
+
          if (trackIndex >= mNumGraphs)
          {
             // Uncomment this line if you don't want to see reference lines for empty graphs
             //break;
+
+            // Bottom to top diagonal
+            mEmptyLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph, 4.0f));
+            mEmptyLines.push_back(glm::vec3(xPosOfOriginOfGraph + mGraphWidth, yPosOfOriginOfGraph + mGraphHeight, 4.0f));
+
+            // Top to bottom diagonal
+            mEmptyLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph + mGraphHeight, 4.0f));
+            mEmptyLines.push_back(glm::vec3(xPosOfOriginOfGraph + mGraphWidth, yPosOfOriginOfGraph, 4.0f));
          }
 
-         float xPosOfOriginOfGraph = (mTileWidth * i) + (mTileHorizontalOffset / 2.0f);
-
-         // Y axis
+         // Y axis (left)
          mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph, 4.0f));
          mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph + mGraphHeight, 4.0f));
 
-         // X axis
+         // X axis (bottom)
          mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph, 4.0f));
          mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph + mGraphWidth, yPosOfOriginOfGraph, 4.0f));
+
+         // Uncomment these lines if you want each graph to be inside a box
+
+         // Y axis (right)
+         //mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph + mGraphWidth, yPosOfOriginOfGraph, 4.0f));
+         //mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph + mGraphWidth, yPosOfOriginOfGraph + mGraphHeight, 4.0f));
+
+         // X axis (top)
+         //mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph, yPosOfOriginOfGraph + mGraphHeight, 4.0f));
+         //mReferenceLines.push_back(glm::vec3(xPosOfOriginOfGraph + mGraphWidth, yPosOfOriginOfGraph + mGraphHeight, 4.0f));
 
          ++trackIndex;
       }
@@ -352,6 +397,9 @@ void TrackVisualizer::deleteBuffers()
 {
    glDeleteVertexArrays(1, &mReferenceLinesVAO);
    glDeleteBuffers(1, &mReferenceLinesVBO);
+
+   glDeleteVertexArrays(1, &mEmptyLinesVAO);
+   glDeleteBuffers(1, &mEmptyLinesVBO);
 
    if (mTrackLinesVAOs.size() > 0)
    {
