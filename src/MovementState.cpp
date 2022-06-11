@@ -221,8 +221,7 @@ void MovementState::processInput(float deltaTime)
    if (mWindow->keyIsPressed(GLFW_KEY_R)) { resetCamera(); }
 
    // Orient the camera
-   if (mWindow->mouseMoved() &&
-       (mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT) || mWindow->keyIsPressed(GLFW_KEY_C)))
+   if (mWindow->mouseMoved() && mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
    {
       mCamera3.processMouseMovement(mWindow->getCursorXOffset(), mWindow->getCursorYOffset());
       mWindow->resetMouseMoved();
@@ -716,9 +715,7 @@ void MovementState::userInterface()
    if (ImGui::CollapsingHeader("Controls", nullptr))
    {
       ImGui::BulletText("Hold the left mouse button and move the mouse\n"
-                        "to rotate the camera around the character.\n"
-                        "Alternatively, hold the C key and move \n"
-                        "the mouse (this is easier on a touchpad).");
+                        "to rotate the camera around the character.");
       ImGui::BulletText("Use the scroll wheel to zoom in and out.");
       ImGui::BulletText("Press the R key to reset the camera.");
       ImGui::BulletText("Use the WASD keys to move.");

@@ -51,7 +51,6 @@ set(project_headers
     inc/texture.h
     inc/texture_loader.h
     inc/Track.h
-    inc/TrackVisualizer.h
     inc/Transform.h
     inc/TransformTrack.h
     inc/Triangle.h
@@ -95,7 +94,6 @@ set(project_sources
     src/texture.cpp
     src/texture_loader.cpp
     src/Track.cpp
-    src/TrackVisualizer.cpp
     src/Transform.cpp
     src/TransformTrack.cpp
     src/Triangle.cpp
