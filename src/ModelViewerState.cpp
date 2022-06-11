@@ -152,8 +152,7 @@ void ModelViewerState::initializeState()
    // Set the initial playback speed
    mSelectedPlaybackSpeed = 1.0f;
    // Set the initial rendering options
-   mDisplayGround = false;
-   mDisplayGraphs = true;
+   mDisplayGround = true;
    mDisplayMesh = true;
    mDisplayBones = false;
    mDisplayJoints = false;
@@ -168,9 +167,6 @@ void ModelViewerState::initializeState()
 
    // Set the model transform
    mAnimationData.modelTransform = Transform(glm::vec3(0.0f, 0.0f, 0.0f), Q::quat(), glm::vec3(1.0f));
-
-   // Reset the track visualizer
-   mTrackVisualizer.setTracks(mClips[mAnimationData.currentClipIndex].GetTransformTracks());
 }
 
 void ModelViewerState::enter()
@@ -357,9 +353,6 @@ void ModelViewerState::update(float deltaTime)
       mAnimationData.currentClipIndex = mSelectedClip;
       mAnimationData.animatedPose     = mSkeleton.GetRestPose();
       mAnimationData.playbackTime     = 0.0f;
-
-      // Reset the track visualizer
-      mTrackVisualizer.setTracks(mClips[mAnimationData.currentClipIndex].GetTransformTracks());
    }
 
    if (mAnimationData.currentSkinningMode != mSelectedSkinningMode)
@@ -406,9 +399,6 @@ void ModelViewerState::update(float deltaTime)
 
    // Update the skeleton viewer
    mSkeletonViewer.UpdateBones(mAnimationData.animatedPose, mAnimationData.animatedPosePalette);
-
-   // Update the track visualizer
-   mTrackVisualizer.update(deltaTime, mSelectedPlaybackSpeed);
 }
 
 void ModelViewerState::render()
@@ -426,12 +416,6 @@ void ModelViewerState::render()
 
    // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
-
-   // Render the graphs
-   if (mDisplayGraphs)
-   {
-      mTrackVisualizer.render();
-   }
 
    glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -738,8 +722,6 @@ void ModelViewerState::userInterface()
       ImGui::Text("Playback Time");
 
       ImGui::Checkbox("Display Ground", &mDisplayGround);
-
-      ImGui::Checkbox("Display Graphs", &mDisplayGraphs);
 
       ImGui::Checkbox("Display Skin", &mDisplayMesh);
 

@@ -13,7 +13,6 @@
 #include "AnimatedMesh.h"
 #include "SkeletonViewer.h"
 #include "Clip.h"
-#include "TrackVisualizer.h"
 
 class ModelViewerState : public State
 {
@@ -110,7 +109,6 @@ private:
    int                       mSelectedSkinningMode;
    float                     mSelectedPlaybackSpeed;
    bool                      mDisplayGround;
-   bool                      mDisplayGraphs;
    bool                      mDisplayMesh;
    bool                      mDisplayBones;
    bool                      mDisplayJoints;
@@ -123,8 +121,6 @@ private:
    AnimationData             mAnimationData;
 
    bool                      mPause = false;
-
-   TrackVisualizer           mTrackVisualizer;
 };
 
 #endif
