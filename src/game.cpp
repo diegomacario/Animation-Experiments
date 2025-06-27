@@ -6,9 +6,6 @@
 Game::Game()
    : mFSM()
    , mWindow()
-#ifndef USE_THIRD_PERSON_CAMERA
-   , mCamera()
-#endif
 {
 
 }
@@ -29,37 +26,14 @@ bool Game::initialize(const std::string& title)
       return false;
    }
 
-#ifndef USE_THIRD_PERSON_CAMERA
-   // Initialize the camera
-   float widthInPix = 1280.0f;
-   float heightInPix = 720.0f;
-   float aspectRatio = (widthInPix / heightInPix);
-
-   mCamera = std::make_shared<Camera>(glm::vec3(0.0f, 0.0f, 0.0f),
-                                      glm::vec3(0.0f, 0.0f, -1.0f),
-                                      glm::vec3(0.0f, 1.0f, 0.0f),
-                                      45.0f,       // Fovy
-                                      aspectRatio, // Aspect ratio
-                                      0.1f,        // Near
-                                      130.0f,      // Far
-                                      10.0f,       // Movement speed
-                                      0.1f);       // Mouse sensitivity
-#endif
-
    // Create the FSM
    mFSM = std::make_shared<FiniteStateMachine>();
 
    // Initialize the states
    std::unordered_map<std::string, std::shared_ptr<State>> mStates;
 
-#ifdef USE_THIRD_PERSON_CAMERA
    mStates["viewer"] = std::make_shared<ModelViewerState>(mFSM,
                                                           mWindow);
-#else
-   mStates["viewer"] = std::make_shared<ModelViewerState>(mFSM,
-                                                          mWindow,
-                                                          mCamera);
-#endif
 
    // Initialize the FSM
    mFSM->initialize(std::move(mStates), "viewer");

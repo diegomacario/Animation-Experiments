@@ -4,11 +4,7 @@
 #include "state.h"
 #include "finite_state_machine.h"
 #include "window.h"
-#ifdef USE_THIRD_PERSON_CAMERA
 #include "Camera3.h"
-#else
-#include "camera.h"
-#endif
 #include "texture.h"
 #include "AnimatedMesh.h"
 #include "Clip.h"
@@ -18,14 +14,8 @@ class ModelViewerState : public State
 {
 public:
 
-#ifdef USE_THIRD_PERSON_CAMERA
    ModelViewerState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
                     const std::shared_ptr<Window>&             window);
-#else
-   ModelViewerState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
-                    const std::shared_ptr<Window>&             window,
-                    const std::shared_ptr<Camera>&             camera);
-#endif
    ~ModelViewerState() = default;
 
    ModelViewerState(const ModelViewerState&) = delete;
@@ -59,11 +49,7 @@ private:
 
    std::shared_ptr<Window>             mWindow;
 
-#ifdef USE_THIRD_PERSON_CAMERA
    Camera3                             mCamera3;
-#else
-   std::shared_ptr<Camera>             mCamera;
-#endif
 
    std::vector<AnimatedMesh>           mGroundMeshes;
    std::shared_ptr<Texture>            mGroundTexture;
