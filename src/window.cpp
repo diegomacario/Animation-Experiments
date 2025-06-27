@@ -6,33 +6,6 @@
 
 #include "window.h"
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten/emscripten.h>
-#include <emscripten/html5.h>
-
-EM_JS(int, getCanvasWidth, (), {
-   return window.innerWidth;
-});
-
-EM_JS(int, getCanvasHeight, (), {
-   return window.innerHeight;
-});
-
-EM_JS(float, getDevicePixelRatio, (), {
-   return window.devicePixelRatio;
-});
-
-EM_JS(float, getBrowserScrollWheelSensitivity, (), {
-   if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
-      return -1.0;
-   }
-   else
-   {
-      return -0.02;
-   }
-});
-#endif
-
 Window::Window(const std::string& title)
    : mWindow(nullptr)
    , mWidthOfWindowInPix(0)
@@ -40,9 +13,7 @@ Window::Window(const std::string& title)
    , mWidthOfFramebufferInPix(0)
    , mHeightOfFramebufferInPix(0)
    , mTitle(title)
-#ifndef __EMSCRIPTEN__
    , mIsFullScreen(false)
-#endif
    , mKeys()
    , mProcessedKeys()
    , mMouseMoved(false)
@@ -53,26 +24,19 @@ Window::Window(const std::string& title)
    , mCursorYOffset(0.0)
    , mScrollWheelMoved(false)
    , mScrollYOffset(0.0)
-#ifdef __EMSCRIPTEN__
-   , mScrollWheelSensitivity(0.0f)
-#endif
-#ifndef __EMSCRIPTEN__
    , mMultisampleFBO(0)
    , mMultisampleTexture(0)
    , mMultisampleRBO(0)
    , mNumOfSamples(1)
-#endif
 {
 
 }
 
 Window::~Window()
 {
-#ifndef __EMSCRIPTEN__
    glDeleteFramebuffers(1, &mMultisampleFBO);
    glDeleteTextures(1, &mMultisampleTexture);
    glDeleteRenderbuffers(1, &mMultisampleRBO);
-#endif
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -97,9 +61,6 @@ bool Window::initialize()
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-#ifdef __EMSCRIPTEN__
-   glfwWindowHint(GLFW_SAMPLES, 8);
-#endif
 
 #ifdef __APPLE__
    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -108,13 +69,6 @@ bool Window::initialize()
    float devicePixelRatio = 1.0f;
    int width = 1280;
    int height = 720;
-
-#ifdef __EMSCRIPTEN__
-   devicePixelRatio = getDevicePixelRatio();
-   width = getCanvasWidth() * devicePixelRatio;
-   height = getCanvasHeight() * devicePixelRatio;
-   mScrollWheelSensitivity = getBrowserScrollWheelSensitivity();
-#endif
 
    mWindow = glfwCreateWindow(width, height, mTitle.c_str(), nullptr, nullptr);
    if (!mWindow)
@@ -129,7 +83,6 @@ bool Window::initialize()
 
    enableCursor(true);
 
-#ifndef __EMSCRIPTEN__
    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
    {
       std::cout << "Error - Window::initialize - Failed to load pointers to OpenGL functions using GLAD" << "\n";
@@ -137,13 +90,11 @@ bool Window::initialize()
       mWindow = nullptr;
       return false;
    }
-#endif
 
    glEnable(GL_CULL_FACE);
 
    glfwGetFramebufferSize(mWindow, &mWidthOfFramebufferInPix, &mHeightOfFramebufferInPix);
 
-#ifndef __EMSCRIPTEN__
    if (!configureAntiAliasingSupport())
    {
       std::cout << "Error - Window::initialize - Failed to configure anti aliasing support" << "\n";
@@ -151,18 +102,15 @@ bool Window::initialize()
       mWindow = nullptr;
       return false;
    }
-#endif
 
    setInputCallbacks();
 
    updateBufferAndViewportSizes(mWidthOfFramebufferInPix, mHeightOfFramebufferInPix);
 
-#ifndef __EMSCRIPTEN__
    // TODO: The ImGui window is properly scaled in the browser, but in the desktop it looks huge
    //       We need to figure out how to scale things properly in the desktop
    //       Once that's done, the calls to AddFontFromFileTTF and ScaleAllSizes should be done in the desktop too
    //devicePixelRatio = static_cast<float>(mWidthOfFramebufferInPix) / static_cast<float>(mWidthOfWindowInPix);
-#endif
 
    // Initialize ImGui
    // Setup Dear ImGui context
@@ -170,23 +118,13 @@ bool Window::initialize()
    ImGui::CreateContext();
    ImGuiIO& io = ImGui::GetIO(); (void)io;
    io.IniFilename = nullptr;
-#ifdef __EMSCRIPTEN__
-   io.Fonts->AddFontFromFileTTF("resources/fonts/Cousine-Regular.ttf", 12 * devicePixelRatio);
-#endif
 
    // Setup Dear ImGui style
    ImGui::StyleColorsDark();
-#ifdef __EMSCRIPTEN__
-   ImGui::GetStyle().ScaleAllSizes(devicePixelRatio);
-#endif
 
    // Setup Platform/Renderer bindings
    ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
-#ifdef __EMSCRIPTEN__
-   ImGui_ImplOpenGL3_Init("#version 300 es");
-#else
    ImGui_ImplOpenGL3_Init("#version 330 core");
-#endif
 
    return true;
 }
@@ -240,7 +178,6 @@ unsigned int Window::getHeightOfFramebufferInPix() const
    return mHeightOfFramebufferInPix;
 }
 
-#ifndef __EMSCRIPTEN__
 bool Window::isFullScreen() const
 {
    return mIsFullScreen;
@@ -264,7 +201,6 @@ void Window::setFullScreen(bool fullScreen)
 
    mIsFullScreen = fullScreen;
 }
-#endif
 
 bool Window::keyIsPressed(int key) const
 {
@@ -447,14 +383,9 @@ void Window::scrollCallback(GLFWwindow* window, double xOffset, double yOffset)
    // I'm going to make the camera ask the window if it should update its FOVY. Is there a better way to do this?
    mScrollYOffset = static_cast<float>(yOffset);
 
-#ifdef __EMSCRIPTEN__
-   mScrollYOffset *= mScrollWheelSensitivity;
-#endif
-
    mScrollWheelMoved = true;
 }
 
-#ifndef __EMSCRIPTEN__
 bool Window::configureAntiAliasingSupport()
 {
    if (!createMultisampleFramebuffer())
@@ -537,17 +468,6 @@ void Window::setNumberOfSamples(unsigned int numOfSamples)
    glRenderbufferStorageMultisample(GL_RENDERBUFFER, mNumOfSamples, GL_DEPTH_COMPONENT, mWidthOfFramebufferInPix, mHeightOfFramebufferInPix);
    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
-#endif
-
-#ifdef __EMSCRIPTEN__
-void Window::updateWindowDimensions(int width, int height)
-{
-   float devicePixelRatio = getDevicePixelRatio();
-   mWidthOfWindowInPix    = width * devicePixelRatio;
-   mHeightOfWindowInPix   = height * devicePixelRatio;
-   glfwSetWindowSize(mWindow, mWidthOfWindowInPix, mHeightOfWindowInPix);
-}
-#endif
 
 void Window::updateBufferAndViewportSizes(int widthOfFramebufferInPix, int heightOfFramebufferInPix)
 {
@@ -555,14 +475,12 @@ void Window::updateBufferAndViewportSizes(int widthOfFramebufferInPix, int heigh
    mHeightOfFramebufferInPix = heightOfFramebufferInPix;
    glfwGetWindowSize(mWindow, &mWidthOfWindowInPix, &mHeightOfWindowInPix);
 
-#ifndef __EMSCRIPTEN__
    resizeFramebuffers();
 
    // Clear the multisample framebuffer
    glBindFramebuffer(GL_FRAMEBUFFER, mMultisampleFBO);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
 
    float aspectRatioOfScene  = 1280.0f / 720.0f;
 
@@ -607,8 +525,4 @@ void Window::updateBufferAndViewportSizes(int widthOfFramebufferInPix, int heigh
    mLowerLeftCornerOfViewportYInPix = lowerLeftCornerOfViewportYInPix;
    mWidthOfViewportInPix = widthOfViewportInPix;
    mHeightOfViewportInPix = heightOfViewportInPix;
-
-#ifdef __EMSCRIPTEN__
-   emscripten_set_element_css_size("canvas", getCanvasWidth(), getCanvasHeight());
-#endif
 }

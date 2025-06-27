@@ -109,10 +109,8 @@ private:
    float                     mSelectedPlaybackSpeed;
    bool                      mDisplayGround;
    bool                      mDisplayMesh;
-#ifndef __EMSCRIPTEN__
    bool                      mWireframeModeForCharacter;
    bool                      mPerformDepthTesting;
-#endif
 
    AnimationData             mAnimationData;
 

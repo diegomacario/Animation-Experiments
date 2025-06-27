@@ -1,11 +1,7 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-#ifdef __EMSCRIPTEN__
-#define GLFW_INCLUDE_ES3
-#else
 #include <glad/glad.h>
-#endif
 #include <GLFW/glfw3.h>
 
 #include <bitset>
@@ -36,10 +32,8 @@ public:
    unsigned int getHeightOfWindowInPix() const;
    unsigned int getWidthOfFramebufferInPix() const;
    unsigned int getHeightOfFramebufferInPix() const;
-#ifndef __EMSCRIPTEN__
    bool         isFullScreen() const;
    void         setFullScreen(bool fullScreen);
-#endif
 
    // Keyboard
    bool         keyIsPressed(int key) const;
@@ -61,18 +55,12 @@ public:
    float        getScrollYOffset() const;
 
    // Anti aliasing support
-#ifndef __EMSCRIPTEN__
    bool         configureAntiAliasingSupport();
    bool         createMultisampleFramebuffer();
    void         bindMultisampleFramebuffer();
    void         generateAntiAliasedImage();
    void         resizeFramebuffers();
    void         setNumberOfSamples(unsigned int numOfSamples);
-#endif
-
-#ifdef __EMSCRIPTEN__
-   void         updateWindowDimensions(int width, int height);
-#endif
 
    int          getLowerLeftCornerOfViewportXInPix() { return mLowerLeftCornerOfViewportXInPix; };
    int          getLowerLeftCornerOfViewportYInPix() { return mLowerLeftCornerOfViewportYInPix; };
@@ -98,9 +86,7 @@ private:
    int                            mWidthOfFramebufferInPix;
    int                            mHeightOfFramebufferInPix;
    std::string                    mTitle;
-#ifndef __EMSCRIPTEN__
    bool                           mIsFullScreen;
-#endif
 
    // Keyboard
    std::bitset<GLFW_KEY_LAST + 1> mKeys;
@@ -117,17 +103,12 @@ private:
    // Scroll wheel
    mutable bool                   mScrollWheelMoved;
    float                          mScrollYOffset;
-#ifdef __EMSCRIPTEN__
-   float                          mScrollWheelSensitivity;
-#endif
 
    // Anti aliasing support
-#ifndef __EMSCRIPTEN__
    unsigned int                   mMultisampleFBO;
    unsigned int                   mMultisampleTexture;
    unsigned int                   mMultisampleRBO;
    unsigned int                   mNumOfSamples;
-#endif
 
    int                            mLowerLeftCornerOfViewportXInPix;
    int                            mLowerLeftCornerOfViewportYInPix;

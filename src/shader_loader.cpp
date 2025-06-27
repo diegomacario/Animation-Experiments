@@ -1,8 +1,4 @@
-#ifdef __EMSCRIPTEN__
-#include <GLES3/gl3.h>
-#else
 #include <glad/glad.h>
-#endif
 
 #include <vector>
 #include <fstream>
@@ -74,7 +70,6 @@ std::shared_ptr<Shader> ShaderLoader::loadResource(const std::string& vShaderFil
    return std::make_shared<Shader>(shaderProgID, std::move(attributes), std::move(uniforms));
 }
 
-#ifndef __EMSCRIPTEN__
 std::shared_ptr<Shader> ShaderLoader::loadResource(const std::string& vShaderFilePath,
                                                    const std::string& fShaderFilePath,
                                                    const std::string& gShaderFilePath) const
@@ -155,7 +150,6 @@ std::shared_ptr<Shader> ShaderLoader::loadResource(const std::string& vShaderFil
 
    return std::make_shared<Shader>(shaderProgID, std::move(attributes), std::move(uniforms));
 }
-#endif
 
 bool ShaderLoader::readShaderFile(const std::string& shaderFilePath, std::string& outShaderCode) const
 {
@@ -179,15 +173,7 @@ bool ShaderLoader::readShaderFile(const std::string& shaderFilePath, std::string
 
 void ShaderLoader::addVersionToShaderCode(std::string& ioShaderCode, GLenum shaderType) const
 {
-#ifdef __EMSCRIPTEN__
-   std::string shaderVersion("#version 300 es\n");
-   if (shaderType == GL_FRAGMENT_SHADER)
-   {
-      shaderVersion += "precision mediump float;\n";
-   }
-#else
    std::string shaderVersion("#version 330 core\n");
-#endif
 
    ioShaderCode = shaderVersion + ioShaderCode;
 }
@@ -214,7 +200,6 @@ unsigned int ShaderLoader::createAndLinkShaderProgram(unsigned int vShaderID, un
    return shaderProgID;
 }
 
-#ifndef __EMSCRIPTEN__
 unsigned int ShaderLoader::createAndLinkShaderProgram(unsigned int vShaderID, unsigned int fShaderID, unsigned int gShaderID) const
 {
    unsigned int shaderProgID = glCreateProgram();
@@ -227,7 +212,6 @@ unsigned int ShaderLoader::createAndLinkShaderProgram(unsigned int vShaderID, un
 
    return shaderProgID;
 }
-#endif
 
 bool ShaderLoader::shaderCompilationSucceeded(unsigned int shaderID) const
 {
