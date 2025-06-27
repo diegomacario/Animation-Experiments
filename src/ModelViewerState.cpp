@@ -116,9 +116,6 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
    mGroundTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/table/wooden_floor.jpg");
 
    initializeState();
-
-   // Initialize the bones of the skeleton viewer
-   mSkeletonViewer.InitializeBones(mAnimationData.animatedPose);
 }
 
 void ModelViewerState::initializeState()
@@ -144,11 +141,8 @@ void ModelViewerState::initializeState()
    // Set the initial rendering options
    mDisplayGround = true;
    mDisplayMesh = true;
-   mDisplayBones = false;
-   mDisplayJoints = false;
 #ifndef __EMSCRIPTEN__
    mWireframeModeForCharacter = false;
-   mWireframeModeForJoints = false;
    mPerformDepthTesting = true;
 #endif
 
@@ -385,9 +379,6 @@ void ModelViewerState::update(float deltaTime)
          mAnimatedMeshes[i].SkinMeshOnTheCPU(mAnimationData.skinMatrices);
       }
    }
-
-   // Update the skeleton viewer
-   mSkeletonViewer.UpdateBones(mAnimationData.animatedPose, mAnimationData.animatedPosePalette);
 }
 
 void ModelViewerState::render()
@@ -510,34 +501,7 @@ void ModelViewerState::render()
 
    glLineWidth(2.0f);
 
-   // Render the bones
-   if (mDisplayBones)
-   {
-#ifdef USE_THIRD_PERSON_CAMERA
-      mSkeletonViewer.RenderBones(mAnimationData.modelTransform, mCamera3.getPerspectiveProjectionViewMatrix());
-#else
-      mSkeletonViewer.RenderBones(mAnimationData.modelTransform, mCamera->getPerspectiveProjectionViewMatrix());
-#endif
-   }
-
    glLineWidth(1.0f);
-
-#ifndef __EMSCRIPTEN__
-   if (mWireframeModeForJoints)
-   {
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-   }
-#endif
-
-   // Render the joints
-   if (mDisplayJoints)
-   {
-#ifdef USE_THIRD_PERSON_CAMERA
-      mSkeletonViewer.RenderJoints(mAnimationData.modelTransform, mCamera3.getPerspectiveProjectionViewMatrix(), mAnimationData.animatedPosePalette);
-#else
-      mSkeletonViewer.RenderJoints(mAnimationData.modelTransform, mCamera->getPerspectiveProjectionViewMatrix(), mAnimationData.animatedPosePalette);
-#endif
-   }
 
 #ifndef __EMSCRIPTEN__
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -712,14 +676,8 @@ void ModelViewerState::userInterface()
 
       ImGui::Checkbox("Display Skin", &mDisplayMesh);
 
-      ImGui::Checkbox("Display Bones", &mDisplayBones);
-
-      ImGui::Checkbox("Display Joints", &mDisplayJoints);
-
 #ifndef __EMSCRIPTEN__
       ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
-
-      ImGui::Checkbox("Wireframe Mode for Joints", &mWireframeModeForJoints);
 
       ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
 #endif

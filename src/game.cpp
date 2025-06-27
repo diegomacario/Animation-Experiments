@@ -1,9 +1,6 @@
 #include <iostream>
 
 #include "ModelViewerState.h"
-#include "IKState.h"
-#include "MovementState.h"
-#include "IKMovementState.h"
 #include "game.h"
 
 Game::Game()
@@ -64,23 +61,8 @@ bool Game::initialize(const std::string& title)
                                                           mCamera);
 #endif
 
-   mStates["movement"] = std::make_shared<MovementState>(mFSM,
-                                                         mWindow);
-
-#ifdef USE_THIRD_PERSON_CAMERA
-   mStates["ik"] = std::make_shared<IKState>(mFSM,
-                                             mWindow);
-#else
-   mStates["ik"] = std::make_shared<IKState>(mFSM,
-                                             mWindow,
-                                             mCamera);
-#endif
-
-   mStates["ik_movement"] = std::make_shared<IKMovementState>(mFSM,
-                                                              mWindow);
-
    // Initialize the FSM
-   mFSM->initialize(std::move(mStates), "ik_movement");
+   mFSM->initialize(std::move(mStates), "viewer");
 
    return true;
 }

@@ -11,8 +11,8 @@
 #endif
 #include "texture.h"
 #include "AnimatedMesh.h"
-#include "SkeletonViewer.h"
 #include "Clip.h"
+#include "Shader.h"
 
 class ModelViewerState : public State
 {
@@ -101,7 +101,6 @@ private:
 
    Skeleton                  mSkeleton;
    std::vector<AnimatedMesh> mAnimatedMeshes;
-   SkeletonViewer            mSkeletonViewer;
    std::vector<FastClip>     mClips;
    std::string               mClipNames;
    int                       mSelectedState;
@@ -110,11 +109,8 @@ private:
    float                     mSelectedPlaybackSpeed;
    bool                      mDisplayGround;
    bool                      mDisplayMesh;
-   bool                      mDisplayBones;
-   bool                      mDisplayJoints;
 #ifndef __EMSCRIPTEN__
    bool                      mWireframeModeForCharacter;
-   bool                      mWireframeModeForJoints;
    bool                      mPerformDepthTesting;
 #endif
 
