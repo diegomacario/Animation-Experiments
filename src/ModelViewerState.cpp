@@ -141,10 +141,8 @@ void ModelViewerState::initializeState()
    // Set the initial rendering options
    mDisplayGround = true;
    mDisplayMesh = true;
-#ifndef __EMSCRIPTEN__
    mWireframeModeForCharacter = false;
    mPerformDepthTesting = true;
-#endif
 
    // Set the initial pose
    mAnimationData.animatedPose = mSkeleton.GetRestPose();
@@ -184,7 +182,6 @@ void ModelViewerState::processInput(float deltaTime)
       }
    }
 
-#ifndef __EMSCRIPTEN__
    // Make the game full screen or windowed
    if (mWindow->keyIsPressed(GLFW_KEY_F) && !mWindow->keyHasBeenProcessed(GLFW_KEY_F))
    {
@@ -249,7 +246,6 @@ void ModelViewerState::processInput(float deltaTime)
       mWindow->setKeyAsProcessed(GLFW_KEY_8);
       mWindow->setNumberOfSamples(8);
    }
-#endif
 
    // Reset the camera
    if (mWindow->keyIsPressed(GLFW_KEY_R)) { resetCamera(); }
@@ -389,9 +385,7 @@ void ModelViewerState::render()
 
    userInterface();
 
-#ifndef __EMSCRIPTEN__
    mWindow->bindMultisampleFramebuffer();
-#endif
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
    // Enable depth testing for 3D objects
@@ -428,12 +422,10 @@ void ModelViewerState::render()
       mGroundShader->use(false);
    }
 
-#ifndef __EMSCRIPTEN__
    if (mWireframeModeForCharacter)
    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
    }
-#endif
 
    // Render the animated meshes
    if (mAnimationData.currentSkinningMode == SkinningMode::CPU && mDisplayMesh)
@@ -488,32 +480,24 @@ void ModelViewerState::render()
       mAnimatedMeshShader->use(false);
    }
 
-#ifdef __EMSCRIPTEN__
-   glDisable(GL_DEPTH_TEST);
-#else
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
    if (!mPerformDepthTesting)
    {
       glDisable(GL_DEPTH_TEST);
    }
-#endif
 
    glLineWidth(2.0f);
 
    glLineWidth(1.0f);
 
-#ifndef __EMSCRIPTEN__
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-#endif
    glEnable(GL_DEPTH_TEST);
 
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-#ifndef __EMSCRIPTEN__
    mWindow->generateAntiAliasedImage();
-#endif
 
    mWindow->swapBuffers();
    mWindow->pollEvents();
@@ -676,11 +660,9 @@ void ModelViewerState::userInterface()
 
       ImGui::Checkbox("Display Skin", &mDisplayMesh);
 
-#ifndef __EMSCRIPTEN__
       ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
 
       ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
-#endif
    }
 
    ImGui::End();
