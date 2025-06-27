@@ -111,7 +111,6 @@
 		04B9050E2847EC1C00FF56D3 /* glad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = glad.c; path = ../../dependencies/glad/glad/glad.c; sourceTree = "<group>"; };
 		04B905102847EC3100FF56D3 /* cgltf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cgltf.c; path = ../../dependencies/cgltf/cgltf/cgltf.c; sourceTree = "<group>"; };
 		04B9051F2847ECEC00FF56D3 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
-		04B905212847ECFF00FF56D3 /* Personal */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Personal; path = ../../../..; sourceTree = "<group>"; };
 		04B905242847ED3C00FF56D3 /* lglfw3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = lglfw3.a; path = ../../dependencies/GLFW/GLFW/lib/lglfw3.a; sourceTree = "<group>"; };
 		04B905262847F04E00FF56D3 /* imgui_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imgui_demo.cpp; path = ../../dependencies/imgui/imgui/imgui_demo.cpp; sourceTree = "<group>"; };
 		04B905272847F04E00FF56D3 /* imgui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imgui.cpp; path = ../../dependencies/imgui/imgui/imgui.cpp; sourceTree = "<group>"; };
@@ -326,7 +325,6 @@
 				043A2D7C2847F182001E6F77 /* Cocoa.framework */,
 				043A2D7A2847F178001E6F77 /* IOKit.framework */,
 				04B905242847ED3C00FF56D3 /* lglfw3.a */,
-				04B905212847ECFF00FF56D3 /* Personal */,
 				04B9051F2847ECEC00FF56D3 /* OpenGL.framework */,
 			);
 			name = Frameworks;
