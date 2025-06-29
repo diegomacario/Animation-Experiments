@@ -82,8 +82,6 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
 
 void ModelViewerState::initializeState()
 {
-   mPause = false;
-
    // Set the initial clip
    unsigned int numClips = static_cast<unsigned int>(mClips.size());
    for (unsigned int clipIndex = 0; clipIndex < numClips; ++clipIndex)
@@ -137,38 +135,6 @@ void ModelViewerState::processInput(float deltaTime)
       }
    }
 
-   // Make the game full screen or windowed
-   if (mWindow->keyIsPressed(GLFW_KEY_F) && !mWindow->keyHasBeenProcessed(GLFW_KEY_F))
-   {
-      mWindow->setKeyAsProcessed(GLFW_KEY_F);
-      mWindow->setFullScreen(!mWindow->isFullScreen());
-   }
-
-   // Change the number of samples used for anti aliasing
-   if (mWindow->keyIsPressed(GLFW_KEY_1) && !mWindow->keyHasBeenProcessed(GLFW_KEY_1))
-   {
-      mWindow->setKeyAsProcessed(GLFW_KEY_1);
-      mWindow->setNumberOfSamples(1);
-   }
-   else if (mWindow->keyIsPressed(GLFW_KEY_2) && !mWindow->keyHasBeenProcessed(GLFW_KEY_2))
-   {
-      mWindow->setKeyAsProcessed(GLFW_KEY_2);
-      mWindow->setNumberOfSamples(2);
-   }
-   else if (mWindow->keyIsPressed(GLFW_KEY_4) && !mWindow->keyHasBeenProcessed(GLFW_KEY_4))
-   {
-      mWindow->setKeyAsProcessed(GLFW_KEY_4);
-      mWindow->setNumberOfSamples(4);
-   }
-   else if (mWindow->keyIsPressed(GLFW_KEY_8) && !mWindow->keyHasBeenProcessed(GLFW_KEY_8))
-   {
-      mWindow->setKeyAsProcessed(GLFW_KEY_8);
-      mWindow->setNumberOfSamples(8);
-   }
-
-   // Reset the camera
-   if (mWindow->keyIsPressed(GLFW_KEY_R)) { resetCamera(); }
-
    // Orient the camera
    if (mWindow->mouseMoved() && mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
    {
@@ -182,21 +148,10 @@ void ModelViewerState::processInput(float deltaTime)
       mCamera3.processScrollWheelMovement(mWindow->getScrollYOffset());
       mWindow->resetScrollWheelMoved();
    }
-
-   if (mWindow->keyIsPressed(GLFW_KEY_P) && !mWindow->keyHasBeenProcessed(GLFW_KEY_P))
-   {
-      mWindow->setKeyAsProcessed(GLFW_KEY_P);
-      mPause = !mPause;
-   }
 }
 
 void ModelViewerState::update(float deltaTime)
 {
-   if (mPause)
-   {
-      return;
-   }
-
    if (mAnimationData.currentClipIndex != mSelectedClip)
    {
       mAnimationData.currentClipIndex = mSelectedClip;
@@ -257,11 +212,7 @@ void ModelViewerState::render()
 
    mWindow->bindMultisampleFramebuffer();
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-   // Enable depth testing for 3D objects
    glEnable(GL_DEPTH_TEST);
-
-   glClear(GL_DEPTH_BUFFER_BIT);
 
    // Render the animated meshes
    if (mAnimationData.currentSkinningMode == SkinningMode::CPU)
@@ -305,15 +256,6 @@ void ModelViewerState::render()
       mDiffuseTexture->unbind(0);
       mAnimatedMeshShader->use(false);
    }
-
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-   glLineWidth(2.0f);
-
-   glLineWidth(1.0f);
-
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   glEnable(GL_DEPTH_TEST);
 
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -433,12 +375,9 @@ void ModelViewerState::userInterface()
 
    ImGui::Begin("Model Viewer", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
 
-   if (ImGui::CollapsingHeader("Settings", nullptr))
-   {
-      ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
+   ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
 
-      ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
-   }
+   ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
 
    ImGui::End();
 }

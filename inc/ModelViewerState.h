@@ -90,8 +90,6 @@ private:
    int                       mSelectedSkinningMode;
 
    AnimationData             mAnimationData;
-
-   bool                      mPause = false;
 };
 
 #endif
