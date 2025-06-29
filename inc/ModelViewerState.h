@@ -51,10 +51,6 @@ private:
 
    Camera3                             mCamera3;
 
-   std::vector<AnimatedMesh>           mGroundMeshes;
-   std::shared_ptr<Texture>            mGroundTexture;
-   std::shared_ptr<Shader>             mGroundShader;
-
    enum SkinningMode : int
    {
       GPU = 0,
@@ -92,11 +88,6 @@ private:
    int                       mSelectedState;
    int                       mSelectedClip;
    int                       mSelectedSkinningMode;
-   float                     mSelectedPlaybackSpeed;
-   bool                      mDisplayGround;
-   bool                      mDisplayMesh;
-   bool                      mWireframeModeForCharacter;
-   bool                      mPerformDepthTesting;
 
    AnimationData             mAnimationData;
 

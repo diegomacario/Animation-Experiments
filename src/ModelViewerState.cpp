@@ -25,11 +25,6 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
                                                                                      "resources/shaders/diffuse_illumination.frag");
    configureLights(mStaticMeshShader);
 
-   // Initialize the ground shader
-   mGroundShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh.vert",
-                                                                                 "resources/shaders/ambient_diffuse_illumination.frag");
-   configureLights(mGroundShader);
-
    // Load the diffuse texture of the animated character
    mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/woman.png");
 
@@ -82,29 +77,6 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
                                       influencesAttribLocOfAnimatedShader);
    }
 
-   // Load the ground
-   data = LoadGLTFFile("resources/models/table/wooden_floor.gltf");
-   mGroundMeshes = LoadStaticMeshes(data);
-   FreeGLTFFile(data);
-
-   int positionsAttribLocOfStaticShader = mGroundShader->getAttributeLocation("position");
-   int normalsAttribLocOfStaticShader   = mGroundShader->getAttributeLocation("normal");
-   int texCoordsAttribLocOfStaticShader = mGroundShader->getAttributeLocation("texCoord");
-   for (unsigned int i = 0,
-        size = static_cast<unsigned int>(mGroundMeshes.size());
-        i < size;
-        ++i)
-   {
-      mGroundMeshes[i].ConfigureVAO(positionsAttribLocOfStaticShader,
-                                    normalsAttribLocOfStaticShader,
-                                    texCoordsAttribLocOfStaticShader,
-                                    -1,
-                                    -1);
-   }
-
-   // Load the texture of the ground
-   mGroundTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/table/wooden_floor.jpg");
-
    initializeState();
 }
 
@@ -126,13 +98,6 @@ void ModelViewerState::initializeState()
 
    // Set the initial skinning mode
    mSelectedSkinningMode = SkinningMode::GPU;
-   // Set the initial playback speed
-   mSelectedPlaybackSpeed = 1.0f;
-   // Set the initial rendering options
-   mDisplayGround = true;
-   mDisplayMesh = true;
-   mWireframeModeForCharacter = false;
-   mPerformDepthTesting = true;
 
    // Set the initial pose
    mAnimationData.animatedPose = mSkeleton.GetRestPose();
@@ -255,7 +220,7 @@ void ModelViewerState::update(float deltaTime)
 
    // Sample the clip to get the animated pose
    FastClip& currClip = mClips[mAnimationData.currentClipIndex];
-   mAnimationData.playbackTime = currClip.Sample(mAnimationData.animatedPose, mAnimationData.playbackTime + (deltaTime * mSelectedPlaybackSpeed));
+   mAnimationData.playbackTime = currClip.Sample(mAnimationData.animatedPose, mAnimationData.playbackTime + deltaTime);
 
    // Get the palette of the animated pose
    mAnimationData.animatedPose.GetMatrixPalette(mAnimationData.animatedPosePalette);
@@ -298,37 +263,8 @@ void ModelViewerState::render()
 
    glClear(GL_DEPTH_BUFFER_BIT);
 
-   if (mDisplayGround)
-   {
-      mGroundShader->use(true);
-
-      glm::mat4 modelMatrix(1.0f);
-      modelMatrix = glm::scale(modelMatrix, glm::vec3(0.10f));
-      mGroundShader->setUniformMat4("model",      modelMatrix);
-      mGroundShader->setUniformMat4("view",       mCamera3.getViewMatrix());
-      mGroundShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
-      mGroundTexture->bind(0, mGroundShader->getUniformLocation("diffuseTex"));
-
-      // Loop over the ground meshes and render each one
-      for (unsigned int i = 0,
-         size = static_cast<unsigned int>(mGroundMeshes.size());
-         i < size;
-         ++i)
-      {
-         mGroundMeshes[i].Render();
-      }
-
-      mGroundTexture->unbind(0);
-      mGroundShader->use(false);
-   }
-
-   if (mWireframeModeForCharacter)
-   {
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-   }
-
    // Render the animated meshes
-   if (mAnimationData.currentSkinningMode == SkinningMode::CPU && mDisplayMesh)
+   if (mAnimationData.currentSkinningMode == SkinningMode::CPU)
    {
       mStaticMeshShader->use(true);
       mStaticMeshShader->setUniformMat4("model",      transformToMat4(mAnimationData.modelTransform));
@@ -348,7 +284,7 @@ void ModelViewerState::render()
       mDiffuseTexture->unbind(0);
       mStaticMeshShader->use(false);
    }
-   else if (mAnimationData.currentSkinningMode == SkinningMode::GPU && mDisplayMesh)
+   else if (mAnimationData.currentSkinningMode == SkinningMode::GPU)
    {
       mAnimatedMeshShader->use(true);
       mAnimatedMeshShader->setUniformMat4("model",      transformToMat4(mAnimationData.modelTransform));
@@ -371,11 +307,6 @@ void ModelViewerState::render()
    }
 
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-   if (!mPerformDepthTesting)
-   {
-      glDisable(GL_DEPTH_TEST);
-   }
 
    glLineWidth(2.0f);
 
@@ -502,57 +433,11 @@ void ModelViewerState::userInterface()
 
    ImGui::Begin("Model Viewer", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
 
-   ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
-   ImGui::Combo("State", &mSelectedState, "Model Viewer\0Flat Movement\0Programmed IK Movement\0IK Movement\0");
-
-   if (ImGui::CollapsingHeader("Description", nullptr))
-   {
-      ImGui::Text("This state illustrates the playback of various\n"
-                  "animation clips that have been loaded from\n"
-                  "a glTF file.\n\n"
-                  "You can switch between the different clips\n"
-                  "and change the playback speed to see them\n"
-                  "in slow or fast motion.");
-   }
-
-   if (ImGui::CollapsingHeader("Controls", nullptr))
-   {
-      ImGui::BulletText("Hold the left mouse button and move the mouse\n"
-                        "to rotate the camera around the character.");
-      ImGui::BulletText("Use the scroll wheel to zoom in and out.");
-      ImGui::BulletText("Press the P key to pause the animation.");
-      ImGui::BulletText("Press the R key to reset the camera.");
-   }
-
    if (ImGui::CollapsingHeader("Settings", nullptr))
    {
       ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
 
       ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
-
-      ImGui::SliderFloat("Playback Speed", &mSelectedPlaybackSpeed, 0.0f, 2.0f, "%.3f");
-
-      float durationOfCurrClip = mClips[mAnimationData.currentClipIndex].GetDuration();
-      char progress[32];
-      snprintf(progress, 32, "%.3f / %.3f", mAnimationData.playbackTime, durationOfCurrClip);
-      ImGui::ProgressBar(mAnimationData.playbackTime / durationOfCurrClip, ImVec2(0.0f, 0.0f), progress);
-
-      //float normalizedPlaybackTime = (mAnimationData.playbackTime - mClips[mAnimationData.currentClipIndex].GetStartTime()) / mClips[mAnimationData.currentClipIndex].GetDuration();
-      //char progress[32];
-      //snprintf(progress, 32, "%.3f", normalizedPlaybackTime);
-      //ImGui::ProgressBar(normalizedPlaybackTime, ImVec2(0.0f, 0.0f), progress);
-
-      ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-      ImGui::Text("Playback Time");
-
-      ImGui::Checkbox("Display Ground", &mDisplayGround);
-
-      ImGui::Checkbox("Display Skin", &mDisplayMesh);
-
-      ImGui::Checkbox("Wireframe Mode for Skin", &mWireframeModeForCharacter);
-
-      ImGui::Checkbox("Perform Depth Testing", &mPerformDepthTesting);
    }
 
    ImGui::End();
