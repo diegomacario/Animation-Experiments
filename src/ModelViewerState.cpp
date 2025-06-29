@@ -19,10 +19,6 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
                                                                                        "resources/shaders/diffuse_illumination.frag");
 
-   // Initialize the static mesh shader
-   mStaticMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh.vert",
-                                                                                     "resources/shaders/diffuse_illumination.frag");
-
    // Load the diffuse texture of the animated character
    mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/woman.png");
 
@@ -104,8 +100,6 @@ void ModelViewerState::enter()
    // Set the current state
    mSelectedState = 0;
    initializeState();
-   resetCamera();
-   resetScene();
 }
 
 void ModelViewerState::processInput(float deltaTime)
@@ -229,15 +223,4 @@ void ModelViewerState::userInterface()
    ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
 
    ImGui::End();
-}
-
-void ModelViewerState::resetScene()
-{
-
-}
-
-void ModelViewerState::resetCamera()
-{
-   mCamera3.reposition(7.5f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 2.5f, 0.0f), 2.0f, 14.0f, 0.0f, 90.0f);
-   mCamera3.processMouseMovement(180.0f / 0.25f, 0.0f);
 }

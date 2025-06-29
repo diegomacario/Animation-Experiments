@@ -36,10 +36,6 @@ private:
 
    void userInterface();
 
-   void resetScene();
-
-   void resetCamera();
-
    std::shared_ptr<FiniteStateMachine> mFSM;
 
    std::shared_ptr<Window>             mWindow;
@@ -65,7 +61,6 @@ private:
    };
 
    std::shared_ptr<Shader>   mAnimatedMeshShader;
-   std::shared_ptr<Shader>   mStaticMeshShader;
    std::shared_ptr<Texture>  mDiffuseTexture;
 
    Skeleton                  mSkeleton;
