@@ -34,11 +34,6 @@ public:
 
 private:
 
-   void configureLights(const std::shared_ptr<Shader>& shader);
-
-   void switchFromGPUToCPU();
-   void switchFromCPUToGPU();
-
    void userInterface();
 
    void resetScene();
@@ -51,24 +46,16 @@ private:
 
    Camera3                             mCamera3;
 
-   enum SkinningMode : int
-   {
-      GPU = 0,
-      CPU = 1,
-   };
-
    struct AnimationData
    {
       AnimationData()
          : currentClipIndex(0)
-         , currentSkinningMode(SkinningMode::GPU)
          , playbackTime(0.0f)
       {
 
       }
 
       unsigned int           currentClipIndex;
-      SkinningMode           currentSkinningMode;
 
       float                  playbackTime;
       Pose                   animatedPose;
@@ -87,7 +74,6 @@ private:
    std::string               mClipNames;
    int                       mSelectedState;
    int                       mSelectedClip;
-   int                       mSelectedSkinningMode;
 
    AnimationData             mAnimationData;
 };

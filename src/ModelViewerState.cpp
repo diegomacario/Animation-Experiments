@@ -18,12 +18,10 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
                                                                                        "resources/shaders/diffuse_illumination.frag");
-   configureLights(mAnimatedMeshShader);
 
    // Initialize the static mesh shader
    mStaticMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/static_mesh.vert",
                                                                                      "resources/shaders/diffuse_illumination.frag");
-   configureLights(mStaticMeshShader);
 
    // Load the diffuse texture of the animated character
    mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/woman.png");
@@ -94,9 +92,6 @@ void ModelViewerState::initializeState()
       }
    }
 
-   // Set the initial skinning mode
-   mSelectedSkinningMode = SkinningMode::GPU;
-
    // Set the initial pose
    mAnimationData.animatedPose = mSkeleton.GetRestPose();
 
@@ -159,20 +154,6 @@ void ModelViewerState::update(float deltaTime)
       mAnimationData.playbackTime     = 0.0f;
    }
 
-   if (mAnimationData.currentSkinningMode != mSelectedSkinningMode)
-   {
-      if (mAnimationData.currentSkinningMode == SkinningMode::GPU)
-      {
-         switchFromGPUToCPU();
-      }
-      else if (mAnimationData.currentSkinningMode == SkinningMode::CPU)
-      {
-         switchFromCPUToGPU();
-      }
-
-      mAnimationData.currentSkinningMode = static_cast<SkinningMode>(mSelectedSkinningMode);
-   }
-
    // Sample the clip to get the animated pose
    FastClip& currClip = mClips[mAnimationData.currentClipIndex];
    mAnimationData.playbackTime = currClip.Sample(mAnimationData.animatedPose, mAnimationData.playbackTime + deltaTime);
@@ -191,15 +172,6 @@ void ModelViewerState::update(float deltaTime)
    {
       mAnimationData.skinMatrices[i] = mAnimationData.animatedPosePalette[i] * inverseBindPose[i];
    }
-
-   // Skin the meshes on the CPU if that's the current skinning mode
-   if (mAnimationData.currentSkinningMode == SkinningMode::CPU)
-   {
-      for (unsigned int i = 0, size = (unsigned int)mAnimatedMeshes.size(); i < size; ++i)
-      {
-         mAnimatedMeshes[i].SkinMeshOnTheCPU(mAnimationData.skinMatrices);
-      }
-   }
 }
 
 void ModelViewerState::render()
@@ -215,47 +187,24 @@ void ModelViewerState::render()
    glEnable(GL_DEPTH_TEST);
 
    // Render the animated meshes
-   if (mAnimationData.currentSkinningMode == SkinningMode::CPU)
+   mAnimatedMeshShader->use(true);
+   mAnimatedMeshShader->setUniformMat4("model",      transformToMat4(mAnimationData.modelTransform));
+   mAnimatedMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
+   mAnimatedMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
+   mAnimatedMeshShader->setUniformMat4Array("animated[0]", mAnimationData.skinMatrices);
+   mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("diffuseTex"));
+
+   // Loop over the meshes and render each one
+   for (unsigned int i = 0,
+        size = static_cast<unsigned int>(mAnimatedMeshes.size());
+        i < size;
+        ++i)
    {
-      mStaticMeshShader->use(true);
-      mStaticMeshShader->setUniformMat4("model",      transformToMat4(mAnimationData.modelTransform));
-      mStaticMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
-      mStaticMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
-      mDiffuseTexture->bind(0, mStaticMeshShader->getUniformLocation("diffuseTex"));
-
-      // Loop over the meshes and render each one
-      for (unsigned int i = 0,
-           size = static_cast<unsigned int>(mAnimatedMeshes.size());
-           i < size;
-           ++i)
-      {
-         mAnimatedMeshes[i].Render();
-      }
-
-      mDiffuseTexture->unbind(0);
-      mStaticMeshShader->use(false);
+      mAnimatedMeshes[i].Render();
    }
-   else if (mAnimationData.currentSkinningMode == SkinningMode::GPU)
-   {
-      mAnimatedMeshShader->use(true);
-      mAnimatedMeshShader->setUniformMat4("model",      transformToMat4(mAnimationData.modelTransform));
-      mAnimatedMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
-      mAnimatedMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
-      mAnimatedMeshShader->setUniformMat4Array("animated[0]", mAnimationData.skinMatrices);
-      mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("diffuseTex"));
 
-      // Loop over the meshes and render each one
-      for (unsigned int i = 0,
-           size = static_cast<unsigned int>(mAnimatedMeshes.size());
-           i < size;
-           ++i)
-      {
-         mAnimatedMeshes[i].Render();
-      }
-
-      mDiffuseTexture->unbind(0);
-      mAnimatedMeshShader->use(false);
-   }
+   mDiffuseTexture->unbind(0);
+   mAnimatedMeshShader->use(false);
 
    ImGui::Render();
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -271,111 +220,11 @@ void ModelViewerState::exit()
 
 }
 
-void ModelViewerState::configureLights(const std::shared_ptr<Shader>& shader)
-{
-   shader->use(true);
-   shader->setUniformVec3("pointLights[0].worldPos", glm::vec3(0.0f, 2.0f, 10.0f));
-   shader->setUniformVec3("pointLights[0].color", glm::vec3(1.0f, 0.95f, 0.9f));
-   shader->setUniformFloat("pointLights[0].constantAtt", 1.0f);
-   shader->setUniformFloat("pointLights[0].linearAtt", 0.01f);
-   shader->setUniformFloat("pointLights[0].quadraticAtt", 0.0f);
-   shader->setUniformVec3("pointLights[1].worldPos", glm::vec3(0.0f, 2.0f, -10.0f));
-   shader->setUniformVec3("pointLights[1].color", glm::vec3(1.0f, 0.95f, 0.9f));
-   shader->setUniformFloat("pointLights[1].constantAtt", 1.0f);
-   shader->setUniformFloat("pointLights[1].linearAtt", 0.01f);
-   shader->setUniformFloat("pointLights[1].quadraticAtt", 0.0f);
-   shader->setUniformInt("numPointLightsInScene", 2);
-   shader->use(false);
-}
-
-void ModelViewerState::switchFromGPUToCPU()
-{
-   int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
-   int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
-   int texCoordsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("texCoord");
-   int weightsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("weights");
-   int influencesAttribLocOfAnimatedShader = mAnimatedMeshShader->getAttributeLocation("joints");
-   for (unsigned int i = 0,
-        size = static_cast<unsigned int>(mAnimatedMeshes.size());
-        i < size;
-        ++i)
-   {
-      mAnimatedMeshes[i].UnconfigureVAO(positionsAttribLocOfAnimatedShader,
-                                        normalsAttribLocOfAnimatedShader,
-                                        texCoordsAttribLocOfAnimatedShader,
-                                        weightsAttribLocOfAnimatedShader,
-                                        influencesAttribLocOfAnimatedShader);
-   }
-
-   int positionsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("position");
-   int normalsAttribLocOfStaticShader   = mStaticMeshShader->getAttributeLocation("normal");
-   int texCoordsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("texCoord");
-   for (unsigned int i = 0,
-        size = static_cast<unsigned int>(mAnimatedMeshes.size());
-        i < size;
-        ++i)
-   {
-      mAnimatedMeshes[i].ConfigureVAO(positionsAttribLocOfStaticShader,
-                                      normalsAttribLocOfStaticShader,
-                                      texCoordsAttribLocOfStaticShader,
-                                      -1,
-                                      -1);
-   }
-}
-
-void ModelViewerState::switchFromCPUToGPU()
-{
-   int positionsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("position");
-   int normalsAttribLocOfStaticShader   = mStaticMeshShader->getAttributeLocation("normal");
-   int texCoordsAttribLocOfStaticShader = mStaticMeshShader->getAttributeLocation("texCoord");
-   for (unsigned int i = 0,
-        size = static_cast<unsigned int>(mAnimatedMeshes.size());
-        i < size;
-        ++i)
-   {
-      mAnimatedMeshes[i].UnconfigureVAO(positionsAttribLocOfStaticShader,
-                                        normalsAttribLocOfStaticShader,
-                                        texCoordsAttribLocOfStaticShader,
-                                        -1,
-                                        -1);
-   }
-
-   int positionsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("position");
-   int normalsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("normal");
-   int texCoordsAttribLocOfAnimatedShader  = mAnimatedMeshShader->getAttributeLocation("texCoord");
-   int weightsAttribLocOfAnimatedShader    = mAnimatedMeshShader->getAttributeLocation("weights");
-   int influencesAttribLocOfAnimatedShader = mAnimatedMeshShader->getAttributeLocation("joints");
-   for (unsigned int i = 0,
-        size = static_cast<unsigned int>(mAnimatedMeshes.size());
-        i < size;
-        ++i)
-   {
-      mAnimatedMeshes[i].ConfigureVAO(positionsAttribLocOfAnimatedShader,
-                                      normalsAttribLocOfAnimatedShader,
-                                      texCoordsAttribLocOfAnimatedShader,
-                                      weightsAttribLocOfAnimatedShader,
-                                      influencesAttribLocOfAnimatedShader);
-   }
-
-   // TODO: This is inefficient. We just need to load the positions and normals.
-   // Load the original positions and normals because the CPU skinning algorithm
-   // has been modifying them every frame
-   for (unsigned int i = 0,
-        size = static_cast<unsigned int>(mAnimatedMeshes.size());
-        i < size;
-        ++i)
-   {
-      mAnimatedMeshes[i].LoadBuffers();
-   }
-}
-
 void ModelViewerState::userInterface()
 {
    ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Appearing);
 
    ImGui::Begin("Model Viewer", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
-
-   ImGui::Combo("Skinning Mode", &mSelectedSkinningMode, "GPU\0CPU\0");
 
    ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
 
