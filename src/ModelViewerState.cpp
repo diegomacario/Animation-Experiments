@@ -4,7 +4,6 @@
 
 #include "resource_manager.h"
 #include "shader_loader.h"
-#include "texture_loader.h"
 #include "GLTFLoader.h"
 #include "RearrangeBones.h"
 #include "ModelViewerState.h"
@@ -18,9 +17,6 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
                                                                                        "resources/shaders/diffuse_illumination.frag");
-
-   // Load the diffuse texture of the animated character
-   mDiffuseTexture = ResourceManager<Texture>().loadUnmanagedResource<TextureLoader>("resources/models/woman/woman.png");
 
    // Load the animated character
    cgltf_data* data        = LoadGLTFFile("resources/models/woman/woman.gltf");
@@ -186,7 +182,6 @@ void ModelViewerState::render()
    mAnimatedMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
    mAnimatedMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
    mAnimatedMeshShader->setUniformMat4Array("animated[0]", mAnimationData.skinMatrices);
-   mDiffuseTexture->bind(0, mAnimatedMeshShader->getUniformLocation("diffuseTex"));
 
    // Loop over the meshes and render each one
    for (unsigned int i = 0,
@@ -197,7 +192,6 @@ void ModelViewerState::render()
       mAnimatedMeshes[i].Render();
    }
 
-   mDiffuseTexture->unbind(0);
    mAnimatedMeshShader->use(false);
 
    ImGui::Render();

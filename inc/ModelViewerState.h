@@ -5,7 +5,6 @@
 #include "finite_state_machine.h"
 #include "window.h"
 #include "Camera3.h"
-#include "texture.h"
 #include "AnimatedMesh.h"
 #include "Clip.h"
 #include "Shader.h"
@@ -61,7 +60,6 @@ private:
    };
 
    std::shared_ptr<Shader>   mAnimatedMeshShader;
-   std::shared_ptr<Texture>  mDiffuseTexture;
 
    Skeleton                  mSkeleton;
    std::vector<AnimatedMesh> mAnimatedMeshes;
