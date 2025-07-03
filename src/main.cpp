@@ -3,10 +3,12 @@
 #include "game.h"
 
 #include "quat.h"
+#include "Transform.h"
 
 int main()
 {
-   testQuaternion();
+   //testQuaternion();
+   testTransform();
 
    Game game;
 
