@@ -93,4 +93,6 @@ namespace Q
 
 glm::vec3 normalizeWithZeroLengthCheck(const glm::vec3& v);
 
+void testQuaternion();
+
 #endif

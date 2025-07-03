@@ -2,8 +2,12 @@
 
 #include "game.h"
 
+#include "quat.h"
+
 int main()
 {
+   testQuaternion();
+
    Game game;
 
    if (!game.initialize("Animation Experiments"))
