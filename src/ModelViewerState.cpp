@@ -1,7 +1,3 @@
-#include "imgui/imgui.h"
-#include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -134,12 +130,6 @@ void ModelViewerState::update(float deltaTime)
 
 void ModelViewerState::render()
 {
-   ImGui_ImplOpenGL3_NewFrame();
-   ImGui_ImplGlfw_NewFrame();
-   ImGui::NewFrame();
-
-   userInterface();
-
    mWindow->bindMultisampleFramebuffer();
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glEnable(GL_DEPTH_TEST);
@@ -171,9 +161,6 @@ void ModelViewerState::render()
 
    mAnimatedMeshShader->use(false);
 
-   ImGui::Render();
-   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
    mWindow->generateAntiAliasedImage();
 
    mWindow->swapBuffers();
@@ -183,15 +170,4 @@ void ModelViewerState::render()
 void ModelViewerState::exit()
 {
 
-}
-
-void ModelViewerState::userInterface()
-{
-   ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Appearing);
-
-   ImGui::Begin("Model Viewer", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
-
-   ImGui::Combo("Clip", &mSelectedClip, mClipNames.c_str());
-
-   ImGui::End();
 }

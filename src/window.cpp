@@ -1,7 +1,3 @@
-#include "imgui/imgui.h"
-#include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
-
 #include <iostream>
 
 #include "window.h"
@@ -37,10 +33,6 @@ Window::~Window()
    glDeleteFramebuffers(1, &mMultisampleFBO);
    glDeleteTextures(1, &mMultisampleTexture);
    glDeleteRenderbuffers(1, &mMultisampleRBO);
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
 
    if (mWindow)
    {
@@ -106,25 +98,6 @@ bool Window::initialize()
    setInputCallbacks();
 
    updateBufferAndViewportSizes(mWidthOfFramebufferInPix, mHeightOfFramebufferInPix);
-
-   // TODO: The ImGui window is properly scaled in the browser, but in the desktop it looks huge
-   //       We need to figure out how to scale things properly in the desktop
-   //       Once that's done, the calls to AddFontFromFileTTF and ScaleAllSizes should be done in the desktop too
-   //devicePixelRatio = static_cast<float>(mWidthOfFramebufferInPix) / static_cast<float>(mWidthOfWindowInPix);
-
-   // Initialize ImGui
-   // Setup Dear ImGui context
-   IMGUI_CHECKVERSION();
-   ImGui::CreateContext();
-   ImGuiIO& io = ImGui::GetIO(); (void)io;
-   io.IniFilename = nullptr;
-
-   // Setup Dear ImGui style
-   ImGui::StyleColorsDark();
-
-   // Setup Platform/Renderer bindings
-   ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
-   ImGui_ImplOpenGL3_Init("#version 330 core");
 
    return true;
 }
@@ -219,13 +192,6 @@ void Window::setKeyAsProcessed(int key)
 
 bool Window::mouseMoved() const
 {
-   ImGuiIO& io = ImGui::GetIO();
-   if (io.WantCaptureMouse)
-   {
-      // The cursor is hovering over an imgui window, so we tell the game that the mouse didn't move
-      return false;
-   }
-
    return mMouseMoved;
 }
 
@@ -256,26 +222,11 @@ void Window::enableCursor(bool enable)
 
 bool Window::isMouseButtonPressed(int button)
 {
-   ImGuiIO& io = ImGui::GetIO();
-   if (io.WantCaptureMouse)
-   {
-      // The cursor is hovering over an imgui window, so we tell the game that no mouse buttons were pressed
-      return false;
-   }
-
    return (glfwGetMouseButton(mWindow, button) == GLFW_PRESS);
 }
 
 bool Window::scrollWheelMoved() const
 {
-   ImGuiIO& io = ImGui::GetIO();
-   if (io.WantCaptureMouse)
-   {
-      // The cursor is hovering over an imgui window, so we tell the game that the scroll wheel didn't move
-      mScrollWheelMoved = false;
-      return false;
-   }
-
    return mScrollWheelMoved;
 }
 

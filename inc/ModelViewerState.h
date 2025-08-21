@@ -29,9 +29,7 @@ public:
 
 private:
 
-   void userInterface();
-
-   std::shared_ptr<Window>             mWindow;
+   std::shared_ptr<Window> mWindow;
 
    struct AnimationData
    {
