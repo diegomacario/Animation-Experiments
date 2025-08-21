@@ -4,7 +4,6 @@
 #include "state.h"
 #include "finite_state_machine.h"
 #include "window.h"
-#include "Camera3.h"
 #include "AnimatedMesh.h"
 #include "Clip.h"
 #include "Shader.h"
@@ -38,8 +37,6 @@ private:
    std::shared_ptr<FiniteStateMachine> mFSM;
 
    std::shared_ptr<Window>             mWindow;
-
-   Camera3                             mCamera3;
 
    struct AnimationData
    {

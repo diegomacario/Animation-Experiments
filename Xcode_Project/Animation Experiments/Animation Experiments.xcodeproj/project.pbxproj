@@ -17,7 +17,6 @@
 		04B904A12847E1C800FF56D3 /* TransformTrack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B904992847E1C800FF56D3 /* TransformTrack.cpp */; };
 		04B904A22847E1C800FF56D3 /* Skeleton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B9049A2847E1C800FF56D3 /* Skeleton.cpp */; };
 		04B904A32847E1C800FF56D3 /* Track.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B9049B2847E1C800FF56D3 /* Track.cpp */; };
-		04B904B32847E22700FF56D3 /* Camera3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B904A42847E22700FF56D3 /* Camera3.cpp */; };
 		04B904B52847E22700FF56D3 /* window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B904A62847E22700FF56D3 /* window.cpp */; };
 		04B904B72847E22700FF56D3 /* game.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B904A82847E22700FF56D3 /* game.cpp */; };
 		04B904B82847E22700FF56D3 /* ModelViewerState.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04B904A92847E22700FF56D3 /* ModelViewerState.cpp */; };
@@ -64,7 +63,6 @@
 		04B904992847E1C800FF56D3 /* TransformTrack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TransformTrack.cpp; path = ../../src/TransformTrack.cpp; sourceTree = "<group>"; };
 		04B9049A2847E1C800FF56D3 /* Skeleton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Skeleton.cpp; path = ../../src/Skeleton.cpp; sourceTree = "<group>"; };
 		04B9049B2847E1C800FF56D3 /* Track.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Track.cpp; path = ../../src/Track.cpp; sourceTree = "<group>"; };
-		04B904A42847E22700FF56D3 /* Camera3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Camera3.cpp; path = ../../src/Camera3.cpp; sourceTree = "<group>"; };
 		04B904A62847E22700FF56D3 /* window.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = window.cpp; path = ../../src/window.cpp; sourceTree = "<group>"; };
 		04B904A82847E22700FF56D3 /* game.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = game.cpp; path = ../../src/game.cpp; sourceTree = "<group>"; };
 		04B904A92847E22700FF56D3 /* ModelViewerState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ModelViewerState.cpp; path = ../../src/ModelViewerState.cpp; sourceTree = "<group>"; };
@@ -87,7 +85,6 @@
 		04B904EB2847E7E000FF56D3 /* window.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = window.h; path = ../../inc/window.h; sourceTree = "<group>"; };
 		04B904EC2847E7E000FF56D3 /* game.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = game.h; path = ../../inc/game.h; sourceTree = "<group>"; };
 		04B904EE2847E7E000FF56D3 /* ModelViewerState.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ModelViewerState.h; path = ../../inc/ModelViewerState.h; sourceTree = "<group>"; };
-		04B904EF2847E7E000FF56D3 /* Camera3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Camera3.h; path = ../../inc/Camera3.h; sourceTree = "<group>"; };
 		04B904F22847E7E000FF56D3 /* state.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = state.h; path = ../../inc/state.h; sourceTree = "<group>"; };
 		04B904F62847E7E000FF56D3 /* AnimatedMesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AnimatedMesh.h; path = ../../inc/AnimatedMesh.h; sourceTree = "<group>"; };
 		04B904F72847E7E000FF56D3 /* shader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = shader.h; path = ../../inc/shader.h; sourceTree = "<group>"; };
@@ -184,7 +181,6 @@
 			isa = PBXGroup;
 			children = (
 				04B904B02847E22700FF56D3 /* AnimatedMesh.cpp */,
-				04B904A42847E22700FF56D3 /* Camera3.cpp */,
 				04B904AF2847E22700FF56D3 /* finite_state_machine.cpp */,
 				04B904A82847E22700FF56D3 /* game.cpp */,
 				04B904B12847E22700FF56D3 /* main.cpp */,
@@ -232,7 +228,6 @@
 			isa = PBXGroup;
 			children = (
 				04B904F62847E7E000FF56D3 /* AnimatedMesh.h */,
-				04B904EF2847E7E000FF56D3 /* Camera3.h */,
 				04B904F92847E7E000FF56D3 /* finite_state_machine.h */,
 				04B904EC2847E7E000FF56D3 /* game.h */,
 				04B904EE2847E7E000FF56D3 /* ModelViewerState.h */,
@@ -386,7 +381,6 @@
 				04B904B82847E22700FF56D3 /* ModelViewerState.cpp in Sources */,
 				04B904BE2847E22700FF56D3 /* finite_state_machine.cpp in Sources */,
 				04B904A32847E1C800FF56D3 /* Track.cpp in Sources */,
-				04B904B32847E22700FF56D3 /* Camera3.cpp in Sources */,
 				04B904BD2847E22700FF56D3 /* shader_loader.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

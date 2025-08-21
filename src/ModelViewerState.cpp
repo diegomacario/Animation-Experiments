@@ -2,6 +2,9 @@
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "resource_manager.h"
 #include "shader_loader.h"
 #include "GLTFLoader.h"
@@ -12,7 +15,6 @@ ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& fi
                                    const std::shared_ptr<Window>&             window)
    : mFSM(finiteStateMachine)
    , mWindow(window)
-   , mCamera3(7.5f, 25.0f, glm::vec3(0.0f), Q::quat(), glm::vec3(0.0f, 2.5f, 0.0f), 2.0f, 14.0f, 0.0f, 90.0f, 45.0f, 1280.0f / 720.0f, 0.1f, 130.0f, 0.25f)
 {
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
@@ -119,20 +121,6 @@ void ModelViewerState::processInput(float deltaTime)
          break;
       }
    }
-
-   // Orient the camera
-   if (mWindow->mouseMoved() && mWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
-   {
-      mCamera3.processMouseMovement(mWindow->getCursorXOffset(), mWindow->getCursorYOffset());
-      mWindow->resetMouseMoved();
-   }
-
-   // Adjust the distance between the player and the camera
-   if (mWindow->scrollWheelMoved())
-   {
-      mCamera3.processScrollWheelMovement(mWindow->getScrollYOffset());
-      mWindow->resetScrollWheelMoved();
-   }
 }
 
 void ModelViewerState::update(float deltaTime)
@@ -179,8 +167,17 @@ void ModelViewerState::render()
    // Render the animated meshes
    mAnimatedMeshShader->use(true);
    mAnimatedMeshShader->setUniformMat4("model",      transformToMat4(mAnimationData.modelTransform));
-   mAnimatedMeshShader->setUniformMat4("view",       mCamera3.getViewMatrix());
-   mAnimatedMeshShader->setUniformMat4("projection", mCamera3.getPerspectiveProjectionMatrix());
+    
+   glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.0f, 2.5f, 10.0f), glm::vec3(0.0f, 2.5f, 0.0f),glm::vec3(0.0f, 1.0f, 0.0f));
+    
+   mAnimatedMeshShader->setUniformMat4("view", viewMatrix);
+    
+   glm::mat4 perspectiveProjectionMatrix = glm::perspective(glm::radians(45.0f),
+                                                            1280.0f / 720.0f,
+                                                            0.1f,
+                                                            130.0f);
+    
+   mAnimatedMeshShader->setUniformMat4("projection", perspectiveProjectionMatrix);
    mAnimatedMeshShader->setUniformMat4Array("animated[0]", mAnimationData.skinMatrices);
 
    // Loop over the meshes and render each one
