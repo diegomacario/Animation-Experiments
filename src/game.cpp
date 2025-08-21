@@ -4,7 +4,7 @@
 #include "game.h"
 
 Game::Game()
-   : mFSM()
+   : mModelViewerState()
    , mWindow()
 {
 
@@ -26,8 +26,7 @@ bool Game::initialize(const std::string& title)
       return false;
    }
 
-   // Create the FSM
-   mFSM = std::make_shared<ModelViewerState>(mWindow);
+    mModelViewerState = std::make_shared<ModelViewerState>(mWindow);
 
    return true;
 }
@@ -44,8 +43,8 @@ void Game::executeGameLoop()
       deltaTime    = static_cast<float>(currentFrame - lastFrame);
       lastFrame    = currentFrame;
 
-      mFSM->processInput(deltaTime);
-      mFSM->update(deltaTime);
-      mFSM->render();
+      mModelViewerState->processInput(deltaTime);
+      mModelViewerState->update(deltaTime);
+      mModelViewerState->render();
    }
 }

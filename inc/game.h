@@ -2,7 +2,6 @@
 #define GAME_H
 
 #include "window.h"
-#include "state.h"
 #include "ModelViewerState.h"
 
 class Game
@@ -23,9 +22,9 @@ public:
 
 private:
 
-   std::shared_ptr<ModelViewerState>     mFSM;
+   std::shared_ptr<ModelViewerState> mModelViewerState;
 
-   std::shared_ptr<Window>                 mWindow;
+   std::shared_ptr<Window>           mWindow;
 };
 
 #endif

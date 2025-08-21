@@ -1,13 +1,12 @@
 #ifndef MODEL_VIEWER_STATE_H
 #define MODEL_VIEWER_STATE_H
 
-#include "state.h"
 #include "window.h"
 #include "AnimatedMesh.h"
 #include "Clip.h"
 #include "Shader.h"
 
-class ModelViewerState : public State
+class ModelViewerState
 {
 public:
 
@@ -22,11 +21,11 @@ public:
 
    void initializeState();
 
-   void enter() override;
-   void processInput(float deltaTime) override;
-   void update(float deltaTime) override;
-   void render() override;
-   void exit() override;
+   void enter();
+   void processInput(float deltaTime);
+   void update(float deltaTime);
+   void render();
+   void exit();
 
 private:
 

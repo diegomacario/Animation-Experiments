@@ -83,7 +83,6 @@
 		04B904EB2847E7E000FF56D3 /* window.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = window.h; path = ../../inc/window.h; sourceTree = "<group>"; };
 		04B904EC2847E7E000FF56D3 /* game.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = game.h; path = ../../inc/game.h; sourceTree = "<group>"; };
 		04B904EE2847E7E000FF56D3 /* ModelViewerState.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ModelViewerState.h; path = ../../inc/ModelViewerState.h; sourceTree = "<group>"; };
-		04B904F22847E7E000FF56D3 /* state.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = state.h; path = ../../inc/state.h; sourceTree = "<group>"; };
 		04B904F62847E7E000FF56D3 /* AnimatedMesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AnimatedMesh.h; path = ../../inc/AnimatedMesh.h; sourceTree = "<group>"; };
 		04B904F72847E7E000FF56D3 /* shader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = shader.h; path = ../../inc/shader.h; sourceTree = "<group>"; };
 		04B904F82847E7E000FF56D3 /* shader_loader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = shader_loader.h; path = ../../inc/shader_loader.h; sourceTree = "<group>"; };
@@ -229,7 +228,6 @@
 				04B904FA2847E7E000FF56D3 /* resource_manager.h */,
 				04B904F82847E7E000FF56D3 /* shader_loader.h */,
 				04B904F72847E7E000FF56D3 /* shader.h */,
-				04B904F22847E7E000FF56D3 /* state.h */,
 				04B904EB2847E7E000FF56D3 /* window.h */,
 			);
 			name = Base;
