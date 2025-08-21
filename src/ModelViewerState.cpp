@@ -11,10 +11,8 @@
 #include "RearrangeBones.h"
 #include "ModelViewerState.h"
 
-ModelViewerState::ModelViewerState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
-                                   const std::shared_ptr<Window>&             window)
-   : mFSM(finiteStateMachine)
-   , mWindow(window)
+ModelViewerState::ModelViewerState(const std::shared_ptr<Window>& window)
+   : mWindow(window)
 {
    // Initialize the animated mesh shader
    mAnimatedMeshShader = ResourceManager<Shader>().loadUnmanagedResource<ShaderLoader>("resources/shaders/animated_mesh_with_pregenerated_skin_matrices.vert",
@@ -96,7 +94,6 @@ void ModelViewerState::initializeState()
 void ModelViewerState::enter()
 {
    // Set the current state
-   mSelectedState = 0;
    initializeState();
 }
 
@@ -104,23 +101,6 @@ void ModelViewerState::processInput(float deltaTime)
 {
    // Close the game
    if (mWindow->keyIsPressed(GLFW_KEY_ESCAPE)) { mWindow->setShouldClose(true); }
-
-   // Change the state
-   if (mSelectedState != 0)
-   {
-      switch (mSelectedState)
-      {
-      case 1:
-         mFSM->changeState("movement");
-         break;
-      case 2:
-         mFSM->changeState("ik");
-         break;
-      case 3:
-         mFSM->changeState("ik_movement");
-         break;
-      }
-   }
 }
 
 void ModelViewerState::update(float deltaTime)

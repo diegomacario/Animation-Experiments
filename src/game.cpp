@@ -27,16 +27,7 @@ bool Game::initialize(const std::string& title)
    }
 
    // Create the FSM
-   mFSM = std::make_shared<FiniteStateMachine>();
-
-   // Initialize the states
-   std::unordered_map<std::string, std::shared_ptr<State>> mStates;
-
-   mStates["viewer"] = std::make_shared<ModelViewerState>(mFSM,
-                                                          mWindow);
-
-   // Initialize the FSM
-   mFSM->initialize(std::move(mStates), "viewer");
+   mFSM = std::make_shared<ModelViewerState>(mWindow);
 
    return true;
 }
@@ -53,8 +44,8 @@ void Game::executeGameLoop()
       deltaTime    = static_cast<float>(currentFrame - lastFrame);
       lastFrame    = currentFrame;
 
-      mFSM->processInputInCurrentState(deltaTime);
-      mFSM->updateCurrentState(deltaTime);
-      mFSM->renderCurrentState();
+      mFSM->processInput(deltaTime);
+      mFSM->update(deltaTime);
+      mFSM->render();
    }
 }

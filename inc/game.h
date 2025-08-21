@@ -3,7 +3,7 @@
 
 #include "window.h"
 #include "state.h"
-#include "finite_state_machine.h"
+#include "ModelViewerState.h"
 
 class Game
 {
@@ -23,7 +23,7 @@ public:
 
 private:
 
-   std::shared_ptr<FiniteStateMachine>     mFSM;
+   std::shared_ptr<ModelViewerState>     mFSM;
 
    std::shared_ptr<Window>                 mWindow;
 };

@@ -2,7 +2,6 @@
 #define MODEL_VIEWER_STATE_H
 
 #include "state.h"
-#include "finite_state_machine.h"
 #include "window.h"
 #include "AnimatedMesh.h"
 #include "Clip.h"
@@ -12,8 +11,7 @@ class ModelViewerState : public State
 {
 public:
 
-   ModelViewerState(const std::shared_ptr<FiniteStateMachine>& finiteStateMachine,
-                    const std::shared_ptr<Window>&             window);
+   ModelViewerState(const std::shared_ptr<Window>& window);
    ~ModelViewerState() = default;
 
    ModelViewerState(const ModelViewerState&) = delete;
@@ -33,8 +31,6 @@ public:
 private:
 
    void userInterface();
-
-   std::shared_ptr<FiniteStateMachine> mFSM;
 
    std::shared_ptr<Window>             mWindow;
 
@@ -62,7 +58,6 @@ private:
    std::vector<AnimatedMesh> mAnimatedMeshes;
    std::vector<FastClip>     mClips;
    std::string               mClipNames;
-   int                       mSelectedState;
    int                       mSelectedClip;
 
    AnimationData             mAnimationData;
